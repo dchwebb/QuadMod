@@ -6,6 +6,7 @@ extern volatile uint32_t SysTickVal;
 
 
 void InitSystemClock();
+void InitSAI();
 //void InitHardware();
 //void InitSysTick();
 //void InitDAC();

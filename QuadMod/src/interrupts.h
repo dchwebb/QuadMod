@@ -1,3 +1,8 @@
+void SAI1_IRQHandler(void)
+{
+
+}
+
 void SysTick_Handler(void)
 {
 	++SysTickVal;
