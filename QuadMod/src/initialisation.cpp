@@ -87,6 +87,7 @@ void InitSAI()
 	SAI1_Block_A->FRCR |= (63 << SAI_xFRCR_FRL_Pos);	// Set Frame size to 32 bits
 	SAI1_Block_A->FRCR |= SAI_xFRCR_FSDEF;				// Frame synchronization: 0: FS is start frame signal; 1: FS is start of frame signal + channel side identification
 	SAI1_Block_A->FRCR |= SAI_xFRCR_FSOFF;				// Frame synchronization offset: 0: FS asserted on first bit of slot 0. 1: FS asserted one bit before first bit of slot 0.
+	SAI1_Block_A->FRCR |= 31 << SAI_xFRCR_FSALL_Pos;	// Frame synchronization active level length: set to toggle on left/right transition
 
 	//SAI1_Block_A->SLOTR |= SAI_xSLOTR_SLOTSZ_1;		// 00: Slot size equivalent to DS data size; 01: 16-bit; 10: 32-bit
 	SAI1_Block_A->SLOTR |= SAI_xSLOTR_NBSLOT_0;			// Number of slots = 2
@@ -101,11 +102,16 @@ void InitSAI()
 	SAI1_Block_B->FRCR = SAI1_Block_A->FRCR;			// Duplicate block A Frame settings
 	SAI1_Block_B->SLOTR = SAI1_Block_A->SLOTR;			// Duplicate block A Frame settings
 
+	SAI1_Block_A->IMR |= SAI_xIMR_FREQIE;				// Interrupt on FIFO empty
+
 	NVIC_SetPriority(SAI1_IRQn, 1);						// Lower is higher priority
 	NVIC_EnableIRQ(SAI1_IRQn);
 
 	// Activate mute mode for testing
-	SAI1_Block_A->CR2 |= SAI_xCR2_MUTE;
+	//SAI1_Block_A->CR2 |= SAI_xCR2_MUTE;
+	SAI1_Block_A->DR = 0;
+	SAI1_Block_A->DR = 0;
+
 	SAI1_Block_A->CR1 |= SAI_xCR1_SAIEN;
 }
 

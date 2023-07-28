@@ -1,6 +1,8 @@
+uint8_t saiTest = 0;
 void SAI1_IRQHandler(void)
 {
-
+	SAI1_Block_A->DR = (uint32_t)(++saiTest);
+	SAI1_Block_A->DR = (uint32_t)(0x80000000 + saiTest);
 }
 
 void SysTick_Handler(void)
