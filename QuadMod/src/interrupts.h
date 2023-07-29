@@ -21,17 +21,17 @@ void SAI1_IRQHandler(void)
 	}
 
 	// Check if interrupt is data received in SAI2 Block A
-	if ((SAI2_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		saiRecAL = SAI2_Block_A->DR;
-		saiRecAR = SAI2_Block_A->DR;
-		saiRecBL = SAI2_Block_B->DR;
-		saiRecBR = SAI2_Block_B->DR;
-
-		debugSAI[debugCount].leftRec = saiRecAL;
-		debugSAI[debugCount++].leftSend = saiTest;
-	} else {
-		uint32_t susp = 1;
-		++susp;
+	while ((SAI2_Block_A->SR & SAI_xSR_FREQ) != 0) {
+		if (saiL) {
+			saiRecAL = SAI2_Block_A->DR;
+			saiRecBL = SAI2_Block_B->DR;
+			debugSAI[debugCount].leftRec = saiRecAL;
+			debugSAI[debugCount++].leftSend = saiTest;
+		} else {
+			saiRecAR = SAI2_Block_A->DR;
+			saiRecBR = SAI2_Block_B->DR;
+		}
+		saiL = !saiL;
 	}
 }
 

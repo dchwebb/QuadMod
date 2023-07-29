@@ -2,68 +2,58 @@
 
 // 8MHz / 4(M) * 250(N) / 2(R) = 250MHz
 #define PLL_M 4
-#define PLL_N 249
-//#define PLL_R 0			// 00: PLLR = 2, 01: PLLR = 4, 10: PLLR = 6, 11: PLLR = 8
+#define PLL_N 250
 #define PLL_P 1				// 01: PLLP = /2
 
-
-
 void InitSystemClock(void) {
-	// Voltage Scaling
-	PWR->VOSCR |= PWR_VOSCR_VOS;				// Set power scaling to 11: VOS0 (highest frequency)
-	while ((PWR->VOSSR & PWR_VOSSR_VOSRDY) == 0); // Delay after an RCC peripheral clock enabling
+	PWR->VOSCR |= PWR_VOSCR_VOS;						// Set power scaling to 11: VOS0 (highest frequency)
+	while ((PWR->VOSSR & PWR_VOSSR_VOSRDY) == 0); 		// Delay after an RCC peripheral clock enabling
 
-	RCC->CR |= RCC_CR_CSION;					// Enable low power internal RC oscillator
-	while ((RCC->CR & RCC_CR_CSIRDY) == 0);		// Wait until CSI ready
+//	RCC->CR |= RCC_CR_CSION;							// Enable low power internal RC oscillator
+//	while ((RCC->CR & RCC_CR_CSIRDY) == 0);				// Wait until CSI ready
 
-	RCC->CR |= RCC_CR_HSEON;					// HSE ON
-	while ((RCC->CR & RCC_CR_HSERDY) == 0);		// Wait till HSE is ready
+	RCC->CR |= RCC_CR_HSEON;							// HSE ON
+	while ((RCC->CR & RCC_CR_HSERDY) == 0);				// Wait till HSE is ready
 
-	RCC->CR |= RCC_CR_HSI48ON;					// Enable USB clock
+	RCC->CR |= RCC_CR_HSI48ON;							// Enable USB clock
 
 	// Configure PLL1
 	RCC->PLL1CFGR = (PLL_M << RCC_PLL1CFGR_PLL1M_Pos) | (RCC_PLL1CFGR_PLL1SRC);		// PLL1SRC 11: HSE selected as PLL clock
-	RCC->PLL1DIVR = (PLL_N << RCC_PLL1DIVR_PLL1N_Pos) | (PLL_P << RCC_PLL1DIVR_PLL1P_Pos);
+	RCC->PLL1DIVR = ((PLL_N - 1) << RCC_PLL1DIVR_PLL1N_Pos) | (PLL_P << RCC_PLL1DIVR_PLL1P_Pos);
 
 	// Settings needed for fractional adjustment:
-//	RCC->PLL1CFGR |= RCC_PLL1CFGR_PLL1FRACEN;	// HAL Enables this but not sure if needed
-//	RCC->PLL1CFGR |= RCC_PLL1CFGR_PLL1RGE;		// PLL1 input frequency range: 00: 1-2MHz; 01: 2-4 MHz; 10: 4-8 MHz; 11: 8-16 MHz;
+//	RCC->PLL1CFGR |= RCC_PLL1CFGR_PLL1FRACEN;			// HAL Enables this but not sure if needed
+//	RCC->PLL1CFGR |= RCC_PLL1CFGR_PLL1RGE;				// PLL1 input frequency range: 00: 1-2MHz; 01: 2-4 MHz; 10: 4-8 MHz; 11: 8-16 MHz;
 //	RCC->PLL1CFGR &= ~RCC_PLL1CFGR_PLL1VCOSEL;
 
-	RCC->CR |= RCC_CR_PLL1ON;					// Enable PLL1
-	RCC->PLL1CFGR = RCC_PLL1CFGR_PLL1PEN;		// Enable PLL P (drives AHB clock)
-	while ((RCC->CR & RCC_CR_PLL1RDY) == 0);	// Wait till PLL1 is ready
+	RCC->CR |= RCC_CR_PLL1ON;							// Enable PLL1
+	RCC->PLL1CFGR = RCC_PLL1CFGR_PLL1PEN;				// Enable PLL P (drives AHB clock)
+	while ((RCC->CR & RCC_CR_PLL1RDY) == 0);			// Wait till PLL1 is ready
 
 	// Configure Flash prefetch and wait state
 	FLASH->ACR |= FLASH_ACR_LATENCY_5WS | FLASH_ACR_PRFTEN;
 	FLASH->ACR &= ~FLASH_ACR_LATENCY_2WS;
 
-	RCC->CFGR1 |= RCC_CFGR1_SW;					// Select PLL1 as system clock source
+	RCC->CFGR1 |= RCC_CFGR1_SW;							// Select PLL1 as system clock source
 	while ((RCC->CFGR1 & RCC_CFGR1_SWS) != RCC_CFGR1_SWS);	// Wait till the main PLL is used as system clock source
-
-	// Configure PLL2 to output 128MHz clock for SAI (4MHz (CSI) / 1 (M) * 32 (N) / 1(P)
-//	RCC->PLL2CFGR = (1 << RCC_PLL2CFGR_PLL2M_Pos) | RCC_PLL2CFGR_PLL2SRC_1;		// Configure CSI as source for PLL2
-//	RCC->PLL2DIVR = (31 << RCC_PLL2DIVR_PLL2N_Pos) | (0 << RCC_PLL2DIVR_PLL2P_Pos);
-
-	// Configure PLL2 to output 12.286MHz clock for SAI (8MHz (HSE) / 6 (M) * 129 (N) / 14(P)
-//	RCC->PLL2CFGR = (6 << RCC_PLL2CFGR_PLL2M_Pos) | RCC_PLL2CFGR_PLL2SRC;		// Configure HSE as source for PLL2
-//	RCC->PLL2DIVR = (128 << RCC_PLL2DIVR_PLL2N_Pos) | (13 << RCC_PLL2DIVR_PLL2P_Pos);
 
 	// Configure PLL2 to output 12.286MHz clock for SAI: 8MHz (HSE) / 5 (M) * 192 (N) / 25(P)
 	RCC->PLL2CFGR = (5 << RCC_PLL2CFGR_PLL2M_Pos) | RCC_PLL2CFGR_PLL2SRC;		// Configure HSE as source for PLL2
 	RCC->PLL2DIVR = (191 << RCC_PLL2DIVR_PLL2N_Pos) | (24 << RCC_PLL2DIVR_PLL2P_Pos);
-	RCC->CR |= RCC_CR_PLL2ON;					// Enable PLL2
-	RCC->PLL2CFGR = RCC_PLL2CFGR_PLL2PEN;		// Enable PLL P (drives SAI clock)
-	while ((RCC->CR & RCC_CR_PLL2RDY) == 0);	// Wait till PLL2 is ready
+	RCC->CR |= RCC_CR_PLL2ON;							// Enable PLL2
+	RCC->PLL2CFGR = RCC_PLL2CFGR_PLL2PEN;				// Enable PLL P (drives SAI clock)
+	while ((RCC->CR & RCC_CR_PLL2RDY) == 0);			// Wait till PLL2 is ready
 
 
-	ICACHE->CR |= ICACHE_CR_EN;					// Enable instruction cache
-	DCACHE1->CR |= DCACHE_CR_EN;				// Enable data cache
+	ICACHE->CR |= ICACHE_CR_EN;							// Enable instruction cache
+	DCACHE1->CR |= DCACHE_CR_EN;						// Enable data cache
 }
 
 
 void InitSAI()
 {
+	// SAI peripheral configured to output 2 stereo signals on SAI1 and receive 2 stereo signals on SAI2
+	// Master is SAI1_A and all other blocks use the same clock
 	RCC->APB2ENR |= RCC_APB2ENR_SAI1EN;					// Enable SAI peripheral
 	RCC->APB2ENR |= RCC_APB2ENR_SAI2EN;
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;				// Enable GPIO Clock
@@ -71,7 +61,6 @@ void InitSAI()
 	RCC->CCIPR5 |= RCC_CCIPR5_SAI1SEL_0;				// SAI Clock Source: 000: pll1_q_ck; *001: pll2_p_ck; 010: pll3_p_ck; 011: AUDIOCLK; 100: per_ck
 
 	// MODER 00: Input mode, 01: General purpose output mode, 10: Alternate function mode, 11: Analog mode (reset state)
-	// PUPDR 01: Pull-up; 10: Pull-down
 
 	// PE2 SAI1_MCLK_A  AF6
 	// PE3 SAI1_SD_B    AF6
@@ -109,7 +98,7 @@ void InitSAI()
 	SAI1_Block_B->CR1 |= SAI_xCR1_SYNCEN_0;				// 00: asynchronous mode; *01: synchronous with internal subblock; 10: synchronous with external SAI
 
 	SAI1_Block_B->FRCR = SAI1_Block_A->FRCR;			// Duplicate block A Frame settings
-	SAI1_Block_B->SLOTR = SAI1_Block_A->SLOTR;			// Duplicate block A Frame settings
+	SAI1_Block_B->SLOTR = SAI1_Block_A->SLOTR;			// Duplicate block A Slot settings
 
 
 	//------------------------------------------
@@ -125,9 +114,9 @@ void InitSAI()
 	SAI2_Block_B->CR1 |= SAI_xCR1_SYNCEN_1;				// 00: asynchronous mode; 01: synchronous with internal subblock; *10: synchronous with external SAI
 
 	SAI2_Block_A->FRCR = SAI1_Block_A->FRCR;			// Duplicate SAI1 block A Frame settings
-	SAI2_Block_A->SLOTR = SAI1_Block_A->SLOTR;			// Duplicate SAI1 block A Frame settings
+	SAI2_Block_A->SLOTR = SAI1_Block_A->SLOTR;			// Duplicate SAI1 block A Slot settings
 	SAI2_Block_B->FRCR = SAI1_Block_A->FRCR;			// Duplicate SAI1 block A Frame settings
-	SAI2_Block_B->SLOTR = SAI1_Block_A->SLOTR;			// Duplicate SAI1 block A Frame settings
+	SAI2_Block_B->SLOTR = SAI1_Block_A->SLOTR;			// Duplicate SAI1 block A Slot settings
 
 
 	// Initialise synching between master on SAI1 and slave on SAI2
@@ -140,7 +129,7 @@ void InitSAI()
 	NVIC_SetPriority(SAI1_IRQn, 1);						// Lower is higher priority
 	NVIC_EnableIRQ(SAI1_IRQn);
 
-	SAI1_Block_A->DR = 0;								// Load the FIFO with the first two left/right values
+	SAI1_Block_A->DR = 0;								// Load the transmitter FIFO with the first left/right values
 	SAI1_Block_A->DR = 0;
 	SAI1_Block_B->DR = 0;
 	SAI1_Block_B->DR = 0;
@@ -151,6 +140,9 @@ void InitSAI()
 	SAI2_Block_A->CR1 |= SAI_xCR1_SAIEN;
 	SAI2_Block_B->CR1 |= SAI_xCR1_SAIEN;
 }
+
+
+
 
 /*
 void InitHardware()
