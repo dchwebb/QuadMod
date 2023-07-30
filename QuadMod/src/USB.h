@@ -27,14 +27,14 @@ typedef struct {
 
 // Create struct for easy access to endpoint registers
 typedef struct {
-	volatile uint16_t EPR;
-	volatile uint16_t reserved;
+	volatile uint32_t EPR;
 } USB_EPR_TypeDef;
 
-#define USBP USB_DRD_FS
+#define  USBP     USB_DRD_FS
 #define  USB_PMA  ((USB_PMA_TypeDef*) USB_DRD_PMAADDR)
-#define  USB_EPR  ((USB_EPR_TypeDef*)(&USBP->EP0R))
-
+#define  USB_EPR  ((USB_EPR_TypeDef*)(&USBP->CHEP0R))
+#define USB_COUNT0_RX_NUM_BLOCK_Pos              (10U)
+#define USB_COUNT0_RX_BLSIZE_Pos                 (15U)
 
 
 #define LOBYTE(x)  (static_cast<uint8_t>(x & 0x00FFU))
@@ -74,9 +74,9 @@ public:
 
 private:
 	static constexpr std::string_view manufacturerString = "Mountjoy Modular";
-	static constexpr std::string_view productString      = "Mountjoy Quango";
-	static constexpr std::string_view cdcString          = "Mountjoy Quango CDC";
-	static constexpr std::string_view midiString         = "Mountjoy Quango MIDI";
+	static constexpr std::string_view productString      = "Mountjoy QuadMod";
+	static constexpr std::string_view cdcString          = "Mountjoy QuadMod CDC";
+	static constexpr std::string_view midiString         = "Mountjoy QuadMod MIDI";
 	static constexpr uint8_t usbSerialNoSize = 24;
 
 	static constexpr uint32_t recipientMask = 0x03;

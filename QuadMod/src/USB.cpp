@@ -17,35 +17,35 @@ size_t _write(int handle, const unsigned char* buf, size_t bufSize)
 
 inline void ClearRxInterrupt(uint8_t ep)
 {
-	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_EPREG_MASK) & ~USB_EP_CTR_RX;
-	USB_EPR[ep].EPR = wRegVal | USB_EP_CTR_TX;
+	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_REG_MASK) & ~USB_EP_VTRX;
+	USB_EPR[ep].EPR = wRegVal | USB_EP_VTTX;
 }
 
 
 inline void ClearTxInterrupt(uint8_t ep)
 {
-	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_EPREG_MASK) & ~USB_EP_CTR_TX;
-	USB_EPR[ep].EPR = wRegVal | USB_EP_CTR_RX;
+	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_REG_MASK) & ~USB_EP_VTTX;
+	USB_EPR[ep].EPR = wRegVal | USB_EP_VTRX;
 }
 
 
 inline void SetTxStatus(uint8_t ep, uint16_t status)		// Set endpoint transmit status - have to use XOR to toggle bits
 {
-	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_EPTX_DTOGMASK) ^ status;
-	USB_EPR[ep].EPR = wRegVal | USB_EP_CTR_RX | USB_EP_CTR_TX;
+	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_TX_DTOGMASK) ^ status;
+	USB_EPR[ep].EPR = wRegVal | USB_EP_VTRX | USB_EP_VTTX;
 }
 
 
 inline void SetRxStatus(uint8_t ep, uint16_t status)		// Set endpoint receive status - have to use XOR to toggle bits
 {
-	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_EPRX_DTOGMASK) ^ status;
-	USB_EPR[ep].EPR = wRegVal | USB_EP_CTR_RX | USB_EP_CTR_TX;
+	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_RX_DTOGMASK) ^ status;
+	USB_EPR[ep].EPR = wRegVal | USB_EP_VTRX | USB_EP_VTTX;
 }
 
 
 void USB::ReadPMA(uint16_t pma, USBHandler* handler)
 {
-	volatile uint16_t* pmaBuff = reinterpret_cast<volatile uint16_t*>(USB_PMAADDR + pma);		// Eg 0x40006018
+	volatile uint16_t* pmaBuff = reinterpret_cast<volatile uint16_t*>(USB_DRD_PMAADDR + pma);		// Eg 0x40006018
 
 	for (uint32_t i = 0; i < (handler->outBuffCount + 1) / 2; i++) {
 		reinterpret_cast<volatile uint16_t*>(handler->outBuff)[i] = *pmaBuff++;				// pma buffer can only be read in 16 bit words
@@ -61,7 +61,7 @@ void USB::ReadPMA(uint16_t pma, USBHandler* handler)
 
 void USB::WritePMA(uint16_t pma, uint16_t bytes, USBHandler* handler)
 {
-	volatile uint16_t* pmaBuff = reinterpret_cast<volatile uint16_t*>(USB_PMAADDR + pma);
+	volatile uint16_t* pmaBuff = reinterpret_cast<volatile uint16_t*>(USB_DRD_PMAADDR + pma);
 
 	for (int i = 0; i < (bytes + 1) / 2; i++) {
 		pmaBuff[i] = reinterpret_cast<const uint16_t*>(handler->inBuff)[i];
@@ -162,7 +162,7 @@ void USB::USBInterruptHandler()						// Originally in Drivers\STM32F4xx_HAL_Driv
 
 	/////////// 	8000 		USB_ISTR_CTR: Correct Transfer
 	while (ReadInterrupts(USB_ISTR_CTR)) {					// Originally PCD_EP_ISR_Handler
-		uint8_t epIndex = USBP->ISTR & USB_ISTR_EP_ID;		// Extract highest priority endpoint number
+		uint8_t epIndex = USBP->ISTR & USB_ISTR_IDN;		// Extract highest priority endpoint number
 
 #if (USB_DEBUG)
 		usbDebug[usbDebugNo].endpoint = epIndex;
@@ -172,7 +172,7 @@ void USB::USBInterruptHandler()						// Originally in Drivers\STM32F4xx_HAL_Driv
 			if ((USBP->ISTR & USB_ISTR_DIR) == 0) {			// DIR = 0: Direction IN
 				ClearTxInterrupt(0);
 
-				uint16_t txBytes = USB_PMA->COUNT_TX & USB_COUNT0_TX_COUNT0_TX_Msk;
+				uint16_t txBytes = USB_PMA->COUNT_TX & USB_PMA_TXBD_COUNTMSK;
 				classByEP[epIndex]->inBuff += txBytes;
 
 				if (classByEP[epIndex]->inBuffRem > ep_maxPacket) {
@@ -192,15 +192,15 @@ void USB::USBInterruptHandler()						// Originally in Drivers\STM32F4xx_HAL_Driv
 
 			} else {										// DIR = 1: Setup or OUT interrupt
 
-				if ((USBP->EP0R & USB_EP_SETUP) != 0) {
-					classByEP[0]->outBuffCount = USB_PMA->COUNT_RX & USB_COUNT0_RX_COUNT0_RX_Msk;
+				if ((USBP->CHEP0R & USB_EP_SETUP) != 0) {
+					classByEP[0]->outBuffCount = USB_PMA->COUNT_RX & USB_PMA_RXBD_COUNTMSK;
 					ReadPMA(USB_PMA[0].ADDR_RX, classByEP[0]);	// Read setup data into  receive buffer
 					ClearRxInterrupt(0);						// clears 8000 interrupt
 					ProcessSetupPacket();						// Parse setup packet into request, locate data (eg descriptor) and populate TX buffer
 
 				} else {
 					ClearRxInterrupt(0);
-					classByEP[0]->outBuffCount = USB_PMA->COUNT_RX & USB_COUNT0_RX_COUNT0_RX;
+					classByEP[0]->outBuffCount = USB_PMA->COUNT_RX & USB_PMA_RXBD_COUNTMSK;
 					if (classByEP[0]->outBuffCount != 0) {
 						ReadPMA(USB_PMA[0].ADDR_RX, classByEP[0]);
 
@@ -219,10 +219,10 @@ void USB::USBInterruptHandler()						// Originally in Drivers\STM32F4xx_HAL_Driv
 
 		} else {
 			// Non zero endpoint
-			if ((USB_EPR[epIndex].EPR & USB_EP_CTR_RX) != 0) {
+			if ((USB_EPR[epIndex].EPR & USB_EP_VTRX) != 0) {
 				ClearRxInterrupt(epIndex);
 				
-				classByEP[epIndex]->outBuffCount = USB_PMA[epIndex].COUNT_RX & USB_COUNT0_RX_COUNT0_RX;
+				classByEP[epIndex]->outBuffCount = USB_PMA[epIndex].COUNT_RX & USB_PMA_RXBD_COUNTMSK;
 				if (classByEP[epIndex]->outBuffCount != 0) {
 					ReadPMA(USB_PMA[epIndex].ADDR_RX, classByEP[epIndex]);
 				}
@@ -232,11 +232,11 @@ void USB::USBInterruptHandler()						// Originally in Drivers\STM32F4xx_HAL_Driv
 				classByEP[epIndex]->DataOut();
 			}
 
-			if ((USB_EPR[epIndex].EPR & USB_EP_CTR_TX) != 0) {
+			if ((USB_EPR[epIndex].EPR & USB_EP_VTTX) != 0) {
 				transmitting = false;
 				ClearTxInterrupt(epIndex);
 
-				uint16_t txBytes = USB_PMA[epIndex].COUNT_TX & USB_COUNT0_TX_COUNT0_TX;
+				uint16_t txBytes = USB_PMA[epIndex].COUNT_TX & USB_PMA_TXBD_COUNTMSK;
 				if (classByEP[epIndex]->inBuffSize >= txBytes) {					// Transmitting data larger than buffer size
 					classByEP[epIndex]->inBuffSize -= txBytes;
 					classByEP[epIndex]->inBuff += txBytes;
@@ -250,16 +250,16 @@ void USB::USBInterruptHandler()						// Originally in Drivers\STM32F4xx_HAL_Driv
 
 	/////////// 	1000 		USB_ISTR_WKUP: Wake Up
 	if (ReadInterrupts(USB_ISTR_WKUP)) {
-		USBP->CNTR &= ~USB_CNTR_FSUSP;
-		USBP->CNTR &= ~USB_CNTR_LPMODE;
+		USBP->CNTR &= ~USB_CNTR_SUSPEN;
+		//USBP->CNTR &= ~USB_CNTR_LPMODE;		// FIXME
 		USBP->ISTR &= ~USB_ISTR_WKUP;
 	}
 
 	/////////// 	800 		SUSP: Suspend Interrupt
 	if (ReadInterrupts(USB_ISTR_SUSP)) {
-		USBP->CNTR |= USB_CNTR_FSUSP;
+		USBP->CNTR |= USB_CNTR_SUSPEN;
 		USBP->ISTR &= ~USB_ISTR_SUSP;
-		USBP->CNTR |= USB_CNTR_LPMODE;
+		//USBP->CNTR |= USB_CNTR_LPMODE;		// FIXME
 		devState = DeviceState::Suspended;
 	}
 
@@ -320,15 +320,15 @@ void USB::ActivateEndpoint(uint8_t endpoint, Direction direction, EndPointType e
 	}
 
 	// Set the address (EA=endpoint) and type (EP_TYPE=ep_type)
-	USB_EPR[endpoint].EPR = (USB_EPR[endpoint].EPR & USB_EP_T_MASK) | (endpoint | ep_type | USB_EP_CTR_RX | USB_EP_CTR_TX);
+	USB_EPR[endpoint].EPR = (USB_EPR[endpoint].EPR & USB_EP_T_MASK) | (endpoint | ep_type | USB_EP_VTRX | USB_EP_VTTX);
 
 	if (direction == Direction::in) {
 		USB_PMA[endpoint].ADDR_TX = pmaAddress;						// Offset of PMA used for EP TX
 
 		// Clear tx data toggle (data packets must alternate 1 and 0 in the data field)
 		if ((USB_EPR[endpoint].EPR & USB_EP_DTOG_TX) != 0) {
-			uint16_t wEPVal = USB_EPR[endpoint].EPR & USB_EPREG_MASK;
-			USB_EPR[endpoint].EPR = wEPVal | USB_EP_CTR_RX | USB_EP_CTR_TX | USB_EP_DTOG_TX;
+			uint16_t wEPVal = USB_EPR[endpoint].EPR & USB_CHEP_REG_MASK;
+			USB_EPR[endpoint].EPR = wEPVal | USB_EP_VTRX | USB_EP_VTTX | USB_EP_DTOG_TX;
 		}
 
 		SetTxStatus(endpoint, USB_EP_TX_NAK);
@@ -339,8 +339,8 @@ void USB::ActivateEndpoint(uint8_t endpoint, Direction direction, EndPointType e
 
 		// Clear rx data toggle
 		if ((USB_EPR[endpoint].EPR & USB_EP_DTOG_RX) != 0) {
-			uint16_t wEPVal = USB_EPR[endpoint].EPR & USB_EPREG_MASK;
-			USB_EPR[endpoint].EPR = wEPVal | USB_EP_CTR_RX | USB_EP_CTR_TX | USB_EP_DTOG_RX;
+			uint16_t wEPVal = USB_EPR[endpoint].EPR & USB_CHEP_REG_MASK;
+			USB_EPR[endpoint].EPR = wEPVal | USB_EP_VTRX | USB_EP_VTTX | USB_EP_DTOG_RX;
 		}
 
 		SetRxStatus(endpoint, USB_EP_RX_VALID);
