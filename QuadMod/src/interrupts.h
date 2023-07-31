@@ -9,6 +9,7 @@ struct {
 	uint32_t leftRec;
 } debugSAI[256];
 uint8_t debugCount = 0;
+uint32_t saiCounter = 0;
 
 void SAI1_IRQHandler(void)
 {
@@ -33,6 +34,17 @@ void SAI1_IRQHandler(void)
 		}
 		saiL = !saiL;
 	}
+
+	if (saiCounter == 1) {
+		volatile uint32_t susp = 1;
+		++susp;
+	}
+	++saiCounter;
+}
+
+void USB_DRD_FS_IRQHandler()
+{
+	usb.USBInterruptHandler();
 }
 
 void SysTick_Handler(void)

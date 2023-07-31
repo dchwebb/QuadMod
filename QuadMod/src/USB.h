@@ -1,15 +1,15 @@
 #pragma once
 
 #include "initialisation.h"
-#include "USBHandler.h"
-//#include "MidiHandler.h"
-//#include "CDCHandler.h"
+//#include "USBHandler.h"
+#include "MidiHandler.h"
+#include "CDCHandler.h"
 #include <functional>
 #include <cstring>
 #include <string>
 
 // Enables capturing of debug data for output over STLink UART on dev boards
-#define USB_DEBUG false
+#define USB_DEBUG true
 #if (USB_DEBUG)
 #include "uartHandler.h"
 #define USB_DEBUG_COUNT 400
@@ -17,13 +17,36 @@
 
 
 // Declare registers for PMA area
-typedef struct {
-  volatile uint16_t ADDR_TX;
-  volatile uint16_t COUNT_TX;
-  volatile uint16_t ADDR_RX;
-  volatile uint16_t COUNT_RX;
-} USB_PMA_TypeDef;
+//typedef struct {
+//	volatile uint16_t ADDR_TX;
+//	volatile uint16_t COUNT_TX;
+//	volatile uint16_t ADDR_RX;
+//	volatile uint16_t COUNT_RX;
+//} USB_PMA_TypeDef;
 
+static constexpr uint32_t pmaAddrMask = 0xFFFF;
+static constexpr uint32_t pmaCountMask = 0x3FF << 16;
+static constexpr uint32_t pmaBlocksMask = 0x1F << 26;
+static constexpr uint32_t pmaBlkSizeMask = 0x1 << 31;
+
+// Declare registers for PMA area - only allowed 32 bit access
+typedef struct {
+	volatile uint32_t TX;
+	volatile uint32_t RX;
+	uint32_t GetTXCount()	{ return (TX >> 16) & 0x3FF; }
+	uint32_t GetRXCount()	{ return (RX >> 16) & 0x3FF; }
+	uint32_t GetRXBlocks()	{ return (RX >> 26) & 0x1F; }
+	uint32_t GetRXBlkSize()	{ return RX >> 31; }
+	uint32_t GetTXAddr()	{ return TX & 0xFFFF; }
+	uint32_t GetRXAddr()	{ return RX & 0xFFFF; }
+	void SetTXCount(uint32_t cnt)	{ TX = (TX & ~pmaCountMask) | (cnt << 16); }
+	void SetRXCount(uint32_t cnt)	{ RX = (RX & ~pmaCountMask) | (cnt << 16); }
+	void SetRXBlocks(uint32_t cnt)	{ RX = (RX & ~pmaBlocksMask) | (cnt << 26); }
+	void SetRXBlkSize(uint32_t cnt)	{ RX = (RX & ~pmaBlkSizeMask) | (cnt << 31); }
+	void SetTXAddr(uint32_t addr)	{ TX = (TX & ~pmaAddrMask) | addr; }
+	void SetRXAddr(uint32_t addr)	{ RX = (RX & ~pmaAddrMask) | addr; }
+
+} USB_PMA_TypeDef;
 
 // Create struct for easy access to endpoint registers
 typedef struct {
@@ -66,8 +89,8 @@ public:
 	uint32_t StringToUnicode(const std::string_view desc, uint8_t* unicode);
 
 	EP0Handler  ep0  = EP0Handler(this, 0, 0, NoInterface);
-//	MidiHandler midi = MidiHandler(this, USB::Midi_In, USB::Midi_Out, MidiInterface);
-//	CDCHandler  cdc  = CDCHandler(this,  USB::CDC_In,  USB::CDC_Out,  CDCCmdInterface);
+	MidiHandler midi = MidiHandler(this, USB::Midi_In, USB::Midi_Out, MidiInterface);
+	CDCHandler  cdc  = CDCHandler(this,  USB::CDC_In,  USB::CDC_Out,  CDCCmdInterface);
 
 	bool classPendingData = false;			// Set when class setup command received and data pending
 	bool transmitting;
@@ -85,8 +108,8 @@ private:
 
 
 	void ProcessSetupPacket();
-	void ReadPMA(uint16_t pma, USBHandler* handler);
-	void WritePMA(uint16_t pma, uint16_t bytes, USBHandler* handler);
+	void ReadPMA(uint32_t pma, USBHandler* handler);
+	void WritePMA(uint32_t pma, uint32_t bytes, USBHandler* handler);
 	void ActivateEndpoint(uint8_t endpoint, Direction direction, EndPointType eptype);
 	void GetDescriptor();
 	void EPStartXfer(const Direction direction, uint8_t endpoint, uint32_t xfer_len);

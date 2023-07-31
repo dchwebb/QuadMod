@@ -15,8 +15,6 @@ void InitSystemClock(void) {
 	RCC->CR |= RCC_CR_HSEON;							// HSE ON
 	while ((RCC->CR & RCC_CR_HSERDY) == 0);				// Wait till HSE is ready
 
-	RCC->CR |= RCC_CR_HSI48ON;							// Enable USB clock
-
 	// Configure PLL1
 	RCC->PLL1CFGR = (PLL_M << RCC_PLL1CFGR_PLL1M_Pos) | (RCC_PLL1CFGR_PLL1SRC);		// PLL1SRC 11: HSE selected as PLL clock
 	RCC->PLL1DIVR = ((PLL_N - 1) << RCC_PLL1DIVR_PLL1N_Pos) | (PLL_P << RCC_PLL1DIVR_PLL1P_Pos);
@@ -47,6 +45,12 @@ void InitSystemClock(void) {
 
 	ICACHE->CR |= ICACHE_CR_EN;							// Enable instruction cache
 	DCACHE1->CR |= DCACHE_CR_EN;						// Enable data cache
+
+	// These settings are not documented at present, but seem required to apply the pull-up on the USB VP line
+	PWR->USBSCR |= PWR_USBSCR_USB33DEN;					// VDDUSB voltage level detector enable
+	while ((PWR->VMSR & PWR_VMSR_USB33RDY) == 0);		// Wait till ready
+
+	PWR->USBSCR |= PWR_USBSCR_USB33SV;					// Independent USB supply valid
 }
 
 
@@ -135,31 +139,20 @@ void InitSAI()
 	SAI1_Block_B->DR = 0;
 
 	// Initialise SAI
-	SAI1_Block_A->CR1 |= SAI_xCR1_SAIEN;
 	SAI1_Block_B->CR1 |= SAI_xCR1_SAIEN;
 	SAI2_Block_A->CR1 |= SAI_xCR1_SAIEN;
 	SAI2_Block_B->CR1 |= SAI_xCR1_SAIEN;
+	SAI1_Block_A->CR1 |= SAI_xCR1_SAIEN;
 }
 
 
 
 
-/*
+
 void InitHardware()
 {
 	InitSysTick();
-	InitDAC();
-	InitIO();
-	InitPWMTimer();
-	InitADC1(&adc.PitchDetect, 2);
-	InitADC3(reinterpret_cast<volatile uint16_t*>(&adc.EnvA.attack), 4);
-	InitADC4(&adc.EnvB.level, 5);
-	InitMidiUART();
-	InitSPI2();
-	InitSPI1();
-	InitEnvTimer();
-	InitTunerTimer();
-	InitCordic();
+	InitSAI();
 }
 
 
@@ -169,7 +162,7 @@ void InitSysTick()
 	NVIC_SetPriority(SysTick_IRQn, 0);
 }
 
-
+/*
 void InitDAC()
 {
 	// Configure 4 DAC outputs PA4 and PA5 are regular DAC1 buffered outputs; PA2 and PB1 are DAC3 via OpAmp1 and OpAmp3 (Manual p.782)

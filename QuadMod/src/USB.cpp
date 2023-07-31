@@ -1,7 +1,7 @@
 #include "USB.h"
 
 USB usb;
-
+/*
 extern "C" {
 // To enable USB for printf commands (To print floats enable 'Use float with printf from newlib-nano' MCU Build Settings)
 size_t _write(int handle, const unsigned char* buf, size_t bufSize)
@@ -13,8 +13,7 @@ size_t _write(int handle, const unsigned char* buf, size_t bufSize)
 	}
 }
 }
-
-
+*/
 inline void ClearRxInterrupt(uint8_t ep)
 {
 	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_REG_MASK) & ~USB_EP_VTRX;
@@ -43,12 +42,12 @@ inline void SetRxStatus(uint8_t ep, uint16_t status)		// Set endpoint receive st
 }
 
 
-void USB::ReadPMA(uint16_t pma, USBHandler* handler)
+void USB::ReadPMA(uint32_t pma, USBHandler* handler)
 {
-	volatile uint16_t* pmaBuff = reinterpret_cast<volatile uint16_t*>(USB_DRD_PMAADDR + pma);		// Eg 0x40006018
+	volatile uint32_t* pmaBuff = reinterpret_cast<volatile uint32_t*>(USB_DRD_PMAADDR + pma);		// Eg 0x40006018
 
-	for (uint32_t i = 0; i < (handler->outBuffCount + 1) / 2; i++) {
-		reinterpret_cast<volatile uint16_t*>(handler->outBuff)[i] = *pmaBuff++;				// pma buffer can only be read in 16 bit words
+	for (uint32_t i = 0; i < (handler->outBuffCount + 3) / 4; i++) {
+		reinterpret_cast<volatile uint32_t*>(handler->outBuff)[i] = *pmaBuff++;				// pma buffer can only be read in 16 bit words
 	}
 
 #if (USB_DEBUG)
@@ -59,12 +58,12 @@ void USB::ReadPMA(uint16_t pma, USBHandler* handler)
 }
 
 
-void USB::WritePMA(uint16_t pma, uint16_t bytes, USBHandler* handler)
+void USB::WritePMA(uint32_t pma, uint32_t bytes, USBHandler* handler)
 {
-	volatile uint16_t* pmaBuff = reinterpret_cast<volatile uint16_t*>(USB_DRD_PMAADDR + pma);
+	volatile uint32_t* pmaBuff = reinterpret_cast<volatile uint32_t*>(USB_DRD_PMAADDR + pma);
 
-	for (int i = 0; i < (bytes + 1) / 2; i++) {
-		pmaBuff[i] = reinterpret_cast<const uint16_t*>(handler->inBuff)[i];
+	for (int i = 0; i < (bytes + 3) / 4; i++) {
+		pmaBuff[i] = reinterpret_cast<const uint32_t*>(handler->inBuff)[i];
 	}
 }
 
@@ -133,8 +132,8 @@ void USB::EPStartXfer(const Direction direction, uint8_t endpoint, uint32_t len)
 			len = ep_maxPacket;
 		}
 
-		WritePMA(USB_PMA[epIndex].ADDR_TX, len, classByEP[epIndex]);
-		USB_PMA[epIndex].COUNT_TX = len;
+		WritePMA(USB_PMA[epIndex].GetTXAddr(), len, classByEP[epIndex]);
+		USB_PMA[epIndex].SetTXCount(len);
 
 #if (USB_DEBUG)
 				usbDebug[usbDebugNo].PacketSize = len;
@@ -172,7 +171,7 @@ void USB::USBInterruptHandler()						// Originally in Drivers\STM32F4xx_HAL_Driv
 			if ((USBP->ISTR & USB_ISTR_DIR) == 0) {			// DIR = 0: Direction IN
 				ClearTxInterrupt(0);
 
-				uint16_t txBytes = USB_PMA->COUNT_TX & USB_PMA_TXBD_COUNTMSK;
+				uint16_t txBytes = USB_PMA[0].GetTXCount();
 				classByEP[epIndex]->inBuff += txBytes;
 
 				if (classByEP[epIndex]->inBuffRem > ep_maxPacket) {
@@ -193,16 +192,16 @@ void USB::USBInterruptHandler()						// Originally in Drivers\STM32F4xx_HAL_Driv
 			} else {										// DIR = 1: Setup or OUT interrupt
 
 				if ((USBP->CHEP0R & USB_EP_SETUP) != 0) {
-					classByEP[0]->outBuffCount = USB_PMA->COUNT_RX & USB_PMA_RXBD_COUNTMSK;
-					ReadPMA(USB_PMA[0].ADDR_RX, classByEP[0]);	// Read setup data into  receive buffer
+					classByEP[0]->outBuffCount = USB_PMA[0].GetRXCount();
+					ReadPMA(USB_PMA[0].GetRXAddr(), classByEP[0]);	// Read setup data into  receive buffer
 					ClearRxInterrupt(0);						// clears 8000 interrupt
 					ProcessSetupPacket();						// Parse setup packet into request, locate data (eg descriptor) and populate TX buffer
 
 				} else {
 					ClearRxInterrupt(0);
-					classByEP[0]->outBuffCount = USB_PMA->COUNT_RX & USB_PMA_RXBD_COUNTMSK;
+					classByEP[0]->outBuffCount = USB_PMA[0].GetRXCount();
 					if (classByEP[0]->outBuffCount != 0) {
-						ReadPMA(USB_PMA[0].ADDR_RX, classByEP[0]);
+						ReadPMA(USB_PMA[0].GetRXAddr(), classByEP[0]);
 
 						if (devState == DeviceState::Configured && classPendingData) {
 							if ((req.RequestType & requestTypeMask) == RequestTypeClass) {
@@ -222,9 +221,9 @@ void USB::USBInterruptHandler()						// Originally in Drivers\STM32F4xx_HAL_Driv
 			if ((USB_EPR[epIndex].EPR & USB_EP_VTRX) != 0) {
 				ClearRxInterrupt(epIndex);
 				
-				classByEP[epIndex]->outBuffCount = USB_PMA[epIndex].COUNT_RX & USB_PMA_RXBD_COUNTMSK;
+				classByEP[epIndex]->outBuffCount = USB_PMA[epIndex].GetRXCount();
 				if (classByEP[epIndex]->outBuffCount != 0) {
-					ReadPMA(USB_PMA[epIndex].ADDR_RX, classByEP[epIndex]);
+					ReadPMA(USB_PMA[epIndex].GetRXAddr(), classByEP[epIndex]);
 				}
 				SetRxStatus(epIndex, USB_EP_RX_VALID);
 
@@ -236,7 +235,7 @@ void USB::USBInterruptHandler()						// Originally in Drivers\STM32F4xx_HAL_Driv
 				transmitting = false;
 				ClearTxInterrupt(epIndex);
 
-				uint16_t txBytes = USB_PMA[epIndex].COUNT_TX & USB_PMA_TXBD_COUNTMSK;
+				uint16_t txBytes = USB_PMA[epIndex].GetTXCount();
 				if (classByEP[epIndex]->inBuffSize >= txBytes) {					// Transmitting data larger than buffer size
 					classByEP[epIndex]->inBuffSize -= txBytes;
 					classByEP[epIndex]->inBuff += txBytes;
@@ -291,6 +290,11 @@ void USB::InitUSB()
 	RCC->APB2ENR |= RCC_APB2ENR_USBEN;					// USB2OTG (OTG_HS2) Peripheral Clocks Enable
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;				// Enable GPIO Clock
 
+	RCC->CR |= RCC_CR_HSI48ON;							// Enable USB clock
+	while ((RCC->CR & RCC_CR_HSI48RDY) == 0);			// Wait till ready
+
+	RCC->CCIPR4 |= RCC_CCIPR4_USBSEL;					// USB clock source: 00: no clock; 01: pll1_q_ck; 10: pll3_q_ck; *11: hsi48_ker_ck
+
 	// MODER 00: Input mode, 01: General purpose output mode, 10: Alternate function mode, 11: Analog mode (reset state)
 	GPIOA->MODER &= ~(GPIO_MODER_MODE11_0 | GPIO_MODER_MODE12_0);
 	GPIOA->AFR[1] |= (10 << GPIO_AFRH_AFSEL11_Pos) | (10 << GPIO_AFRH_AFSEL12_Pos);
@@ -298,12 +302,12 @@ void USB::InitUSB()
 	NVIC_SetPriority(USB_DRD_FS_IRQn, 3);
 	NVIC_EnableIRQ(USB_DRD_FS_IRQn);
 
-	USB_DRD_FS->CNTR = USB_CNTR_USBRST;					// Force USB Reset
-	USB_DRD_FS->CNTR &= ~USB_CNTR_USBRST;				// Release reset
 	USB_DRD_FS->CNTR &= ~USB_CNTR_HOST;					// Set mode to device
-	//USB_DRD_FS->BTABLE = 0;							// Set Buffer table Address BTABLE_ADDRESS
+	USB_DRD_FS->CNTR |= USB_CNTR_USBRST;				// Force USB Reset
+	USB_DRD_FS->CNTR &= ~USB_CNTR_USBRST;				// Release reset
 	USB_DRD_FS->ISTR = 0;								// Clear pending interrupts
-	USB_DRD_FS->CNTR = USB_CNTR_CTRM  | USB_CNTR_WKUPM | USB_CNTR_SUSPM | USB_CNTR_ERRM | USB_CNTR_RESETM;
+	USB_DRD_FS->CNTR = USB_CNTR_CTRM  | USB_CNTR_WKUPM | USB_CNTR_SUSPM | USB_CNTR_ERRM | USB_CNTR_RESETM | USB_CNTR_L1REQM;
+
 	USB_DRD_FS->BCDR |= USB_BCDR_DPPU;					// Connect internal PU resistor on USB DP line
 }
 
@@ -323,7 +327,7 @@ void USB::ActivateEndpoint(uint8_t endpoint, Direction direction, EndPointType e
 	USB_EPR[endpoint].EPR = (USB_EPR[endpoint].EPR & USB_EP_T_MASK) | (endpoint | ep_type | USB_EP_VTRX | USB_EP_VTTX);
 
 	if (direction == Direction::in) {
-		USB_PMA[endpoint].ADDR_TX = pmaAddress;						// Offset of PMA used for EP TX
+		USB_PMA[endpoint].SetTXAddr(pmaAddress);			// Offset of PMA used for EP TX
 
 		// Clear tx data toggle (data packets must alternate 1 and 0 in the data field)
 		if ((USB_EPR[endpoint].EPR & USB_EP_DTOG_TX) != 0) {
@@ -334,8 +338,9 @@ void USB::ActivateEndpoint(uint8_t endpoint, Direction direction, EndPointType e
 		SetTxStatus(endpoint, USB_EP_TX_NAK);
 
 	} else {
-		USB_PMA[endpoint].ADDR_RX = pmaAddress;						// Offset of PMA used for EP RX
-		USB_PMA[endpoint].COUNT_RX = (1 << USB_COUNT0_RX_BLSIZE_Pos) | (1 << USB_COUNT0_RX_NUM_BLOCK_Pos);		// configure block size = 1 (32 Bytes); number of blocks = 2 (64 bytes)
+		USB_PMA[endpoint].SetRXAddr(pmaAddress);			// Offset of PMA used for EP RX
+		USB_PMA[endpoint].SetRXBlkSize(1);					// configure block size = 1 (32 Bytes)
+		USB_PMA[endpoint].SetRXBlocks(1);					// number of blocks = 2 (64 bytes)
 
 		// Clear rx data toggle
 		if ((USB_EPR[endpoint].EPR & USB_EP_DTOG_RX) != 0) {
@@ -360,7 +365,8 @@ void USB::EP0In(const uint8_t* buff, const uint32_t size)
 	EPStartXfer(Direction::in, 0, ep0.inBuffSize);		// sends blank request back
 
 #if (USB_DEBUG)
-	USBUpdateDbg({}, {}, {}, ep0.inBuffSize, {}, (uint32_t*)ep0.inBuff);
+	usbDebug[usbDebugNo].PacketSize = ep0.inBuffSize;
+	usbDebug[usbDebugNo].xferBuff0 = (uint32_t)ep0.inBuff;
 #endif
 }
 
@@ -480,10 +486,11 @@ uint32_t USB::StringToUnicode(const std::string_view desc, uint8_t *unicode)
 
 void USB::SerialToUnicode()
 {
-	const uint32_t* uidAddr = (uint32_t*)UID_BASE;			// Location in memory that holds 96 bit Unique device ID register
+	// FIXME - accessing UID_BASE data hard faults
+	char uidBuff[usbSerialNoSize + 1] = "Mountjoy_Quango_12345678";
 
-	char uidBuff[usbSerialNoSize + 1];
-	snprintf(uidBuff, usbSerialNoSize + 1, "%08lx%08lx%08lx", uidAddr[0], uidAddr[1], uidAddr[2]);
+	//const uint32_t* uidAddr = (uint32_t*)UID_BASE;			// Location in memory that holds 96 bit Unique device ID register
+	//snprintf(uidBuff, usbSerialNoSize + 1, "%08lx%08lx%08lx", uidAddr[0], uidAddr[1], uidAddr[2]);
 
 	stringDescr[0] = usbSerialNoSize * 2 + 2;				// length is 24 bytes (x2 for unicode padding) + 2 for header
 	stringDescr[1] = StringDescriptor;

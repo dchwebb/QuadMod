@@ -3,12 +3,12 @@
 #include "stm32h563xx.h"
 
 extern volatile uint32_t SysTickVal;
-
+#define SYSTICK 1000						// 1ms
 
 void InitSystemClock();
 void InitSAI();
-//void InitHardware();
-//void InitSysTick();
+void InitHardware();
+void InitSysTick();
 //void InitDAC();
 //void InitIO();
 //void InitEnvTimer();
