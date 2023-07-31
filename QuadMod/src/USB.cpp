@@ -1,7 +1,7 @@
 #include "USB.h"
 
 USB usb;
-/*
+
 extern "C" {
 // To enable USB for printf commands (To print floats enable 'Use float with printf from newlib-nano' MCU Build Settings)
 size_t _write(int handle, const unsigned char* buf, size_t bufSize)
@@ -13,7 +13,7 @@ size_t _write(int handle, const unsigned char* buf, size_t bufSize)
 	}
 }
 }
-*/
+
 inline void ClearRxInterrupt(uint8_t ep)
 {
 	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_REG_MASK) & ~USB_EP_VTRX;
@@ -62,7 +62,7 @@ void USB::WritePMA(uint32_t pma, uint32_t bytes, USBHandler* handler)
 {
 	volatile uint32_t* pmaBuff = reinterpret_cast<volatile uint32_t*>(USB_DRD_PMAADDR + pma);
 
-	for (int i = 0; i < (bytes + 3) / 4; i++) {
+	for (uint32_t i = 0; i < (bytes + 3) / 4; i++) {
 		pmaBuff[i] = reinterpret_cast<const uint32_t*>(handler->inBuff)[i];
 	}
 }

@@ -23,6 +23,7 @@ int main(void)
 			usb.OutputDebug();
 			outputUSB = SysTickVal;
 		}
+		usb.cdc.ProcessCommand();
 	}
 }
 
