@@ -9,8 +9,8 @@ void MidiHandler::DataIn()
 void MidiHandler::DataOut()
 {
 	// Handle incoming midi command here
-	const uint8_t* outBuffBytes = reinterpret_cast<const uint8_t*>(outBuff);
-	midiEvent(*outBuff);
+	//const uint8_t* outBuffBytes = reinterpret_cast<const uint8_t*>(outBuff);
+	//midiEvent(*outBuff);
 	/*
 	if (!partialSysEx && outBuffCount == 4) {
 		midiEvent(*outBuff);

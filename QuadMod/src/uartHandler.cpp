@@ -5,7 +5,7 @@
 UART uart;
 #endif
 
-UART::UART() {
+void UART::Init() {
 	// Debug UART pin: PD8 = USART3_TX
 	// Dev board button PC13
 

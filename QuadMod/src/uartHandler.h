@@ -10,7 +10,7 @@ public:
 	uint8_t cmdPos = 0;
 	char command[255];
 
-	UART();
+	void Init();
 	void SendString(const std::string& s);
 	void SendString(const char* s);
 	void SendChar(char c);

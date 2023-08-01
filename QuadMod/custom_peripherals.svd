@@ -25,335 +25,248 @@
          </addressBlock>
          <registers>
             <register>
-               <name>ADDR0_TX</name>
-               <displayName>ADDR0_TX</displayName>
-               <description>See p.2013</description>
+               <name>TX0</name>
+               <displayName>TX0</displayName>
+               <description>See p.2620</description>
                <addressOffset>0x0</addressOffset>
-               <size>0x10</size>
+               <size>0x20</size>
                <access>read-write</access>
                <resetValue>0x00000000</resetValue>
                <fields>
                   <field>
-                     <name>ADDR0_TX</name>
+                     <name>ADDR_TX</name>
                      <description>ADDR0_TX</description>
                      <bitOffset>0</bitOffset>
                      <bitWidth>16</bitWidth>
                   </field>
+                  <field>
+                     <name>COUNT_TX</name>
+                     <description>COUNT0_TX</description>
+                     <bitOffset>16</bitOffset>
+                     <bitWidth>10</bitWidth>
+                  </field>
                 </fields>
             </register>
             <register>
-               <name>COUNT0_TX</name>
-               <displayName>COUNT0_TX</displayName>
-               <description>USB endpoint n register</description>
-               <addressOffset>0x2</addressOffset>
-               <size>0x10</size>
-               <access>read-write</access>
-               <resetValue>0x00000000</resetValue>
-               <fields>
-                  <field>
-                     <name>COUNT0_TX</name>
-                     <description>COUNT0_TX</description>
-                     <bitOffset>0</bitOffset>
-                     <bitWidth>10</bitWidth>
-                  </field>
-               </fields>
-            </register>
-            <register>
-               <name>ADDR0_RX</name>
-               <displayName>ADDR0_RX</displayName>
-               <description>USB endpoint n register</description>
+               <name>RX0</name>
+               <displayName>RX0</displayName>
+               <description>USB PMA transmit</description>
                <addressOffset>0x4</addressOffset>
-               <size>0x10</size>
+               <size>0x20</size>
                <access>read-write</access>
                <resetValue>0x00000000</resetValue>
                <fields>
                   <field>
-                     <name>ADDR0_RX</name>
-                     <description>ADDR0_RX</description>
+                     <name>ADDR_RX</name>
+                     <description>ADDR_RX</description>
                      <bitOffset>0</bitOffset>
                      <bitWidth>16</bitWidth>
                   </field>
-               </fields>
-            </register>
-             <register>
-               <name>COUNT0_RX</name>
-               <displayName>COUNT0_RX</displayName>
-               <description>USB endpoint n register</description>
-               <addressOffset>0x6</addressOffset>
-               <size>0x10</size>
-               <access>read-write</access>
-               <resetValue>0x00000000</resetValue>
-               <fields>
-                  <field>
-                     <name>COUNT0_RX</name>
-                     <description>COUNT0_RX</description>
-                     <bitOffset>0</bitOffset>
+						<field>
+                     <name>COUNT_RX</name>
+                     <description>COUNT_RX</description>
+                     <bitOffset>16</bitOffset>
                      <bitWidth>10</bitWidth>
                   </field>
                   <field>
                      <name>NUM_BLOCK</name>
                      <description>For 32 byte blocks, 0 = 32 bytes, 1 = 64 bytes; 2 = 96 bytes etc</description>
-                     <bitOffset>10</bitOffset>
+                     <bitOffset>26</bitOffset>
                      <bitWidth>5</bitWidth>
                   </field>
 						<field>
                      <name>BLSIZE</name>
                      <description>0: 2 byte block size; 1: 32 byte block size</description>
-                     <bitOffset>15</bitOffset>
+                     <bitOffset>31</bitOffset>
                      <bitWidth>1</bitWidth>
                   </field>
                </fields>
             </register>
-				
-				<register>
-               <name>ADDR1_TX</name>
-               <displayName>ADDR1_TX</displayName>
-               <description>See p.2013</description>
+
+           <register>
+               <name>TX1</name>
+               <displayName>TX0</displayName>
+               <description>See p.2620</description>
                <addressOffset>0x8</addressOffset>
-               <size>0x10</size>
+               <size>0x20</size>
                <access>read-write</access>
                <resetValue>0x00000000</resetValue>
                <fields>
                   <field>
-                     <name>ADDR1_TX</name>
-                     <description>ADDR1_TX</description>
+                     <name>ADDR_TX</name>
+                     <description>ADDR0_TX</description>
                      <bitOffset>0</bitOffset>
                      <bitWidth>16</bitWidth>
+                  </field>
+                  <field>
+                     <name>COUNT_TX</name>
+                     <description>COUNT0_TX</description>
+                     <bitOffset>16</bitOffset>
+                     <bitWidth>10</bitWidth>
                   </field>
                 </fields>
             </register>
             <register>
-               <name>COUNT1_TX</name>
-               <displayName>COUNT1_TX</displayName>
-               <description>USB endpoint n register</description>
-               <addressOffset>0xA</addressOffset>
-               <size>0x10</size>
-               <access>read-write</access>
-               <resetValue>0x00000000</resetValue>
-               <fields>
-                  <field>
-                     <name>COUNT1_TX</name>
-                     <description>COUNT1_TX</description>
-                     <bitOffset>0</bitOffset>
-                     <bitWidth>10</bitWidth>
-                  </field>
-               </fields>
-            </register>
-            <register>
-               <name>ADDR1_RX</name>
-               <displayName>ADDR1_RX</displayName>
-               <description>USB endpoint n register</description>
+               <name>RX1</name>
+               <displayName>RX1</displayName>
+               <description>USB PMA transmit</description>
                <addressOffset>0xC</addressOffset>
-               <size>0x10</size>
+               <size>0x20</size>
                <access>read-write</access>
                <resetValue>0x00000000</resetValue>
                <fields>
                   <field>
-                     <name>ADDR1_RX</name>
-                     <description>ADDR1_RX</description>
+                     <name>ADDR_RX</name>
+                     <description>ADDR_RX</description>
                      <bitOffset>0</bitOffset>
                      <bitWidth>16</bitWidth>
                   </field>
-               </fields>
-            </register>
-             <register>
-               <name>COUNT1_RX</name>
-               <displayName>COUNT1_RX</displayName>
-               <description>USB endpoint n register</description>
-               <addressOffset>0xE</addressOffset>
-               <size>0x10</size>
-               <access>read-write</access>
-               <resetValue>0x00000000</resetValue>
-               <fields>
-                  <field>
-                     <name>COUNT1_RX</name>
-                     <description>COUNT1_RX</description>
-                     <bitOffset>0</bitOffset>
+						<field>
+                     <name>COUNT_RX</name>
+                     <description>COUNT_RX</description>
+                     <bitOffset>16</bitOffset>
                      <bitWidth>10</bitWidth>
                   </field>
                   <field>
                      <name>NUM_BLOCK</name>
                      <description>For 32 byte blocks, 0 = 32 bytes, 1 = 64 bytes; 2 = 96 bytes etc</description>
-                     <bitOffset>10</bitOffset>
+                     <bitOffset>26</bitOffset>
                      <bitWidth>5</bitWidth>
                   </field>
-						                  <field>
+						<field>
                      <name>BLSIZE</name>
                      <description>0: 2 byte block size; 1: 32 byte block size</description>
-                     <bitOffset>15</bitOffset>
+                     <bitOffset>31</bitOffset>
                      <bitWidth>1</bitWidth>
                   </field>
                </fields>
             </register>
 				
 				<register>
-               <name>ADDR2_TX</name>
-               <displayName>ADDR2_TX</displayName>
-               <description>See p.2013</description>
+               <name>TX2</name>
+               <displayName>TX2</displayName>
+               <description>See p.2620</description>
                <addressOffset>0x10</addressOffset>
-               <size>0x10</size>
+               <size>0x20</size>
                <access>read-write</access>
                <resetValue>0x00000000</resetValue>
                <fields>
                   <field>
-                     <name>ADDR2_TX</name>
-                     <description>ADDR2_TX</description>
+                     <name>ADDR_TX</name>
+                     <description>ADDR0_TX</description>
                      <bitOffset>0</bitOffset>
                      <bitWidth>16</bitWidth>
+                  </field>
+                  <field>
+                     <name>COUNT_TX</name>
+                     <description>COUNT0_TX</description>
+                     <bitOffset>16</bitOffset>
+                     <bitWidth>10</bitWidth>
                   </field>
                 </fields>
             </register>
             <register>
-               <name>COUNT2_TX</name>
-               <displayName>COUNT2_TX</displayName>
-               <description>USB endpoint n register</description>
-               <addressOffset>0x12</addressOffset>
-               <size>0x10</size>
-               <access>read-write</access>
-               <resetValue>0x00000000</resetValue>
-               <fields>
-                  <field>
-                     <name>COUNT2_TX</name>
-                     <description>COUNT2_TX</description>
-                     <bitOffset>0</bitOffset>
-                     <bitWidth>10</bitWidth>
-                  </field>
-               </fields>
-            </register>
-            <register>
-               <name>ADDR2_RX</name>
-               <displayName>ADDR2_RX</displayName>
-               <description>USB endpoint n register</description>
+               <name>RX2</name>
+               <displayName>RX2</displayName>
+               <description>USB PMA transmit</description>
                <addressOffset>0x14</addressOffset>
-               <size>0x10</size>
+               <size>0x20</size>
                <access>read-write</access>
                <resetValue>0x00000000</resetValue>
                <fields>
                   <field>
-                     <name>ADDR2_RX</name>
-                     <description>ADDR2_RX</description>
+                     <name>ADDR_RX</name>
+                     <description>ADDR_RX</description>
                      <bitOffset>0</bitOffset>
                      <bitWidth>16</bitWidth>
                   </field>
-               </fields>
-            </register>
-             <register>
-               <name>COUNT2_RX</name>
-               <displayName>COUNT2_RX</displayName>
-               <description>USB endpoint n register</description>
-               <addressOffset>0x16</addressOffset>
-               <size>0x10</size>
-               <access>read-write</access>
-               <resetValue>0x00000000</resetValue>
-               <fields>
-                  <field>
-                     <name>COUNT2_RX</name>
-                     <description>COUNT2_RX</description>
-                     <bitOffset>0</bitOffset>
+						<field>
+                     <name>COUNT_RX</name>
+                     <description>COUNT_RX</description>
+                     <bitOffset>16</bitOffset>
                      <bitWidth>10</bitWidth>
                   </field>
                   <field>
                      <name>NUM_BLOCK</name>
                      <description>For 32 byte blocks, 0 = 32 bytes, 1 = 64 bytes; 2 = 96 bytes etc</description>
-                     <bitOffset>10</bitOffset>
+                     <bitOffset>26</bitOffset>
                      <bitWidth>5</bitWidth>
                   </field>
-						                  <field>
+						<field>
                      <name>BLSIZE</name>
                      <description>0: 2 byte block size; 1: 32 byte block size</description>
-                     <bitOffset>15</bitOffset>
+                     <bitOffset>31</bitOffset>
                      <bitWidth>1</bitWidth>
                   </field>
                </fields>
             </register>
 				
-				<register>
-               <name>ADDR3_TX</name>
-               <displayName>ADDR3_TX</displayName>
-               <description>See p.2013</description>
+	           <register>
+               <name>TX3</name>
+               <displayName>TX3</displayName>
+               <description>See p.2620</description>
                <addressOffset>0x18</addressOffset>
-               <size>0x10</size>
+               <size>0x20</size>
                <access>read-write</access>
                <resetValue>0x00000000</resetValue>
                <fields>
                   <field>
-                     <name>ADDR3_TX</name>
-                     <description>ADDR3_TX</description>
+                     <name>ADDR_TX</name>
+                     <description>ADDR0_TX</description>
                      <bitOffset>0</bitOffset>
                      <bitWidth>16</bitWidth>
+                  </field>
+                  <field>
+                     <name>COUNT_TX</name>
+                     <description>COUNT0_TX</description>
+                     <bitOffset>16</bitOffset>
+                     <bitWidth>10</bitWidth>
                   </field>
                 </fields>
             </register>
             <register>
-               <name>COUNT3_TX</name>
-               <displayName>COUNT3_TX</displayName>
-               <description>USB endpoint n register</description>
-               <addressOffset>0x1a</addressOffset>
-               <size>0x10</size>
+               <name>RX3</name>
+               <displayName>RX3</displayName>
+               <description>USB PMA transmit</description>
+               <addressOffset>0x1C</addressOffset>
+               <size>0x20</size>
                <access>read-write</access>
                <resetValue>0x00000000</resetValue>
                <fields>
                   <field>
-                     <name>COUNT3_TX</name>
-                     <description>COUNT3_TX</description>
-                     <bitOffset>0</bitOffset>
-                     <bitWidth>10</bitWidth>
-                  </field>
-               </fields>
-            </register>
-            <register>
-               <name>ADDR3_RX</name>
-               <displayName>ADDR3_RX</displayName>
-               <description>USB endpoint n register</description>
-               <addressOffset>0x1c</addressOffset>
-               <size>0x10</size>
-               <access>read-write</access>
-               <resetValue>0x00000000</resetValue>
-               <fields>
-                  <field>
-                     <name>ADDR3_RX</name>
-                     <description>ADDR3_RX</description>
+                     <name>ADDR_RX</name>
+                     <description>ADDR_RX</description>
                      <bitOffset>0</bitOffset>
                      <bitWidth>16</bitWidth>
                   </field>
-               </fields>
-            </register>
-             <register>
-               <name>COUNT3_RX</name>
-               <displayName>COUNT3_RX</displayName>
-               <description>USB endpoint n register</description>
-               <addressOffset>0x1e</addressOffset>
-               <size>0x10</size>
-               <access>read-write</access>
-               <resetValue>0x00000000</resetValue>
-               <fields>
-                  <field>
-                     <name>COUNT3_RX</name>
-                     <description>COUNT2_RX</description>
-                     <bitOffset>0</bitOffset>
+						<field>
+                     <name>COUNT_RX</name>
+                     <description>COUNT_RX</description>
+                     <bitOffset>16</bitOffset>
                      <bitWidth>10</bitWidth>
                   </field>
                   <field>
                      <name>NUM_BLOCK</name>
                      <description>For 32 byte blocks, 0 = 32 bytes, 1 = 64 bytes; 2 = 96 bytes etc</description>
-                     <bitOffset>10</bitOffset>
+                     <bitOffset>26</bitOffset>
                      <bitWidth>5</bitWidth>
                   </field>
-						                  <field>
+						<field>
                      <name>BLSIZE</name>
                      <description>0: 2 byte block size; 1: 32 byte block size</description>
-                     <bitOffset>15</bitOffset>
+                     <bitOffset>31</bitOffset>
                      <bitWidth>1</bitWidth>
                   </field>
                </fields>
             </register>
 				
+					
             <register>
                <name>EP0_RX_BUFFER</name>
                <displayName>EP0_BUFFER</displayName>
                <description>USB endpoint n register</description>
                <addressOffset>0x20</addressOffset>
-               <size>0x10</size>
+               <size>0x20</size>
                <access>read-write</access>
                <resetValue>0x00000000</resetValue>
                <fields>
@@ -369,8 +282,8 @@
                <name>EP0_RX_BUFFER2</name>
                <displayName>EP0_BUFFER</displayName>
                <description>USB endpoint n register</description>
-               <addressOffset>0x22</addressOffset>
-               <size>0x10</size>
+               <addressOffset>0x24</addressOffset>
+               <size>0x20</size>
                <access>read-write</access>
                <resetValue>0x00000000</resetValue>
                <fields>
@@ -386,7 +299,7 @@
                <name>EP0_TX_BUFFER</name>
                <displayName>EP0_BUFFER</displayName>
                <description>USB endpoint n register</description>
-               <addressOffset>0x58</addressOffset>
+               <addressOffset>0x60</addressOffset>
                <size>0x20</size>
                <access>read-write</access>
                <resetValue>0x00000000</resetValue>

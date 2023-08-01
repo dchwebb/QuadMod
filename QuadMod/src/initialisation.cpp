@@ -51,6 +51,8 @@ void InitSystemClock(void) {
 	while ((PWR->VMSR & PWR_VMSR_USB33RDY) == 0);		// Wait till ready
 
 	PWR->USBSCR |= PWR_USBSCR_USB33SV;					// Independent USB supply valid
+
+	SystemCoreClockUpdate();							// Update SystemCoreClock (system clock frequency) from settings of oscillators, prescalers and PLL
 }
 
 

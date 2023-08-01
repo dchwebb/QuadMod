@@ -1,7 +1,6 @@
 #pragma once
 
 #include "initialisation.h"
-//#include "USBHandler.h"
 #include "MidiHandler.h"
 #include "CDCHandler.h"
 #include <functional>
@@ -9,20 +8,12 @@
 #include <string>
 
 // Enables capturing of debug data for output over STLink UART on dev boards
-#define USB_DEBUG true
+#define USB_DEBUG false
 #if (USB_DEBUG)
 #include "uartHandler.h"
 #define USB_DEBUG_COUNT 400
 #endif
 
-
-// Declare registers for PMA area
-//typedef struct {
-//	volatile uint16_t ADDR_TX;
-//	volatile uint16_t COUNT_TX;
-//	volatile uint16_t ADDR_RX;
-//	volatile uint16_t COUNT_RX;
-//} USB_PMA_TypeDef;
 
 static constexpr uint32_t pmaAddrMask = 0xFFFF;
 static constexpr uint32_t pmaCountMask = 0x3FF << 16;
@@ -56,8 +47,7 @@ typedef struct {
 #define  USBP     USB_DRD_FS
 #define  USB_PMA  ((USB_PMA_TypeDef*) USB_DRD_PMAADDR)
 #define  USB_EPR  ((USB_EPR_TypeDef*)(&USBP->CHEP0R))
-#define USB_COUNT0_RX_NUM_BLOCK_Pos              (10U)
-#define USB_COUNT0_RX_BLSIZE_Pos                 (15U)
+
 
 
 #define LOBYTE(x)  (static_cast<uint8_t>(x & 0x00FFU))
