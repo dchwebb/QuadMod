@@ -8,6 +8,8 @@ extern "C" {
 #include "interrupts.h"
 }
 
+// FIXME:
+// Work out how to access UID_BASE without hard fault
 
 extern uint32_t SystemCoreClock;
 int main(void)
