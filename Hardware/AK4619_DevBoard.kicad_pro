@@ -475,6 +475,10 @@
       {
         "netclass": "BGA",
         "pattern": "*OCTO*"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "*12V*"
       }
     ]
   },
