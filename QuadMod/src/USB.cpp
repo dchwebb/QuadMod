@@ -490,7 +490,7 @@ uint32_t USB::StringToUnicode(const std::string_view desc, uint8_t *unicode)
 
 void USB::SerialToUnicode()
 {
-	// FIXME - accessing UID_BASE data hard faults
+	// FIXME - accessing UID_BASE data hard faults: need to disable caching for this address in MPU
 	char uidBuff[usbSerialNoSize + 1] = "Mountjoy_Quango_12345678";
 
 	//const uint32_t* uidAddr = (uint32_t*)UID_BASE;			// Location in memory that holds 96 bit Unique device ID register
