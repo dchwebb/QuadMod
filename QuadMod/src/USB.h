@@ -21,7 +21,7 @@ static constexpr uint32_t pmaBlocksMask = 0x1F << 26;
 static constexpr uint32_t pmaBlkSizeMask = 0x1 << 31;
 
 // Declare registers for PMA area - only allowed 32 bit access
-typedef struct {
+struct USB_PMA_t {
 	volatile uint32_t TX;
 	volatile uint32_t RX;
 	uint32_t GetTXCount()	{ return (TX >> 16) & 0x3FF; }
@@ -37,23 +37,22 @@ typedef struct {
 	void SetTXAddr(uint32_t addr)	{ TX = (TX & ~pmaAddrMask) | addr; }
 	void SetRXAddr(uint32_t addr)	{ RX = (RX & ~pmaAddrMask) | addr; }
 
-} USB_PMA_TypeDef;
+};
 
 // Create struct for easy access to endpoint registers
-typedef struct {
+struct USB_EPR_t {
 	volatile uint32_t EPR;
-} USB_EPR_TypeDef;
+};
 
 #define  USBP     USB_DRD_FS
-#define  USB_PMA  ((USB_PMA_TypeDef*) USB_DRD_PMAADDR)
-#define  USB_EPR  ((USB_EPR_TypeDef*)(&USBP->CHEP0R))
+
 
 
 
 #define LOBYTE(x)  (static_cast<uint8_t>(x & 0x00FFU))
 #define HIBYTE(x)  (static_cast<uint8_t>((x & 0xFF00U) >> 8))
 
-class USB {
+class USBMain {
 	friend class USBHandler;
 public:
 	enum Interface {NoInterface = -1, AudioInterface = 0, MidiInterface = 1, CDCCmdInterface = 2, CDCDataInterface = 3, interfaceCount = 4};
@@ -72,39 +71,43 @@ public:
 
 	void USBInterruptHandler();
 	void InitUSB();
+	void Disable();
 	size_t SendData(const uint8_t *data, uint16_t len, uint8_t endpoint);
 	void SendString(const char* s);
-	void SendString(std::string s);
+	void SendString(const std::string& s);
 	size_t SendString(const unsigned char* s, size_t len);
 	uint32_t StringToUnicode(const std::string_view desc, uint8_t* unicode);
 
 	EP0Handler  ep0  = EP0Handler(this, 0, 0, NoInterface);
-	MidiHandler midi = MidiHandler(this, USB::Midi_In, USB::Midi_Out, MidiInterface);
-	CDCHandler  cdc  = CDCHandler(this,  USB::CDC_In,  USB::CDC_Out,  CDCCmdInterface);
+	MidiHandler midi = MidiHandler(this, USBMain::Midi_In, USBMain::Midi_Out, MidiInterface);
+	CDCHandler  cdc  = CDCHandler(this,  USBMain::CDC_In,  USBMain::CDC_Out,  CDCCmdInterface);
 
 	bool classPendingData = false;			// Set when class setup command received and data pending
 	bool transmitting;
+	uint32_t stringErrors = 0;				// For debug capture number of times sending aborted because busy
 
 private:
 	static constexpr std::string_view manufacturerString = "Mountjoy Modular";
 	static constexpr std::string_view productString      = "Mountjoy QuadMod";
 	static constexpr std::string_view cdcString          = "Mountjoy QuadMod CDC";
 	static constexpr std::string_view midiString         = "Mountjoy QuadMod MIDI";
+	static constexpr uint8_t selfPowered = 0;				// Set to 1 if self powered
+	static constexpr uint16_t ProductId = 65437;
 	static constexpr uint8_t usbSerialNoSize = 24;
 
 	static constexpr uint32_t recipientMask = 0x03;
 	static constexpr uint32_t requestTypeMask = 0x60;
-	static constexpr uint32_t epAddrMask = 0x0F;
+	static constexpr uint8_t epAddrMask = 0x0F;
 
 
 	void ProcessSetupPacket();
-	void ReadPMA(uint32_t pma, USBHandler* handler);
-	void WritePMA(uint32_t pma, uint32_t bytes, USBHandler* handler);
-	void ActivateEndpoint(uint8_t endpoint, Direction direction, EndPointType eptype);
+	void ReadPMA(const uint32_t pma, USBHandler* handler);
+	void WritePMA(const uint32_t pma, const uint32_t bytes, USBHandler* handler);
+	void ActivateEndpoint(uint8_t endpoint, const Direction direction, EndPointType eptype);
 	void GetDescriptor();
-	void EPStartXfer(const Direction direction, uint8_t endpoint, uint32_t xfer_len);
+	void EPStartXfer(const Direction direction, const uint8_t endpoint, uint32_t xfer_len);
 	void EP0In(const uint8_t* buff, uint32_t size);
-	bool ReadInterrupts(uint32_t interrupt);
+	bool ReadInterrupts(const uint32_t interrupt);
 	void IntToUnicode(uint32_t value, uint8_t* pbuf, uint8_t len);
 	uint32_t GetString(const char* desc);
 	uint32_t MakeConfigDescriptor();
@@ -123,7 +126,6 @@ private:
 
 	// USB standard device descriptor
 	static constexpr uint16_t VendorID = 1155;	// STMicroelectronics
-	static constexpr uint16_t ProductId = 65432;
 
 	// USB standard device descriptor - in usbd_desc.c
 	const uint8_t USBD_FS_DeviceDesc[0x12] = {
@@ -192,4 +194,4 @@ public:
 };
 
 
-extern USB usb;
+extern USBMain usb;
