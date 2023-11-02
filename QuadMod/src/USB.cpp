@@ -198,8 +198,8 @@ void USBMain::USBInterruptHandler()								// Originally in Drivers\STM32F4xx_HA
 				if ((USBP->CHEP0R & USB_EP_SETUP) != 0) {
 					classByEP[0]->outBuffCount = USB_PMA[0].GetRXCount();
 					ReadPMA(USB_PMA[0].GetRXAddr(), classByEP[0]);	// Read setup data into  receive buffer
-					ClearRxInterrupt(0);						// clears 8000 interrupt
-					ProcessSetupPacket();						// Parse setup packet into request, locate data (eg descriptor) and populate TX buffer
+					ClearRxInterrupt(0);							// clears 8000 interrupt
+					ProcessSetupPacket();							// Parse setup packet into request, locate data (eg descriptor) and populate TX buffer
 
 				} else {
 					ClearRxInterrupt(0);
@@ -315,13 +315,13 @@ void USBMain::InitUSB()
 	NVIC_SetPriority(USB_DRD_FS_IRQn, 3);
 	NVIC_EnableIRQ(USB_DRD_FS_IRQn);
 
-	USBP->CNTR &= ~USB_CNTR_HOST;					// Set mode to device
-	USBP->CNTR |= USB_CNTR_USBRST;				// Force USB Reset
-	USBP->CNTR &= ~USB_CNTR_USBRST;				// Release reset
-	USBP->ISTR = 0;								// Clear pending interrupts
+	USBP->CNTR &= ~USB_CNTR_HOST;						// Set mode to device
+	USBP->CNTR |= USB_CNTR_USBRST;						// Force USB Reset
+	USBP->CNTR &= ~USB_CNTR_USBRST;						// Release reset
+	USBP->ISTR = 0;										// Clear pending interrupts
 	USBP->CNTR = USB_CNTR_CTRM  | USB_CNTR_WKUPM | USB_CNTR_SUSPM | USB_CNTR_ERRM | USB_CNTR_RESETM | USB_CNTR_L1REQM;
 
-	USBP->BCDR |= USB_BCDR_DPPU;					// Connect internal PU resistor on USB DP line
+	USBP->BCDR |= USB_BCDR_DPPU;						// Connect internal PU resistor on USB DP line
 
 #if (USB_DEBUG)
 	uart.Init();
@@ -501,11 +501,10 @@ uint32_t USBMain::StringToUnicode(const std::string_view desc, uint8_t *unicode)
 
 void USBMain::SerialToUnicode()
 {
-	// FIXME - accessing UID_BASE data hard faults: need to disable caching for this address in MPU
-	char uidBuff[usbSerialNoSize + 1] = "Mountjoy_Quango_12345678";
+	const uint32_t* uidAddr = (uint32_t*)UID_BASE;			// Location in memory that holds 96 bit Unique device ID register
 
-	//const uint32_t* uidAddr = (uint32_t*)UID_BASE;			// Location in memory that holds 96 bit Unique device ID register
-	//snprintf(uidBuff, usbSerialNoSize + 1, "%08lx%08lx%08lx", uidAddr[0], uidAddr[1], uidAddr[2]);
+	char uidBuff[usbSerialNoSize + 1];
+	snprintf(uidBuff, usbSerialNoSize + 1, "%08lx%08lx%08lx", uidAddr[0], uidAddr[1], uidAddr[2]);
 
 	stringDescr[0] = usbSerialNoSize * 2 + 2;				// length is 24 bytes (x2 for unicode padding) + 2 for header
 	stringDescr[1] = StringDescriptor;

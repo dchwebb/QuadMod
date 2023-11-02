@@ -9,6 +9,7 @@ void InitSystemClock();
 void InitSAI();
 void InitHardware();
 void InitSysTick();
+void InitMPU();
 //void InitDAC();
 //void InitIO();
 //void InitEnvTimer();

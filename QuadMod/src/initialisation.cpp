@@ -155,6 +155,7 @@ void InitHardware()
 {
 	InitSysTick();
 	InitSAI();
+	InitMPU();
 }
 
 
@@ -162,6 +163,26 @@ void InitSysTick()
 {
 	SysTick_Config(SystemCoreClock / SYSTICK);		// gives 1ms
 	NVIC_SetPriority(SysTick_IRQn, 0);
+}
+
+
+void InitMPU()
+{
+	// Use the Memory Protection Unit (MPU) to set up a region of memory with data caching disabled to access UID
+	MPU->RNR = 0;									// Memory region number
+
+	MPU->RBAR = (UID_BASE & 0xFFFFFFE0UL) |			// Store the address of the UID into the region base address register
+				(0    << MPU_RBAR_SH_Pos) |			// Shareable
+				(0b11 << MPU_RBAR_AP_Pos) |			// Access Permission: Read-only by any privilege level
+				(1    << MPU_RBAR_XN_Pos);			// Execution not permitted
+
+	MPU->RLAR = ((UID_BASE | 0xFFFF) & 0xFFFFFFE0UL) |	// Set the upper memory limit for the region
+				(0 << MPU_RLAR_AttrIndx_Pos)         |	// Set attribute index to 0
+				MPU_RLAR_EN_Msk;						// Enable the region
+
+	MPU->CTRL |= (1 << MPU_CTRL_PRIVDEFENA_Pos) |	// Enable PRIVDEFENA - this allows use of default memory map for memory areas other than those specific regions defined above
+				 (1 << MPU_CTRL_ENABLE_Pos);		// Enable the MPU
+
 }
 
 /*
