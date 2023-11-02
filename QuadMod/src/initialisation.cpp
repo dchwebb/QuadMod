@@ -1,9 +1,10 @@
 #include "initialisation.h"
 
-// 8MHz / 4(M) * 250(N) / 2(R) = 250MHz
+// 8MHz / 4(M) * 250(N) / 2(P) = 250MHz
 #define PLL_M 4
 #define PLL_N 250
 #define PLL_P 1				// 01: PLLP = /2
+#define PLL_Q 1				// 01: PLLQ = /2
 
 void InitSystemClock(void) {
 	PWR->VOSCR |= PWR_VOSCR_VOS;						// Set power scaling to 11: VOS0 (highest frequency)
@@ -17,7 +18,7 @@ void InitSystemClock(void) {
 
 	// Configure PLL1
 	RCC->PLL1CFGR = (PLL_M << RCC_PLL1CFGR_PLL1M_Pos) | (RCC_PLL1CFGR_PLL1SRC);		// PLL1SRC 11: HSE selected as PLL clock
-	RCC->PLL1DIVR = ((PLL_N - 1) << RCC_PLL1DIVR_PLL1N_Pos) | (PLL_P << RCC_PLL1DIVR_PLL1P_Pos);
+	RCC->PLL1DIVR = ((PLL_N - 1) << RCC_PLL1DIVR_PLL1N_Pos) | (PLL_P << RCC_PLL1DIVR_PLL1P_Pos) | (PLL_Q << RCC_PLL1DIVR_PLL1Q_Pos);
 
 	// Settings needed for fractional adjustment:
 //	RCC->PLL1CFGR |= RCC_PLL1CFGR_PLL1FRACEN;			// HAL Enables this but not sure if needed
@@ -25,7 +26,8 @@ void InitSystemClock(void) {
 //	RCC->PLL1CFGR &= ~RCC_PLL1CFGR_PLL1VCOSEL;
 
 	RCC->CR |= RCC_CR_PLL1ON;							// Enable PLL1
-	RCC->PLL1CFGR = RCC_PLL1CFGR_PLL1PEN;				// Enable PLL P (drives AHB clock)
+	RCC->PLL1CFGR = RCC_PLL1CFGR_PLL1PEN |				// Enable PLL P (drives AHB clock)
+					RCC_PLL1CFGR_PLL1QEN;				// Enable PLL Q (for SPI1 clock)
 	while ((RCC->CR & RCC_CR_PLL1RDY) == 0);			// Wait till PLL1 is ready
 
 	// Configure Flash prefetch and wait state
@@ -53,6 +55,62 @@ void InitSystemClock(void) {
 	PWR->USBSCR |= PWR_USBSCR_USB33SV;					// Independent USB supply valid
 
 	SystemCoreClockUpdate();							// Update SystemCoreClock (system clock frequency) from settings of oscillators, prescalers and PLL
+}
+
+
+void InitHardware()
+{
+	InitSysTick();
+	InitMPU();
+}
+
+
+void InitAudioCodec()
+{
+	// Initialise pins and functions needed for Audio Codec
+
+	// PD15 is PDN pin - has external pull-down to ground; pull high to enable
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;				// Enable GPIO Clock
+	GPIOD->MODER &= ~GPIO_MODER_MODE15;					// Set to output mode
+	GPIOD->ODR |= GPIO_ODR_OD15;						// Set output high
+
+
+	// Enable SPI
+
+	// PA5: SPI1_SCK; PB4: SPI1_MISO; PB5: SPI1_MOSI; PG10: SPI1_NSS (AF5)
+	RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;					// SPI1 clock enable
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOGEN;			// GPIO clocks
+
+	// PA5: SPI1_SCK
+	GPIOA->MODER  &= ~GPIO_MODER_MODE5_0;				// 10: Alternate function mode
+	GPIOA->AFR[0] |= 5 << GPIO_AFRL_AFSEL5_Pos;			// Alternate Function 5 (SPI1)
+
+	// PB5: SPI1_MISO
+	GPIOB->MODER  &= ~GPIO_MODER_MODE4_0;				// 10: Alternate function mode
+	GPIOB->AFR[0] |= 5 << GPIO_AFRL_AFSEL4_Pos;			// Alternate Function 5 (SPI1)
+
+	// PB5: SPI1_MOSI
+	GPIOB->MODER  &= ~GPIO_MODER_MODE5_0;				// 10: Alternate function mode
+	GPIOB->AFR[0] |= 5 << GPIO_AFRL_AFSEL5_Pos;			// Alternate Function 5 (SPI1)
+
+	// PG10: SPI1_NSS (uses GPIO rather than hardware NSS which doesn't work with 24 bit data)
+	//GPIOG->MODER &= ~GPIO_MODER_MODE10_1;				// 01: Output mode
+	//GPIOG->ODR |= GPIO_ODR_OD10;						// Set pin to high
+	GPIOG->MODER &= ~GPIO_MODER_MODE10_0;				// 10: Alternate function mode
+	GPIOG->AFR[1] |= 5 << GPIO_AFRH_AFSEL10_Pos;		// Alternate Function 5 (SPI1)
+
+	// Configure SPI - baud rate tested working at /4 (42MHz) but run at /8 for now
+	SPI1->CFG1 |= SPI_CFG1_MBR_2;						// Baud rate (250Mhz/x): 000: /2; 001: /4; 010: /8; 011: /16; *100: /32; 101: /64
+	//SPI1->CR1  |= SPI_CR1_SSI;							// Internal slave select
+	//SPI1->CFG2 |= SPI_CFG2_SSM;							// Software NSS management
+
+	SPI1->CR2  |= 1;									// Transfer size of 1
+	SPI1->CFG2 |= SPI_CFG2_SSOE;						// Hardware NSS management
+
+	SPI1->CFG1 |= 0b11111 << SPI_CFG1_DSIZE_Pos;		// Data Size: 0b111 = 8 bit; 0b11111 = 32bit
+	SPI1->CFG2 |= SPI_CFG2_MASTER;						// Master mode
+
+	SPI1->CR1 |= SPI_CR1_SPE;							// Enable SPI
 }
 
 
@@ -150,13 +208,6 @@ void InitSAI()
 
 
 
-
-void InitHardware()
-{
-	InitSysTick();
-	InitSAI();
-	InitMPU();
-}
 
 
 void InitSysTick()
@@ -276,34 +327,7 @@ void InitIO()
 }
 
 
-void InitSPI1()
-{
-	// Controls AD5676 8 channel DAC
-	// PB3: SPI1_SCK; PB4: SPI1_MISO; PB5: SPI1_MOSI; PA15: SPI1_NSS (AF5)
-	RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;			// SPI1 clock enable
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN;			// GPIO clocks
 
-	// PB3: SPI1_SCK
-	GPIOB->MODER  &= ~GPIO_MODER_MODE3_0;			// 10: Alternate function mode
-	GPIOB->AFR[0] |= 5 << GPIO_AFRL_AFSEL3_Pos;		// Alternate Function 5 (SPI1)
-
-	// PB5: SPI1_MOSI
-	GPIOB->MODER  &= ~GPIO_MODER_MODE5_0;			// 10: Alternate function mode
-	GPIOB->AFR[0] |= 5 << GPIO_AFRL_AFSEL5_Pos;		// Alternate Function 5 (SPI1)
-
-	// PA15: SPI1_NSS (uses GPIO rather than hardware NSS which doesn't work with 24 bit data)
-	GPIOA->MODER |= GPIO_MODER_MODE15_0;			// 01: Output mode
-	GPIOA->MODER &= ~GPIO_MODER_MODE15_1;			// 01: Output mode
-
-	// Configure SPI - baud rate tested working at /4 (42MHz) but run at /8 for now
-	SPI1->CR1 |= SPI_CR1_MSTR;						// Master mode
-	SPI1->CR1 |= SPI_CR1_BR_1;						// Baud rate (170Mhz/x): 000: /2; 001: /4; *010: /8; 011: /16; 100: /32; 101: /64
-	SPI1->CR1 |= SPI_CR1_SSI;						// Internal slave select
-	SPI1->CR1 |= SPI_CR1_SSM;						// Software NSS management
-	SPI1->CR2 |= 0b111 << SPI_CR2_DS_Pos;			// Data Size: 0b111 = 8 bit
-
-	SPI1->CR1 |= SPI_CR1_SPE;						// Enable SPI
-}
 
 
 void InitSPI2()

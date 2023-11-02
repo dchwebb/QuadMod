@@ -8,6 +8,7 @@ extern volatile uint32_t SysTickVal;
 void InitSystemClock();
 void InitSAI();
 void InitHardware();
+void InitAudioCodec();
 void InitSysTick();
 void InitMPU();
 //void InitDAC();

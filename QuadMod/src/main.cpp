@@ -1,5 +1,6 @@
 #include "initialisation.h"
 #include "USB.h"
+#include "AudioCodec.h"
 
 volatile uint32_t SysTickVal;
 volatile uint32_t outputUSB = 0;
@@ -17,6 +18,7 @@ int main(void)
 	SystemInit();						// Activates floating point coprocessor and resets clock
 	InitSystemClock();					// Configure the clock and PLL
 	InitHardware();
+	audioCodec.Init();
 	usb.InitUSB();
 
 	while (1) {
