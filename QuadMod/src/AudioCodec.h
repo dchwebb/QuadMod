@@ -5,7 +5,7 @@
 class AudioCodec {
 public:
 	void Init();
-
+	uint8_t ReadData(uint16_t address);
 
 private:
 	struct __attribute__((__packed__)) Command {
@@ -19,7 +19,6 @@ private:
 	};
 
 	void WriteData(uint16_t address, uint8_t data);
-	uint8_t ReadData(uint16_t address);
 	void SendCmd(Command cmd);
 };
 

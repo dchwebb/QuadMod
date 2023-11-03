@@ -1,4 +1,4 @@
-uint16_t saiTest = 0;
+uint32_t saiTest = 0;
 uint32_t saiRecAL = 0;
 uint32_t saiRecAR = 0;
 uint32_t saiRecBL = 0;
@@ -15,10 +15,11 @@ void SAI1_IRQHandler(void)
 {
 	// Check if interrupt is Block A FIFO request
 	if ((SAI1_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		SAI1_Block_A->DR = (uint32_t)(++saiTest);
-		SAI1_Block_A->DR = (uint32_t)(0x10000000 + saiTest);
-		SAI1_Block_B->DR = (uint32_t)(0x20000000 + saiTest);
-		SAI1_Block_B->DR = (uint32_t)(0x30000000 + saiTest);
+		saiTest += 5000000;
+		SAI1_Block_A->DR = (uint32_t)(saiTest);
+		SAI1_Block_A->DR = (uint32_t)(0x80000000 - saiTest);
+		SAI1_Block_B->DR = (uint32_t)(saiTest);
+		SAI1_Block_B->DR = (uint32_t)(0x80000000 - saiTest);
 	}
 
 	// Check if interrupt is data received in SAI2 Block A

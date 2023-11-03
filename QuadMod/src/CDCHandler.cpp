@@ -1,10 +1,11 @@
 #include "USB.h"
 #include "CDCHandler.h"
+#include "AudioCodec.h"
 #include <charconv>
 #include <stdarg.h>
 #include <cmath>
-// Check if a command has been received from USB, parse and action as required
 
+// Check if a command has been received from USB, parse and action as required
 void CDCHandler::ProcessCommand()
 {
 	if (!cmdPending) {
@@ -23,13 +24,21 @@ void CDCHandler::ProcessCommand()
 
 		usb->SendString("Mountjoy QuadMod\r\n"
 				"\r\nSupported commands:\r\n"
-				"info        -  Show diagnostic information\r\n"
+				"info         -  Show diagnostic information\r\n"
+				"readspi:HH   -  Read codec register at 0xHH\r\n"
 				"\r\n"
 		);
 
 
-	} else if (cmd.compare("calib") == 0) {				// Print calibration settings
-
+	} else if (cmd.compare(0, 8, "readspi:") == 0) {				// Read spi register
+		uint8_t regNo;
+		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), regNo, 16);
+		if (res.ec == std::errc()) {
+			uint8_t readData = audioCodec.ReadData(regNo);
+			printf("I2C Register: %#04x Value: %#04x\r\n", regNo, readData);
+		} else {
+			usb->SendString("Invalid register\r\n");
+		}
 
 	} else if (cmd.compare("savecfg") == 0) {			// Save configuration
 		//config.SaveConfig();
