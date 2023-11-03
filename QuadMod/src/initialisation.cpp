@@ -69,12 +69,6 @@ void InitAudioCodec()
 {
 	// Initialise pins and functions needed for Audio Codec
 
-	// PD15 is PDN pin - has external pull-down to ground; pull high to enable
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;				// Enable GPIO Clock
-	GPIOD->MODER &= ~GPIO_MODER_MODE15;					// Set to output mode
-	GPIOD->ODR |= GPIO_ODR_OD15;						// Set output high
-
-
 	// Enable SPI
 
 	// PA5: SPI1_SCK; PB4: SPI1_MISO; PB5: SPI1_MOSI; PG10: SPI1_NSS (AF5)
@@ -99,18 +93,20 @@ void InitAudioCodec()
 	GPIOG->MODER &= ~GPIO_MODER_MODE10_0;				// 10: Alternate function mode
 	GPIOG->AFR[1] |= 5 << GPIO_AFRH_AFSEL10_Pos;		// Alternate Function 5 (SPI1)
 
-	// Configure SPI - baud rate tested working at /4 (42MHz) but run at /8 for now
+	// Configure SPI
 	SPI1->CFG1 |= SPI_CFG1_MBR_2;						// Baud rate (250Mhz/x): 000: /2; 001: /4; 010: /8; 011: /16; *100: /32; 101: /64
-	//SPI1->CR1  |= SPI_CR1_SSI;							// Internal slave select
-	//SPI1->CFG2 |= SPI_CFG2_SSM;							// Software NSS management
-
 	SPI1->CR2  |= 1;									// Transfer size of 1
 	SPI1->CFG2 |= SPI_CFG2_SSOE;						// Hardware NSS management
-
 	SPI1->CFG1 |= 0b11111 << SPI_CFG1_DSIZE_Pos;		// Data Size: 0b111 = 8 bit; 0b11111 = 32bit
 	SPI1->CFG2 |= SPI_CFG2_MASTER;						// Master mode
 
 	SPI1->CR1 |= SPI_CR1_SPE;							// Enable SPI
+
+	// PD15 is PDN pin - has external pull-down to ground; pull high to enable
+	//
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;				// Enable GPIO Clock
+	GPIOD->MODER &= ~GPIO_MODER_MODE15_1;				// 00: Input, 01: Output, 10: Alternate function, 11: Analog (reset state)
+
 }
 
 
@@ -124,7 +120,7 @@ void InitSAI()
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;				// Enable GPIO Clock
 	RCC->CCIPR5 |= RCC_CCIPR5_SAI1SEL_0;				// SAI Clock Source: 000: pll1_q_ck; *001: pll2_p_ck; 010: pll3_p_ck; 011: AUDIOCLK; 100: per_ck
 
-	// MODER 00: Input mode, 01: General purpose output mode, 10: Alternate function mode, 11: Analog mode (reset state)
+	// MODER 00: Input, 01: Output, 10: Alternate function, 11: Analog (reset state)
 
 	// PE2 SAI1_MCLK_A  AF6
 	// PE3 SAI1_SD_B    AF6
