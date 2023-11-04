@@ -4,6 +4,7 @@
 
 extern volatile uint32_t SysTickVal;
 #define SYSTICK 1000						// 1ms
+static constexpr uint32_t sampleRate = 48000;
 
 void InitSystemClock();
 void InitSAI();
