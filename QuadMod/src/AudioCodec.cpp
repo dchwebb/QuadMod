@@ -20,12 +20,8 @@ void AudioCodec::Init()
 	DelayMS(10);												// Wait 10ms for codec power to stablise
 
 	SendCmd({Command::activateSPI, Command::SpiMode, 0x7A});	// To activate SPI mode send 0xDE 0xADDA 0x7A
-
-//	uint8_t data = ReadData(Command::AudioInterfaceFormat);
-//	printf("Data: %02X\r\n", data);
-
 	WriteData(Command::AudioInterfaceFormat, 0b00001110);		// Set 32bit, data on rising bit clock
-	WriteData(Command::AnalogInput, 0b11111111);				// Set all channels to pseudo differential input mode
+	WriteData(Command::AnalogInput, 0b11111111);				// Set all in channels to pseudo differential input mode
 
 	InitSAI();													// Configure I2S via SAI peripheral and start clocks
 	WriteData(Command::PowerManagement, 0b00110111);			// Release standby state
@@ -39,22 +35,23 @@ void AudioCodec::WriteData(uint16_t address, uint8_t data)
 
 uint8_t AudioCodec::ReadData(uint16_t address)
 {
-	[[maybe_unused]] volatile uint32_t dummy = SPI1->RXDR;	// Clear read buffer
+	while ((SPI1->SR & SPI_SR_RXP) == SPI_SR_RXP) {
+		[[maybe_unused]] volatile uint32_t dummy = SPI1->RXDR;		// Clear read buffer
+	}
 	SendCmd({Command::Read, address, 0});
 
-//	while ((SPI1->SR & SPI_SR_EOT) == 0);
-	return (uint8_t)(SPI1->RXDR & 0xFF);					// Will also echo back command - data is last byte
+	return (uint8_t)(SPI1->RXDR & 0xFF);						// Will also echo back command - data is last byte
 }
 
 
 inline void AudioCodec::SendCmd(Command cmd)
 {
-	SPI1->IFCR |= (SPI_IFCR_TXTFC | SPI_IFCR_EOTC);			// Clear status register
+	SPI1->IFCR |= (SPI_IFCR_TXTFC | SPI_IFCR_EOTC);				// Clear status register
 
 	SPI1->TXDR = *(uint32_t*)&cmd;
 	SPI1->CR1 |= SPI_CR1_CSTART;
 
-	while ((SPI1->SR & SPI_SR_EOT) == 0);			// Wait for command to finish
+	while ((SPI1->SR & SPI_SR_EOT) == 0);						// Wait for command to finish
 }
 
 
@@ -71,11 +68,8 @@ uint32_t saiRecAR = 0;
 uint32_t saiRecBL = 0;
 uint32_t saiRecBR = 0;
 bool saiL = true;
-struct {
-	uint32_t leftSend;
-	uint32_t leftRec;
-} debugSAI[256];
-uint8_t debugCount = 0;
+int32_t debugSAI[2000];
+uint16_t debugCount = 0;
 uint32_t saiCounter = 0;
 int32_t output = 0;
 
@@ -85,6 +79,9 @@ void AudioCodec::TestOutput()
 	if ((SAI1_Block_A->SR & SAI_xSR_FREQ) != 0) {
 		GPIOG->ODR |= GPIO_ODR_OD12;
 		sinePos += 0.01f;
+		if (sinePos > 2.0f * M_PI) {
+			sinePos -= 2.0f * M_PI;
+		}
 		output = (int32_t)(std::sin(sinePos) * std::numeric_limits<int32_t>::max());
 
 		saiTest1 += saiTestInc1;
@@ -112,8 +109,10 @@ void AudioCodec::TestOutput()
 		if (saiL) {
 			saiRecAL = SAI2_Block_A->DR;
 			saiRecBL = SAI2_Block_B->DR;
-			debugSAI[debugCount].leftRec = saiRecAL;
-			debugSAI[debugCount++].leftSend = saiTest1;
+			debugSAI[debugCount++] = saiRecAL;
+			if (debugCount > 2000) {
+				debugCount = 0;
+			}
 		} else {
 			saiRecAR = SAI2_Block_A->DR;
 			saiRecBR = SAI2_Block_B->DR;
