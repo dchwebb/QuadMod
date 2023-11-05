@@ -24,8 +24,9 @@ void CDCHandler::ProcessCommand()
 
 		usb->SendString("Mountjoy QuadMod\r\n"
 				"\r\nSupported commands:\r\n"
-				"info         -  Show diagnostic information\r\n"
-				"readspi:HH   -  Read codec register at 0xHH\r\n"
+				"info           -  Show diagnostic information\r\n"
+				"readspi:HH     -  Read codec register at 0xHH\r\n"
+				"writespi:RR,VV -  Write value 0xVV to audio codec register 0xRR\r\n"
 				"\r\n"
 		);
 
@@ -35,7 +36,23 @@ void CDCHandler::ProcessCommand()
 		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), regNo, 16);
 		if (res.ec == std::errc()) {
 			uint8_t readData = audioCodec.ReadData(regNo);
-			printf("I2C Register: %#04x Value: %#04x\r\n", regNo, readData);
+			printf("SPI Register: %#04x Value: %#04x\r\n", regNo, readData);
+		} else {
+			usb->SendString("Invalid register\r\n");
+		}
+
+	} else if (cmd.compare(0, 9, "writespi:") == 0) {				// write i2c register
+
+		uint8_t regNo, value;
+		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), regNo, 16);
+		if (res.ec == std::errc()) {			// no error
+			auto res = std::from_chars(cmd.data() + cmd.find(",") + 1, cmd.data() + cmd.size(), value, 16);
+			if (res.ec == std::errc()) {			// no error
+				audioCodec.WriteData(regNo, value);
+				printf("SPI write: Register: %#04x Value: %#04x\r\n", regNo, value);
+			} else {
+				usb->SendString("Invalid value\r\n");
+			}
 		} else {
 			usb->SendString("Invalid register\r\n");
 		}

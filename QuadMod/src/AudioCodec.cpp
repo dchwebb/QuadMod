@@ -20,12 +20,14 @@ void AudioCodec::Init()
 	DelayMS(10);												// Wait 10ms for codec power to stablise
 
 	SendCmd({Command::activateSPI, Command::SpiMode, 0x7A});	// To activate SPI mode send 0xDE 0xADDA 0x7A
-	WriteData(Command::AudioInterfaceFormat, 0b00001100);		// Set 32bit, data on falling bit clock
-	WriteData(Command::AnalogInput, 0b11111111);				// Set all in channels to pseudo differential input mode
+	WriteData(Command::AudioInterfaceFormat, 0b0000'1100);		// Set 32bit, data on falling bit clock
+	WriteData(Command::AnalogInput,          0b1111'1111);		// Set all in channels to pseudo differential input mode
+//	WriteData(Command::AnalogFilter,         0b0010'0010);		// Use a fast filter for ADC - reduces latency by ~300uS
 
 	InitSAI();													// Configure I2S via SAI peripheral and start clocks
-	WriteData(Command::PowerManagement, 0b00110111);			// Release standby state
+	WriteData(Command::PowerManagement,      0b0011'0111);		// Release standby state
 }
+
 
 void AudioCodec::WriteData(uint16_t address, uint8_t data)
 {
@@ -36,7 +38,7 @@ void AudioCodec::WriteData(uint16_t address, uint8_t data)
 uint8_t AudioCodec::ReadData(uint16_t address)
 {
 	while ((SPI1->SR & SPI_SR_RXP) == SPI_SR_RXP) {
-		[[maybe_unused]] volatile uint32_t dummy = SPI1->RXDR;		// Clear read buffer
+		[[maybe_unused]] volatile uint32_t dummy = SPI1->RXDR;	// Clear read buffer
 	}
 	SendCmd({Command::Read, address, 0});
 
