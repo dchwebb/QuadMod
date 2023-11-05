@@ -20,7 +20,6 @@ void AudioCodec::Init()
 	DelayMS(10);												// Wait 10ms for codec power to stablise
 
 	SendCmd({Command::activateSPI, Command::SpiMode, 0x7A});	// To activate SPI mode send 0xDE 0xADDA 0x7A
-	//WriteData(Command::AudioInterfaceFormat, 0b00001110);		// Set 32bit, data on rising bit clock
 	WriteData(Command::AudioInterfaceFormat, 0b00001100);		// Set 32bit, data on falling bit clock
 	WriteData(Command::AnalogInput, 0b11111111);				// Set all in channels to pseudo differential input mode
 
@@ -57,74 +56,52 @@ inline void AudioCodec::SendCmd(Command cmd)
 
 
 
+// For generating test signals
 float sinePos = 0.0f;
-int32_t saiTest1 = 0;
-uint32_t saiTestInc1 = 100;
-
-uint32_t saiTest2 = 0;
-uint32_t saiTest3 = 0;
-uint32_t saiTest4 = 0;
-uint32_t saiRecAL = 0;
-uint32_t saiRecAR = 0;
-uint32_t saiRecBL = 0;
-uint32_t saiRecBR = 0;
-bool saiL = true;
-int32_t debugSAI[2000];
-uint16_t debugCount = 0;
-uint32_t saiCounter = 0;
-int32_t output = 0;
+int32_t sinOutput = 0;
+int32_t triInc = 10000000;
+int32_t triOutput = 0;
 
 void AudioCodec::TestOutput()
 {
-	// Check if interrupt is Block A FIFO request
+	GPIOG->ODR |= GPIO_ODR_OD12;
+
+	// Check if SAI2 Block A has FIFO request (Input)
+	while ((SAI2_Block_A->SR & SAI_xSR_FREQ) != 0) {
+		GPIOG->ODR |= GPIO_ODR_OD6;
+		if (dataIn.leftRight) {
+			dataIn.channel1 = SAI2_Block_A->DR;
+			dataIn.channel2 = SAI2_Block_B->DR;
+		} else {
+			dataIn.channel3 = SAI2_Block_A->DR;
+			dataIn.channel4 = SAI2_Block_B->DR;
+		}
+		dataIn.leftRight = !dataIn.leftRight;
+		GPIOG->ODR &= ~GPIO_ODR_OD6;
+	}
+
+	// Check if SAI1 Block A FIFO request (Output)
 	if ((SAI1_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		GPIOG->ODR |= GPIO_ODR_OD12;
+
+		// Generate test signals for output and look-back testing
 		sinePos += 0.01f;
 		if (sinePos > 2.0f * M_PI) {
 			sinePos -= 2.0f * M_PI;
 		}
-		output = (int32_t)(std::sin(sinePos) * std::numeric_limits<int32_t>::max());
+		sinOutput = (int32_t)(std::sin(sinePos) * std::numeric_limits<int32_t>::max());
 
-		saiTest1 += saiTestInc1;
-		if (saiTest1 >= 65535 || saiTest1 < 0) {
-			saiTestInc1 = -saiTestInc1;
-			saiTest1 += saiTestInc1;
-		}
-
-		saiTest2 += 6000000;
-		saiTest3 += 7000000;
-		saiTest4 += 8000000;
-
-		//SAI1_Block_A->DR = (uint32_t)(saiTest1 << 15);
-		SAI1_Block_A->DR = std::bit_cast<uint32_t>(output);
-
-		SAI1_Block_A->DR = (uint32_t)(saiTest2);
-		SAI1_Block_B->DR = (uint32_t)(saiTest3);
-		SAI1_Block_B->DR = (uint32_t)(saiRecAL);
-		GPIOG->ODR &= ~GPIO_ODR_OD12;
-	}
-
-	// Check if interrupt is data received in SAI2 Block A
-	while ((SAI2_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		GPIOG->ODR |= GPIO_ODR_OD6;
-		if (saiL) {
-			saiRecAL = SAI2_Block_A->DR;
-			saiRecBL = SAI2_Block_B->DR;
-			debugSAI[debugCount++] = saiRecAL;
-			if (debugCount > 2000) {
-				debugCount = 0;
-			}
+		int32_t newTri = triOutput + triInc;
+		if ((triInc > 0 && newTri < triOutput) || (triInc < 0 && newTri > triOutput)) {
+			triInc = -triInc;
 		} else {
-			saiRecAR = SAI2_Block_A->DR;
-			saiRecBR = SAI2_Block_B->DR;
+			triOutput = newTri;
 		}
-		saiL = !saiL;
-		GPIOG->ODR &= ~GPIO_ODR_OD6;
+
+		SAI1_Block_A->DR = std::bit_cast<uint32_t>(triOutput);
+		SAI1_Block_A->DR = dataIn.channel2;
+		SAI1_Block_B->DR = std::bit_cast<uint32_t>(sinOutput);
+		SAI1_Block_B->DR = dataIn.channel3;
 	}
 
-	if (saiCounter == 1) {
-		volatile uint32_t susp = 1;
-		++susp;
-	}
-	++saiCounter;
+	GPIOG->ODR &= ~GPIO_ODR_OD12;
 }
