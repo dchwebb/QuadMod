@@ -20,7 +20,8 @@ void AudioCodec::Init()
 	DelayMS(10);												// Wait 10ms for codec power to stablise
 
 	SendCmd({Command::activateSPI, Command::SpiMode, 0x7A});	// To activate SPI mode send 0xDE 0xADDA 0x7A
-	WriteData(Command::AudioInterfaceFormat, 0b00001110);		// Set 32bit, data on rising bit clock
+	//WriteData(Command::AudioInterfaceFormat, 0b00001110);		// Set 32bit, data on rising bit clock
+	WriteData(Command::AudioInterfaceFormat, 0b00001100);		// Set 32bit, data on falling bit clock
 	WriteData(Command::AnalogInput, 0b11111111);				// Set all in channels to pseudo differential input mode
 
 	InitSAI();													// Configure I2S via SAI peripheral and start clocks
@@ -99,7 +100,7 @@ void AudioCodec::TestOutput()
 
 		SAI1_Block_A->DR = (uint32_t)(saiTest2);
 		SAI1_Block_B->DR = (uint32_t)(saiTest3);
-		SAI1_Block_B->DR = (uint32_t)(saiTest4);
+		SAI1_Block_B->DR = (uint32_t)(saiRecAL);
 		GPIOG->ODR &= ~GPIO_ODR_OD12;
 	}
 
