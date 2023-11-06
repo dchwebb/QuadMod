@@ -16,7 +16,7 @@ void AudioCodec::Init()
 {
 	InitAudioCodec();											// Initialise SPI and PDN pin
 	DelayMS(2);													// Wait for SPI CS pin to go high
-	GPIOD->ODR |= GPIO_ODR_OD15;								// Set PDN high once SPI CS is high to enable SPI mode
+	pdnPin.SetHigh();											// Set PDN high once SPI CS is high to enable SPI mode
 	DelayMS(10);												// Wait 10ms for codec power to stablise
 
 	SendCmd({Command::activateSPI, Command::SpiMode, 0x7A});	// To activate SPI mode send 0xDE 0xADDA 0x7A

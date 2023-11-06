@@ -1,4 +1,5 @@
 #include "initialisation.h"
+#include "GpioPin.h"
 
 // 8MHz / 4(M) * 250(N) / 2(P) = 250MHz
 #define PLL_M 4
@@ -62,39 +63,39 @@ void InitHardware()
 {
 	InitSysTick();
 	InitMPU();
+	InitHyperRAM();
 
 	// Debug pins - PG12, PG6
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOGEN;				// GPIO clock
-	GPIOG->MODER &= ~GPIO_MODER_MODE12_1;				// 00: Input, 01: Output, 10: Alternate function, 11: Analog (reset state)
-	GPIOG->MODER &= ~GPIO_MODER_MODE6_1;				// 00: Input, 01: Output, 10: Alternate function, 11: Analog (reset state)
+	GpioPin::Init(GPIOG, 6, GpioPin::Type::Output);
+	GpioPin::Init(GPIOG, 12, GpioPin::Type::Output);
 }
 
 
+void InitHyperRAM()
+{
+	// Cypress S27KL0641 DABHI020: 3.0v, 64Mb, 100MHz
+	GpioPin::Init(GPIOA, 3, GpioPin::Type::AlternateFunction, 3);	// PA3  OCTOSPI_CLK AF3
+	GpioPin::Init(GPIOB, 1, GpioPin::Type::AlternateFunction, 6);	// PB1  OCTOSPI_IO0 AF6
+	GpioPin::Init(GPIOB, 0, GpioPin::Type::AlternateFunction, 6);	// PB0  OCTOSPI_IO1 AF6
+	GpioPin::Init(GPIOC, 2, GpioPin::Type::AlternateFunction, 9);	// PC2  OCTOSPI_IO2 AF9
+	GpioPin::Init(GPIOA, 6, GpioPin::Type::AlternateFunction, 6);	// PA6  OCTOSPI_IO3 AF6
+	GpioPin::Init(GPIOE, 7, GpioPin::Type::AlternateFunction, 10); 	// PE7  OCTOSPI_IO4 AF10
+	GpioPin::Init(GPIOE, 8, GpioPin::Type::AlternateFunction, 10); 	// PE8  OCTOSPI_IO5 AF10
+	GpioPin::Init(GPIOC, 3, GpioPin::Type::AlternateFunction, 6);	// PC3  OCTOSPI_IO6 AF6
+	GpioPin::Init(GPIOC, 0, GpioPin::Type::AlternateFunction, 10);	// PC0  OCTOSPI_IO7 AF10
+	GpioPin::Init(GPIOB, 10, GpioPin::Type::AlternateFunction, 10);	// PB10 OCTOSPI_NCS AF10
+	GpioPin::Init(GPIOB, 2, GpioPin::Type::AlternateFunction, 10);	// PB2  OCTOSPI_DQS AF10
+}
+
 void InitAudioCodec()
 {
-	// Initialise pins and functions needed for Audio Codec
-
 	// Enable SPI
-
-	// PA5: SPI1_SCK; PB4: SPI1_MISO; PB5: SPI1_MOSI; PG10: SPI1_NSS (AF5)
 	RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;					// SPI1 clock enable
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOGEN;			// GPIO clocks
 
-	// PA5: SPI1_SCK
-	GPIOA->MODER  &= ~GPIO_MODER_MODE5_0;				// 10: Alternate function mode
-	GPIOA->AFR[0] |= 5 << GPIO_AFRL_AFSEL5_Pos;			// Alternate Function 5 (SPI1)
-
-	// PB5: SPI1_MISO
-	GPIOB->MODER  &= ~GPIO_MODER_MODE4_0;				// 10: Alternate function mode
-	GPIOB->AFR[0] |= 5 << GPIO_AFRL_AFSEL4_Pos;			// Alternate Function 5 (SPI1)
-
-	// PB5: SPI1_MOSI
-	GPIOB->MODER  &= ~GPIO_MODER_MODE5_0;				// 10: Alternate function mode
-	GPIOB->AFR[0] |= 5 << GPIO_AFRL_AFSEL5_Pos;			// Alternate Function 5 (SPI1)
-
-	// PG10: SPI1_NSS (uses GPIO rather than hardware NSS which doesn't work with 24 bit data)
-	GPIOG->MODER &= ~GPIO_MODER_MODE10_0;				// 10: Alternate function mode
-	GPIOG->AFR[1] |= 5 << GPIO_AFRH_AFSEL10_Pos;		// Alternate Function 5 (SPI1)
+	GpioPin::Init(GPIOA, 5, GpioPin::Type::AlternateFunction, 5);	// PA5: SPI1_SCK
+	GpioPin::Init(GPIOB, 4, GpioPin::Type::AlternateFunction, 5);	// PB4: SPI1_MISO
+	GpioPin::Init(GPIOB, 5, GpioPin::Type::AlternateFunction, 5);	// PB5: SPI1_MOSI
+	GpioPin::Init(GPIOG, 10, GpioPin::Type::AlternateFunction, 5);	// PG10: SPI1_NSS
 
 	// Configure SPI
 	SPI1->CFG1 |= SPI_CFG1_MBR_2;						// Baud rate (250Mhz/x): 000: /2; 001: /4; 010: /8; 011: /16; *100: /32; 101: /64
@@ -106,8 +107,8 @@ void InitAudioCodec()
 	SPI1->CR1 |= SPI_CR1_SPE;							// Enable SPI
 
 	// PD15 is PDN pin - has external pull-down to ground; pull high to enable
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;				// Enable GPIO Clock
-	GPIOD->MODER &= ~GPIO_MODER_MODE15_1;				// 00: Input, 01: Output, 10: Alternate function, 11: Analog (reset state)
+//	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;				// Enable GPIO Clock
+//	GPIOD->MODER &= ~GPIO_MODER_MODE15_1;				// 00: Input, 01: Output, 10: Alternate function, 11: Analog (reset state)
 
 }
 
@@ -118,26 +119,15 @@ void InitSAI()
 	// Master is SAI1_A and all other blocks use the same clock
 	RCC->APB2ENR |= RCC_APB2ENR_SAI1EN;					// Enable SAI peripheral
 	RCC->APB2ENR |= RCC_APB2ENR_SAI2EN;
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;				// Enable GPIO Clock
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;				// Enable GPIO Clock
 	RCC->CCIPR5 |= RCC_CCIPR5_SAI1SEL_0;				// SAI Clock Source: 000: pll1_q_ck; *001: pll2_p_ck; 010: pll3_p_ck; 011: AUDIOCLK; 100: per_ck
 
-	// MODER 00: Input, 01: Output, 10: Alternate function, 11: Analog (reset state)
-
-	// PE2 SAI1_MCLK_A  AF6
-	// PE3 SAI1_SD_B    AF6
-	// PE4 SAI1_FS_A    AF6
-	// PE5 SAI1_SCK_A   AF6
-	// PE6 SAI1_SD_A    AF6
-	GPIOE->MODER &= ~(GPIO_MODER_MODE2_0 | GPIO_MODER_MODE3_0 | GPIO_MODER_MODE4_0 | GPIO_MODER_MODE5_0 | GPIO_MODER_MODE6_0);
-	GPIOE->AFR[0] |= (6 << GPIO_AFRL_AFSEL2_Pos) | (6 << GPIO_AFRL_AFSEL3_Pos) | (6 << GPIO_AFRL_AFSEL4_Pos) | (6 << GPIO_AFRL_AFSEL5_Pos) | (6 << GPIO_AFRL_AFSEL6_Pos);
-
-	// PD11 SAI2_SD_A   AF10
-	// PE11 SAI2_SD_B   AF10
-	GPIOD->MODER &= ~GPIO_MODER_MODE11_0;
-	GPIOD->AFR[1] |= (10 << GPIO_AFRH_AFSEL11_Pos);
-	GPIOE->MODER &= ~GPIO_MODER_MODE11_0;
-	GPIOE->AFR[1] |= (10 << GPIO_AFRH_AFSEL11_Pos);
+	GpioPin::Init(GPIOE, 2, GpioPin::Type::AlternateFunction, 6); 	// PE2 SAI1_MCLK_A  AF6
+	GpioPin::Init(GPIOE, 3, GpioPin::Type::AlternateFunction, 6); 	// PE3 SAI1_SD_B    AF6
+	GpioPin::Init(GPIOE, 4, GpioPin::Type::AlternateFunction, 6); 	// PE4 SAI1_FS_A    AF6
+	GpioPin::Init(GPIOE, 5, GpioPin::Type::AlternateFunction, 6); 	// PE5 SAI1_SCK_A   AF6
+	GpioPin::Init(GPIOE, 6, GpioPin::Type::AlternateFunction, 6); 	// PE6 SAI1_SD_A    AF6
+	GpioPin::Init(GPIOD, 11, GpioPin::Type::AlternateFunction, 10); // PD11 SAI2_SD_A   AF10
+	GpioPin::Init(GPIOE, 11, GpioPin::Type::AlternateFunction, 10); // PE11 SAI2_SD_B   AF10
 
 	SAI1_Block_A->CR1 |= SAI_xCR1_DS;					// 110: 24 bits; 111: 32 bits
 	SAI1_Block_A->CR1 |= SAI_xCR1_CKSTR;				// 0: Signals generated by SAI change on rising edge, signals received by SAI sampled on falling edge; 	1: Signals generated by SAI change on falling edge, signals received sampled on rising edge.
@@ -210,7 +200,7 @@ void InitSAI()
 
 void InitSysTick()
 {
-	SysTick_Config(SystemCoreClock / SYSTICK);		// gives 1ms
+	SysTick_Config(SystemCoreClock / sysTick);		// gives 1ms
 	NVIC_SetPriority(SysTick_IRQn, 0);
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "initialisation.h"
+#include "GpioPin.h"
 
 class AudioCodec {
 public:
@@ -29,6 +30,8 @@ private:
 	};
 
 	void SendCmd(Command cmd);
+
+	GpioPin pdnPin{GPIOD, 15, GpioPin::Type::Output};		// PDN pin is used to bring Codec out of reset
 };
 
 extern AudioCodec audioCodec;
