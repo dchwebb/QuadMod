@@ -1,6 +1,7 @@
 #include "USB.h"
 #include "CDCHandler.h"
 #include "AudioCodec.h"
+#include "HyperRAM.h"
 #include <charconv>
 #include <stdarg.h>
 #include <cmath>
@@ -27,6 +28,7 @@ void CDCHandler::ProcessCommand()
 				"info           -  Show diagnostic information\r\n"
 				"readspi:HH     -  Read codec register at 0xHH\r\n"
 				"writespi:RR,VV -  Write value 0xVV to audio codec register 0xRR\r\n"
+				"hrid           -  Get HyperRAM ID\r\n"
 				"\r\n"
 		);
 
@@ -56,6 +58,10 @@ void CDCHandler::ProcessCommand()
 		} else {
 			usb->SendString("Invalid register\r\n");
 		}
+
+	} else if (cmd.compare("hrid") == 0) {				// HyperRAM ID
+		uint32_t id = hyperRAM.GetID();
+		printf("HyperRAM ID: %#010lx\r\n", id);
 
 	} else if (cmd.compare("savecfg") == 0) {			// Save configuration
 		//config.SaveConfig();

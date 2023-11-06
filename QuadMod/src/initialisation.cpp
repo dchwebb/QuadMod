@@ -83,9 +83,21 @@ void InitHyperRAM()
 	GpioPin::Init(GPIOE, 8, GpioPin::Type::AlternateFunction, 10); 	// PE8  OCTOSPI_IO5 AF10
 	GpioPin::Init(GPIOC, 3, GpioPin::Type::AlternateFunction, 6);	// PC3  OCTOSPI_IO6 AF6
 	GpioPin::Init(GPIOC, 0, GpioPin::Type::AlternateFunction, 10);	// PC0  OCTOSPI_IO7 AF10
-	GpioPin::Init(GPIOB, 10, GpioPin::Type::AlternateFunction, 10);	// PB10 OCTOSPI_NCS AF10
+	GpioPin::Init(GPIOB, 10, GpioPin::Type::AlternateFunction, 9);	// PB10 OCTOSPI_NCS AF10
 	GpioPin::Init(GPIOB, 2, GpioPin::Type::AlternateFunction, 10);	// PB2  OCTOSPI_DQS AF10
+
+	RCC->AHB4ENR |= RCC_AHB4ENR_OCTOSPI1EN;
+	RCC->CCIPR4 &= ~RCC_CCIPR4_OCTOSPISEL;					// kernel clock 250MHz: 00 rcc_hclk4 (default); 01 pll1_q_ck; 10 pll2_r_ck; 11 per_ck
+
+	OCTOSPI1->DCR2 |= (9 << OCTOSPI_DCR2_PRESCALER_Pos);	// Set prescaler to n + 1 => 250MHz / 10 = 25MHz
+	OCTOSPI1->DCR1 |= (22 << OCTOSPI_DCR1_DEVSIZE_Pos);		// No. of bytes = 2^(DEVSIZE+1): 64Mb = 2^23 bytes
+	OCTOSPI1->DCR1 |= (1 << OCTOSPI_DCR1_CSHT_Pos);			// CSHT + 1: min no CLK cycles where NCS must stay high between commands - Min 10ns
+	OCTOSPI1->DCR1 &= ~OCTOSPI_DCR1_CKMODE;					// Clock mode 0: CLK is low NCS high
+	OCTOSPI1->DCR1 |= (0b100 << OCTOSPI_DCR1_MTYP_Pos);		// 100: HyperBus memory mode; 101: HyperBus register mode
+	OCTOSPI1->HLCR |= (4 << OCTOSPI_HLCR_TACC_Pos);			// 40ns: Access time according to memory latency, in no of communication clock cycles
+	OCTOSPI1->HLCR |= (4 << OCTOSPI_HLCR_TRWR_Pos);			// 40ns: Minimum recovery time in number of communication clock cycles
 }
+
 
 void InitAudioCodec()
 {
@@ -105,11 +117,6 @@ void InitAudioCodec()
 	SPI1->CFG2 |= SPI_CFG2_MASTER;						// Master mode
 
 	SPI1->CR1 |= SPI_CR1_SPE;							// Enable SPI
-
-	// PD15 is PDN pin - has external pull-down to ground; pull high to enable
-//	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;				// Enable GPIO Clock
-//	GPIOD->MODER &= ~GPIO_MODER_MODE15_1;				// 00: Input, 01: Output, 10: Alternate function, 11: Analog (reset state)
-
 }
 
 
@@ -279,74 +286,6 @@ void InitDAC()
 }
 
 
-void InitIO()
-{
-	// MODER 00: Input mode, 01: General purpose output mode, 10: Alternate function mode, 11: Analog mode (reset state)
-	// PUPDR 01: Pull-up; 10: Pull-down
-
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;			// GPIO A clock
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;			// GPIO B clock
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;			// GPIO C clock
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;			// GPIO D clock
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOFEN;			// GPIO F clock
-
-	//	Init Multiplexer pins PA1, PA3, PF2
-	GPIOA->MODER &= ~GPIO_MODER_MODER1_1;			// PA1: Multiplexer A0 out
-	GPIOA->MODER &= ~GPIO_MODER_MODER3_1;			// PA3: Multiplexer A1 out
-	GPIOF->MODER &= ~GPIO_MODER_MODER2_1;			// PF2: Multiplexer A2 out
-
-	// Init Gate outputs PD2 - PD5
-	GPIOD->MODER &= ~GPIO_MODER_MODER2_1;			// PD2: Gate1 Out
-	GPIOD->MODER &= ~GPIO_MODER_MODER3_1;			// PD3: Gate2 Out
-	GPIOD->MODER &= ~GPIO_MODER_MODER4_1;			// PD4: Gate3 Out
-	GPIOD->MODER &= ~GPIO_MODER_MODER5_1;			// PD5: Gate4 Out
-
-	// Calibration buttons input
-	GPIOB->MODER &= ~GPIO_MODER_MODER10;			// PB10: channel A
-	GPIOB->PUPDR |= GPIO_PUPDR_PUPD10_0;			// Activate pull-up
-	GPIOB->MODER &= ~GPIO_MODER_MODER11;			// PB11: channel B
-	GPIOB->PUPDR |= GPIO_PUPDR_PUPD11_0;			// Activate pull-up
-
-	// Octave Switch pins PD0, PC12
-	GPIOD->MODER &= ~GPIO_MODER_MODER0;				// PD0: Octave
-	GPIOD->PUPDR |= GPIO_PUPDR_PUPD0_1;				// Activate pull-down
-	GPIOC->MODER &= ~GPIO_MODER_MODER12;			// PC12: Octave
-	GPIOC->PUPDR |= GPIO_PUPDR_PUPD12_1;			// Activate pull-down
-}
-
-
-
-
-
-void InitSPI2()
-{
-	// Controls MCP48CMB21 single channel DAC for channel B envelope 4
-	// PA10: SPI2_MISO; PB13: SPI2_SCK; PB15: SPI2_MOSI; PD15: SPI2_NSS
-	RCC->APB1ENR1 |= RCC_APB1ENR1_SPI2EN;			// SPI2 clock enable
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIODEN;			// GPIO clocks
-
-	// PB13: SPI2_SCK
-	GPIOB->MODER  &= ~GPIO_MODER_MODE13_0;			// 10: Alternate function mode
-	GPIOB->AFR[1] |= 5 << GPIO_AFRH_AFSEL13_Pos;	// Alternate Function 5 (SPI2)
-
-	// PB15: SPI2_MOSI
-	GPIOB->MODER  &= ~GPIO_MODER_MODE15_0;			// 10: Alternate function mode
-	GPIOB->AFR[1] |= 5 << GPIO_AFRH_AFSEL15_Pos;	// Alternate Function 5 (SPI2)
-
-	// PD15: SPI2_NSS
-	GPIOD->MODER  &= ~GPIO_MODER_MODE15_1;			// 01: Output mode
-
-	// Configure SPI
-	SPI2->CR1 |= SPI_CR1_MSTR;						// Master mode
-	SPI2->CR1 |= SPI_CR1_SSI;						// Internal slave select
-	SPI2->CR1 |= SPI_CR1_BR_1;						// Baud rate (170Mhz/x): 000: /2; 001: /4; *010: /8; 011: /16; 100: /32; 101: /64
-	SPI2->CR1 |= SPI_CR1_SSM;						// Software NSS management
-	SPI2->CR2 |= 0b111 << SPI_CR2_DS_Pos;			// Data Size: 0b1011 = 12-bit; 0b111 = 8 bit
-
-	SPI2->CR1 |= SPI_CR1_SPE;						// Enable SPI
-
-	GPIOD->ODR |= GPIO_ODR_OD15;					// SPI2 NSS - initialise high
-}
 
 
 void InitMidiUART()
@@ -478,18 +417,6 @@ void InitEnvTimer() {
 }
 
 
-//	Setup Timer 5 on an interrupt to trigger tuner sample capture
-void InitTunerTimer()
-{
-	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM5EN;			// Enable Timer 5
-	TIM5->PSC = 1;									// Set prescaler
-	TIM5->ARR = 500; 								// Set auto reload register - 170Mhz / (PSC + 1) / ARR = ~10kHz
-
-	TIM5->DIER |= TIM_DIER_UIE;						// DMA/interrupt enable register
-	NVIC_EnableIRQ(TIM5_IRQn);
-	NVIC_SetPriority(TIM5_IRQn, 0);					// Lower is higher priority
-}
-
 
 void InitAdcPins(ADC_TypeDef* ADC_No, std::initializer_list<uint8_t> channels) {
 	uint8_t sequence = 1;
@@ -591,155 +518,6 @@ void InitADC1(volatile uint16_t* buffer, uint16_t channels)
 
 
 
-
-void InitADC3(volatile uint16_t* buffer, uint16_t channels)
-{
-	// Initialize Clocks
-	//RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
-	//RCC->AHB1ENR |= RCC_AHB1ENR_DMAMUX1EN;
-	RCC->AHB2ENR |= RCC_AHB2ENR_ADC345EN;
-	RCC->CCIPR |= RCC_CCIPR_ADC345SEL_1;			// 00: no clock, 01: PLL P clk clock, *10: System clock
-
-	DMA1_Channel2->CCR &= ~DMA_CCR_EN;
-	DMA1_Channel2->CCR |= DMA_CCR_CIRC;				// Circular mode to keep refilling buffer
-	DMA1_Channel2->CCR |= DMA_CCR_MINC;				// Memory in increment mode
-	DMA1_Channel2->CCR |= DMA_CCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
-	DMA1_Channel2->CCR |= DMA_CCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
-	DMA1_Channel2->CCR |= DMA_CCR_PL_0;				// Priority: 00 = low; 01 = Medium; 10 = High; 11 = Very High
-
-	DMA1->IFCR = 0x3F << DMA_IFCR_CGIF2_Pos;		// clear all five interrupts for this stream
-
-	DMAMUX1_Channel1->CCR |= 37; 					// DMA request MUX input 37 = ADC3 (See p.426)
-	DMAMUX1_ChannelStatus->CFR |= DMAMUX_CFR_CSOF1; // Channel 2 Clear synchronization overrun event flag
-
-	ADC3->CR &= ~ADC_CR_DEEPPWD;					// Deep power down: 0: ADC not in deep-power down	1: ADC in deep-power-down (default reset state)
-	ADC3->CR |= ADC_CR_ADVREGEN;					// Enable ADC internal voltage regulator
-
-	// Wait until voltage regulator settled
-	volatile uint32_t wait_loop_index = (SystemCoreClock / (100000UL * 2UL));
-	while (wait_loop_index != 0UL) {
-		wait_loop_index--;
-	}
-	while ((ADC3->CR & ADC_CR_ADVREGEN) != ADC_CR_ADVREGEN) {}
-
-	ADC345_COMMON->CCR |= ADC_CCR_CKMODE;			// adc_hclk/4 (Synchronous clock mode)
-	ADC3->CFGR |= ADC_CFGR_CONT;					// 1: Continuous conversion mode for regular conversions
-	ADC3->CFGR |= ADC_CFGR_OVRMOD;					// Overrun Mode 1: ADC_DR register is overwritten with the last conversion result when an overrun is detected.
-	ADC3->CFGR |= ADC_CFGR_DMACFG;					// 0: DMA One Shot Mode selected, 1: DMA Circular Mode selected
-	ADC3->CFGR |= ADC_CFGR_DMAEN;					// Enable ADC DMA
-
-	// For scan mode: set number of channels to be converted
-	ADC3->SQR1 |= (channels - 1);
-
-	// Start calibration
-	ADC3->CR &= ~ADC_CR_ADCALDIF;					// Calibration in single ended mode
-	ADC3->CR |= ADC_CR_ADCAL;
-	while ((ADC3->CR & ADC_CR_ADCAL) == ADC_CR_ADCAL) {};
-
-
-//	Configure ADC Channels to be converted:
-//	PE7 ADC3_IN4		Env1 Attack
-//	PE8 ADC345_IN6		Env1 Decay
-//	PE9 ADC3_IN2		Env1 Sustain
-//	PE10 ADC345_IN14	Env1 Release
-
-	InitAdcPins(ADC3, {4, 6, 2, 14});
-
-	// Enable ADC
-	ADC3->CR |= ADC_CR_ADEN;
-	while ((ADC3->ISR & ADC_ISR_ADRDY) == 0) {}
-
-	DMAMUX1_ChannelStatus->CFR |= DMAMUX_CFR_CSOF1; // Channel 2 Clear synchronization overrun event flag
-	DMA1->IFCR = 0x3F << DMA_IFCR_CGIF2_Pos;		// clear all five interrupts for this stream
-
-	DMA1_Channel2->CNDTR |= channels;				// Number of data items to transfer (ie size of ADC buffer)
-	DMA1_Channel2->CPAR = (uint32_t)(&(ADC3->DR));	// Configure the peripheral data register address 0x40022040
-	DMA1_Channel2->CMAR = (uint32_t)(buffer);		// Configure the memory address (note that M1AR is used for double-buffer mode) 0x24000040
-
-	DMA1_Channel2->CCR |= DMA_CCR_EN;				// Enable DMA and wait
-	wait_loop_index = (SystemCoreClock / (100000UL * 2UL));
-	while (wait_loop_index != 0UL) {
-		wait_loop_index--;
-	}
-
-	ADC3->CR |= ADC_CR_ADSTART;						// Start ADC
-}
-
-
-void InitADC4(volatile uint16_t* buffer, uint16_t channels)
-{
-	// Initialize Clocks
-	//RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
-	//RCC->AHB1ENR |= RCC_AHB1ENR_DMAMUX1EN;
-	//RCC->AHB2ENR |= RCC_AHB2ENR_ADC345EN;
-	//RCC->CCIPR |= RCC_CCIPR_ADC345SEL_1;			// 00: no clock, 01: PLL P clk clock, *10: System clock
-
-	DMA1_Channel3->CCR &= ~DMA_CCR_EN;
-	DMA1_Channel3->CCR |= DMA_CCR_CIRC;				// Circular mode to keep refilling buffer
-	DMA1_Channel3->CCR |= DMA_CCR_MINC;				// Memory in increment mode
-	DMA1_Channel3->CCR |= DMA_CCR_PSIZE_0;			// Peripheral size: 8 bit; 01 = 16 bit; 10 = 32 bit
-	DMA1_Channel3->CCR |= DMA_CCR_MSIZE_0;			// Memory size: 8 bit; 01 = 16 bit; 10 = 32 bit
-	DMA1_Channel3->CCR |= DMA_CCR_PL_0;				// Priority: 00 = low; 01 = Medium; 10 = High; 11 = Very High
-
-	DMA1->IFCR = 0x3F << DMA_IFCR_CGIF3_Pos;		// clear all five interrupts for this stream
-
-	DMAMUX1_Channel2->CCR |= 38; 					// DMA request MUX input 38 = ADC4 (See p.426)
-	DMAMUX1_ChannelStatus->CFR |= DMAMUX_CFR_CSOF2; // Channel 2 Clear synchronization overrun event flag
-
-	ADC4->CR &= ~ADC_CR_DEEPPWD;					// Deep power down: 0: ADC not in deep-power down	1: ADC in deep-power-down (default reset state)
-	ADC4->CR |= ADC_CR_ADVREGEN;					// Enable ADC internal voltage regulator
-
-	// Wait until voltage regulator settled
-	volatile uint32_t wait_loop_index = (SystemCoreClock / (100000UL * 2UL));
-	while (wait_loop_index != 0UL) {
-		wait_loop_index--;
-	}
-	while ((ADC4->CR & ADC_CR_ADVREGEN) != ADC_CR_ADVREGEN) {}
-
-	//ADC345_COMMON->CCR |= ADC_CCR_CKMODE;			// adc_hclk/4 (Synchronous clock mode)
-	ADC4->CFGR |= ADC_CFGR_CONT;					// 1: Continuous conversion mode for regular conversions
-	ADC4->CFGR |= ADC_CFGR_OVRMOD;					// Overrun Mode 1: ADC_DR register is overwritten with the last conversion result when an overrun is detected.
-	ADC4->CFGR |= ADC_CFGR_DMACFG;					// 0: DMA One Shot Mode selected, 1: DMA Circular Mode selected
-	ADC4->CFGR |= ADC_CFGR_DMAEN;					// Enable ADC DMA
-
-	// For scan mode: set number of channels to be converted
-	ADC4->SQR1 |= (channels - 1);
-
-	// Start calibration
-	ADC4->CR &= ~ADC_CR_ADCALDIF;					// Calibration in single ended mode
-	ADC4->CR |= ADC_CR_ADCAL;
-	while ((ADC4->CR & ADC_CR_ADCAL) == ADC_CR_ADCAL) {};
-
-
-//	Configure ADC Channels to be converted:
-//	PD9 ADC4_IN13 		ChannelBLevel
-//	PE11 ADC345_IN15	Env2 Attack
-//	PE12 ADC345_IN16	Env2 Decay
-//	PE14 ADC4_IN1		Env2 Sustain
-//	PE15 ADC4_IN2		Env2 Release
-
-
-	InitAdcPins(ADC4, {13, 15, 16, 1, 2});
-
-	// Enable ADC
-	ADC4->CR |= ADC_CR_ADEN;
-	while ((ADC4->ISR & ADC_ISR_ADRDY) == 0) {}
-
-	DMAMUX1_ChannelStatus->CFR |= DMAMUX_CFR_CSOF2; // Channel 3 Clear synchronization overrun event flag
-	DMA1->IFCR = 0x3F << DMA_IFCR_CGIF3_Pos;		// clear all five interrupts for this stream
-
-	DMA1_Channel3->CNDTR |= channels;				// Number of data items to transfer (ie size of ADC buffer)
-	DMA1_Channel3->CPAR = (uint32_t)(&(ADC4->DR));	// Configure the peripheral data register address 0x40022040
-	DMA1_Channel3->CMAR = (uint32_t)(buffer);		// Configure the memory address (note that M1AR is used for double-buffer mode) 0x24000040
-
-	DMA1_Channel3->CCR |= DMA_CCR_EN;				// Enable DMA and wait
-	wait_loop_index = (SystemCoreClock / (100000UL * 2UL));
-	while (wait_loop_index != 0UL) {
-		wait_loop_index--;
-	}
-
-	ADC4->CR |= ADC_CR_ADSTART;						// Start ADC
-}
 
 
 void InitCordic()

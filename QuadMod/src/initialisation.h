@@ -16,15 +16,9 @@ void InitMPU();
 void InitHyperRAM();
 
 //void InitDAC();
-//void InitIO();
 //void InitEnvTimer();
 //void InitADC1(volatile uint16_t* buffer, uint16_t channels);
-//void InitADC3(volatile uint16_t* buffer, uint16_t channels);
-//void InitADC4(volatile uint16_t* buffer, uint16_t channels);
 //void InitUart();
 //void InitCordic();
 //void InitPWMTimer();
 //void InitMidiUART();
-//void InitSPI2();
-//void InitSPI1();
-//void InitTunerTimer();
