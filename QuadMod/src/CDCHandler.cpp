@@ -59,9 +59,15 @@ void CDCHandler::ProcessCommand()
 			usb->SendString("Invalid register\r\n");
 		}
 
-	} else if (cmd.compare("hrid") == 0) {				// HyperRAM ID
-		uint32_t id = hyperRAM.GetID();
-		printf("HyperRAM ID: %#010lx\r\n", id);
+	} else if (cmd.compare(0, 5, "hrid:") == 0) {				// HyperRAM ID
+		uint32_t regNo;
+		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), regNo, 16);
+		if (res.ec == std::errc()) {
+			uint32_t id = hyperRAM.GetID(regNo);
+			printf("HyperRAM Register: %#010x Data: %#010lx\r\n", regNo, id);
+		} else {
+			usb->SendString("Invalid register\r\n");
+		}
 
 	} else if (cmd.compare("savecfg") == 0) {			// Save configuration
 		//config.SaveConfig();
