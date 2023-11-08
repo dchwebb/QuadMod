@@ -28,7 +28,9 @@ void CDCHandler::ProcessCommand()
 				"info           -  Show diagnostic information\r\n"
 				"readspi:HH     -  Read codec register at 0xHH\r\n"
 				"writespi:RR,VV -  Write value 0xVV to audio codec register 0xRR\r\n"
-				"hrid           -  Get HyperRAM ID\r\n"
+				"mreg:AAAAAAAA  -  Get HyperRAM Register at address 0xAAAAAAAA\r\n"
+				"mmem:AAAAAAAA  -  Get HyperRAM Memory at address 0xAAAAAAAA\r\n"
+				"wmem:AAAAAAAA,VVVV  -  Write HyperRAM Memory at address 0xAAAAAAAA\r\n"
 				"\r\n"
 		);
 
@@ -59,12 +61,38 @@ void CDCHandler::ProcessCommand()
 			usb->SendString("Invalid register\r\n");
 		}
 
-	} else if (cmd.compare(0, 5, "hrid:") == 0) {				// HyperRAM ID
-		uint32_t regNo;
-		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), regNo, 16);
+	} else if (cmd.compare(0, 5, "mreg:") == 0) {				// HyperRAM Register
+		uint32_t addr;
+		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), addr, 16);
 		if (res.ec == std::errc()) {
-			uint32_t id = hyperRAM.GetID(regNo);
-			printf("HyperRAM Register: %#010x Data: %#010lx\r\n", regNo, id);
+			uint32_t id = hyperRAM.Read(addr, HyperRAM::Register);
+			printf("HyperRAM Register: %#010lx Data: %#010lx\r\n", addr, id);
+		} else {
+			usb->SendString("Invalid register\r\n");
+		}
+
+	} else if (cmd.compare(0, 5, "mmem:") == 0) {				// HyperRAM Memory
+		uint32_t addr;
+		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), addr, 16);
+		if (res.ec == std::errc()) {
+			uint32_t id = hyperRAM.Read(addr, HyperRAM::Memory);
+			printf("HyperRAM Address: %#010lx Data: %#010lx\r\n", addr, id);
+		} else {
+			usb->SendString("Invalid register\r\n");
+		}
+
+	} else if (cmd.compare(0, 5, "wmem:") == 0) {				// Write HyperRAM Memory
+		uint32_t addr;
+		uint16_t value;
+		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), addr, 16);
+		if (res.ec == std::errc()) {
+			res = std::from_chars(cmd.data() + cmd.find(",") + 1, cmd.data() + cmd.size(), value, 16);
+			if (res.ec == std::errc()) {			// no error
+				hyperRAM.Write(addr, value);
+				printf("HyperRAM Address: %#010lx Data: %#010lx\r\n", addr, value);
+			} else {
+				usb->SendString("Invalid value\r\n");
+			}
 		} else {
 			usb->SendString("Invalid register\r\n");
 		}
