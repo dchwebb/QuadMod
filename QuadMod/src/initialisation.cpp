@@ -89,16 +89,19 @@ void InitHyperRAM()
 	RCC->AHB4ENR |= RCC_AHB4ENR_OCTOSPI1EN;
 	RCC->CCIPR4 &= ~RCC_CCIPR4_OCTOSPISEL;					// kernel clock 250MHz: 00 rcc_hclk4 (default); 01 pll1_q_ck; 10 pll2_r_ck; 11 per_ck
 
-	OCTOSPI1->DCR2 |= (19 << OCTOSPI_DCR2_PRESCALER_Pos);	// Set prescaler to n + 1 => 250MHz / 10 = 25MHz
+	// Various settings below taken from AN5050
 	OCTOSPI1->DCR1 |= (22 << OCTOSPI_DCR1_DEVSIZE_Pos);		// No. of bytes = 2^(DEVSIZE+1): 64Mb = 2^23 bytes
-	OCTOSPI1->DCR1 |= (1 << OCTOSPI_DCR1_CSHT_Pos);			// CSHT + 1: min no CLK cycles where NCS must stay high between commands - Min 10ns
+	OCTOSPI1->DCR1 |= (0 << OCTOSPI_DCR1_CSHT_Pos);			// CSHT + 1: min no CLK cycles where NCS must stay high between commands - Min 10ns
 	OCTOSPI1->DCR1 &= ~OCTOSPI_DCR1_CKMODE;					// Clock mode 0: CLK is low NCS high
 	OCTOSPI1->DCR1 |= (0b100 << OCTOSPI_DCR1_MTYP_Pos);		// 100: HyperBus memory mode; 101: HyperBus register mode
-	OCTOSPI1->DCR3 |= (3 << OCTOSPI_DCR3_CSBOUND_Pos);		// Set Chip select boundary; FIXME - not sure what this should be??
-	OCTOSPI1->DCR3 = 250; 									// Refresh Time: The chip select should be released every 4us: FIXME not sure about this
+	OCTOSPI1->DCR2 |= (19 << OCTOSPI_DCR2_PRESCALER_Pos);	// Set prescaler to n + 1 => 250MHz / 10 = 25MHz
+	OCTOSPI1->DCR3 |= (0 << OCTOSPI_DCR3_CSBOUND_Pos);		// Set Chip select boundary
+	OCTOSPI1->DCR4 = 250; 									// Refresh Time: The chip select should be released every 4us
 	OCTOSPI1->TCR |= OCTOSPI_TCR_DHQC;						// Delay hold quarter cycle; See RM p881
 	OCTOSPI1->HLCR |= (4 << OCTOSPI_HLCR_TACC_Pos);			// 40ns: Access time according to memory latency, in no of communication clock cycles
-	OCTOSPI1->HLCR |= (4 << OCTOSPI_HLCR_TRWR_Pos);			// 40ns: Minimum recovery time in number of communication clock cycles
+	OCTOSPI1->HLCR |= (3 << OCTOSPI_HLCR_TRWR_Pos);			// 40ns: Minimum recovery time in number of communication clock cycles
+	//OCTOSPI1->HLCR |= OCTOSPI_HLCR_WZL;						// Set write zero latency
+	OCTOSPI1->HLCR |= OCTOSPI_HLCR_LM;						// Latency mode	0: Variable initial latency; 1: Fixed latency
 }
 
 
