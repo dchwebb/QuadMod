@@ -89,7 +89,7 @@ void CDCHandler::ProcessCommand()
 			res = std::from_chars(cmd.data() + cmd.find(",") + 1, cmd.data() + cmd.size(), value, 16);
 			if (res.ec == std::errc()) {			// no error
 				hyperRAM.Write(addr, value);
-				printf("HyperRAM Address: %#010lx Data: %#010lx\r\n", addr, value);
+				printf("Write Address: %#010lx Data: %#010lx\r\n", addr, value);
 			} else {
 				usb->SendString("Invalid value\r\n");
 			}

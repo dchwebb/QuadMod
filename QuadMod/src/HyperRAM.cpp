@@ -51,7 +51,7 @@ uint32_t HyperRAM::Write(uint32_t address, uint16_t val)
 					  OCTOSPI_CCR_DQSE);					// DQS Enable
 	OCTOSPI1->CCR = OCTOSPI1->WCCR;
 
-	OCTOSPI1->TCR |= 4 << OCTOSPI_TCR_DCYC_Pos;
+	OCTOSPI1->WTCR |= 4 << OCTOSPI_TCR_DCYC_Pos;
 
 	OCTOSPI1->DCR1 &= ~OCTOSPI_DCR1_MTYP;					// 100: HyperBus memory mode; 101: HyperBus register mode
 	OCTOSPI1->DCR1 |= (Memory << OCTOSPI_DCR1_MTYP_Pos);	// 100: HyperBus memory mode; 101: HyperBus register mode
