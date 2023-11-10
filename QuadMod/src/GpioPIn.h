@@ -4,13 +4,13 @@ class GpioPin {
 public:
 	enum class Type {Input, Output, AlternateFunction};
 
-	GpioPin(GPIO_TypeDef* port, uint32_t pin, Type pinType, uint32_t alternateFunction = 0) :
+	GpioPin(GPIO_TypeDef* port, uint32_t pin, Type pinType, uint32_t alternateFunction = 0, uint32_t driveStrength = 0) :
 		port(port), pin(pin), pinType(pinType)
 	{
-		Init(port, pin, pinType, alternateFunction);		// Init function is static so can be called without instantiating object
+		Init(port, pin, pinType, alternateFunction, driveStrength);		// Init function is static so can be called without instantiating object
 	}
 
-	static void Init(GPIO_TypeDef* port, uint32_t pin, Type pinType, uint32_t alternateFunction = 0)
+	static void Init(GPIO_TypeDef* port, uint32_t pin, Type pinType, uint32_t alternateFunction = 0, uint32_t driveStrength = 0)
 	{
 		// maths to calculate RCC clock to enable
 		uint32_t portPos = ((uint32_t)port - AHB2PERIPH_BASE_NS) >> 10;
@@ -33,6 +33,8 @@ public:
 				port->AFR[1] |= alternateFunction << ((pin - 8) * 4);
 			}
 		}
+
+		port->OSPEEDR |= driveStrength << (pin * 2);
 	}
 
 	void SetHigh()

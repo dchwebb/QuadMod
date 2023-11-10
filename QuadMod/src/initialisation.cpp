@@ -74,17 +74,17 @@ void InitHardware()
 void InitHyperRAM()
 {
 	// Cypress S27KL0641 DABHI020: 3.0v, 64Mb, 100MHz
-	GpioPin::Init(GPIOA, 3, GpioPin::Type::AlternateFunction, 3);	// PA3  OCTOSPI_CLK AF3
-	GpioPin::Init(GPIOB, 1, GpioPin::Type::AlternateFunction, 6);	// PB1  OCTOSPI_IO0 AF6
-	GpioPin::Init(GPIOB, 0, GpioPin::Type::AlternateFunction, 6);	// PB0  OCTOSPI_IO1 AF6
-	GpioPin::Init(GPIOC, 2, GpioPin::Type::AlternateFunction, 9);	// PC2  OCTOSPI_IO2 AF9
-	GpioPin::Init(GPIOA, 6, GpioPin::Type::AlternateFunction, 6);	// PA6  OCTOSPI_IO3 AF6
-	GpioPin::Init(GPIOE, 7, GpioPin::Type::AlternateFunction, 10); 	// PE7  OCTOSPI_IO4 AF10
-	GpioPin::Init(GPIOE, 8, GpioPin::Type::AlternateFunction, 10); 	// PE8  OCTOSPI_IO5 AF10
-	GpioPin::Init(GPIOC, 3, GpioPin::Type::AlternateFunction, 6);	// PC3  OCTOSPI_IO6 AF6
-	GpioPin::Init(GPIOC, 0, GpioPin::Type::AlternateFunction, 10);	// PC0  OCTOSPI_IO7 AF10
-	GpioPin::Init(GPIOB, 10, GpioPin::Type::AlternateFunction, 9);	// PB10 OCTOSPI_NCS AF10
-	GpioPin::Init(GPIOB, 2, GpioPin::Type::AlternateFunction, 10);	// PB2  OCTOSPI_DQS AF10
+	GpioPin::Init(GPIOA, 3, GpioPin::Type::AlternateFunction, 3, 0b11);		// PA3  OCTOSPI_CLK AF3
+	GpioPin::Init(GPIOB, 1, GpioPin::Type::AlternateFunction, 6, 0b11);		// PB1  OCTOSPI_IO0 AF6
+	GpioPin::Init(GPIOB, 0, GpioPin::Type::AlternateFunction, 6, 0b11);		// PB0  OCTOSPI_IO1 AF6
+	GpioPin::Init(GPIOC, 2, GpioPin::Type::AlternateFunction, 9, 0b11);		// PC2  OCTOSPI_IO2 AF9
+	GpioPin::Init(GPIOA, 6, GpioPin::Type::AlternateFunction, 6, 0b11);		// PA6  OCTOSPI_IO3 AF6
+	GpioPin::Init(GPIOE, 7, GpioPin::Type::AlternateFunction, 10, 0b11); 	// PE7  OCTOSPI_IO4 AF10
+	GpioPin::Init(GPIOE, 8, GpioPin::Type::AlternateFunction, 10, 0b11); 	// PE8  OCTOSPI_IO5 AF10
+	GpioPin::Init(GPIOC, 3, GpioPin::Type::AlternateFunction, 6, 0b11);		// PC3  OCTOSPI_IO6 AF6
+	GpioPin::Init(GPIOC, 0, GpioPin::Type::AlternateFunction, 10, 0b11);	// PC0  OCTOSPI_IO7 AF10
+	GpioPin::Init(GPIOB, 10, GpioPin::Type::AlternateFunction, 9, 0b11);	// PB10 OCTOSPI_NCS AF10
+	GpioPin::Init(GPIOB, 2, GpioPin::Type::AlternateFunction, 10, 0b11);	// PB2  OCTOSPI_DQS AF10
 
 	RCC->AHB4ENR |= RCC_AHB4ENR_OCTOSPI1EN;
 	RCC->CCIPR4 &= ~RCC_CCIPR4_OCTOSPISEL;					// kernel clock 250MHz: 00 rcc_hclk4 (default); 01 pll1_q_ck; 10 pll2_r_ck; 11 per_ck
