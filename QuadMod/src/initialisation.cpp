@@ -5,7 +5,7 @@
 #define PLL_M 4
 #define PLL_N 250
 #define PLL_P 1				// 01: PLLP = /2
-#define PLL_Q 1				// 01: PLLQ = /2
+#define PLL_Q 4				// Divide by PPL_Q + 1
 
 void InitSystemClock(void) {
 	PWR->VOSCR |= PWR_VOSCR_VOS;						// Set power scaling to 11: VOS0 (highest frequency)
@@ -87,7 +87,8 @@ void InitHyperRAM()
 	GpioPin::Init(GPIOB, 2, GpioPin::Type::AlternateFunction, 10, 0b11);	// PB2  OCTOSPI_DQS AF10
 
 	RCC->AHB4ENR |= RCC_AHB4ENR_OCTOSPI1EN;
-	RCC->CCIPR4 &= ~RCC_CCIPR4_OCTOSPISEL;					// kernel clock 250MHz: 00 rcc_hclk4 (default); 01 pll1_q_ck; 10 pll2_r_ck; 11 per_ck
+	//RCC->CCIPR4 &= ~RCC_CCIPR4_OCTOSPISEL;					// kernel clock 250MHz: 00 rcc_hclk4 (default); 01 pll1_q_ck; 10 pll2_r_ck; 11 per_ck
+	RCC->CCIPR4 |= RCC_CCIPR4_OCTOSPISEL_0;					// kernel clock 100MHz: 00 rcc_hclk4; *01 pll1_q_ck; 10 pll2_r_ck; 11 per_ck
 
 	// Various settings below taken from AN5050
 	OCTOSPI1->CR |= (3 << OCTOSPI_CR_FTHRES_Pos);			// FIFO Threshold
@@ -95,13 +96,15 @@ void InitHyperRAM()
 	OCTOSPI1->DCR1 |= (7 << OCTOSPI_DCR1_CSHT_Pos);			// CSHT + 1: min no CLK cycles where NCS must stay high between commands - Min 10ns
 	OCTOSPI1->DCR1 &= ~OCTOSPI_DCR1_CKMODE;					// Clock mode 0: CLK is low NCS high
 	OCTOSPI1->DCR1 |= (0b100 << OCTOSPI_DCR1_MTYP_Pos);		// 100: HyperBus memory mode; 101: HyperBus register mode
-	OCTOSPI1->DCR2 |= (19 << OCTOSPI_DCR2_PRESCALER_Pos);	// Set prescaler to n + 1 => 250MHz / 10 = 25MHz
+	OCTOSPI1->DCR2 |= (4 << OCTOSPI_DCR2_PRESCALER_Pos);	// Set prescaler to n + 1 => 100MHz / 1 = 100MHz
+	//OCTOSPI1->DCR1 |= OCTOSPI_DCR1_DLYBYP;				// Delay block is bypassed
+	//OCTOSPI1->DCR1 |= OCTOSPI_DCR1_FRCK;					// Free running clock
 	OCTOSPI1->DCR3 |= (23 << OCTOSPI_DCR3_CSBOUND_Pos);		// Set Chip select boundary
 	OCTOSPI1->DCR4 = 250; 									// Refresh Time: The chip select should be released every 4us
 	OCTOSPI1->TCR |= OCTOSPI_TCR_DHQC;						// Delay hold quarter cycle; See RM p881
-	OCTOSPI1->HLCR |= (7 << OCTOSPI_HLCR_TACC_Pos);			// 40ns: Access time according to memory latency, in no of communication clock cycles
+	OCTOSPI1->HLCR |= (6 << OCTOSPI_HLCR_TACC_Pos);			// 40ns: Access time according to memory latency, in no of communication clock cycles
 	OCTOSPI1->HLCR |= (3 << OCTOSPI_HLCR_TRWR_Pos);			// 40ns: Minimum recovery time in number of communication clock cycles
-	//OCTOSPI1->HLCR |= OCTOSPI_HLCR_WZL;						// Set write zero latency
+	//OCTOSPI1->HLCR |= OCTOSPI_HLCR_WZL;					// Set write zero latency
 	OCTOSPI1->HLCR |= OCTOSPI_HLCR_LM;						// Latency mode	0: Variable initial latency; 1: Fixed latency
 }
 
@@ -117,7 +120,7 @@ void InitAudioCodec()
 	GpioPin::Init(GPIOG, 10, GpioPin::Type::AlternateFunction, 5);	// PG10: SPI1_NSS
 
 	// Configure SPI
-	SPI1->CFG1 |= SPI_CFG1_MBR_2;						// Baud rate (250Mhz/x): 000: /2; 001: /4; 010: /8; 011: /16; *100: /32; 101: /64
+	SPI1->CFG1 |= SPI_CFG1_MBR_1;						// Baud rate (100Mhz/x): 000: /2; 001: /4; *010: /8; 011: /16; 100: /32; 101: /64
 	SPI1->CR2  |= 1;									// Transfer size of 1
 	SPI1->CFG2 |= SPI_CFG2_SSOE;						// Hardware NSS management
 	SPI1->CFG1 |= 0b11111 << SPI_CFG1_DSIZE_Pos;		// Data Size: 0b111 = 8 bit; 0b11111 = 32bit

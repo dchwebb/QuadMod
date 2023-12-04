@@ -33,16 +33,11 @@ uint32_t HyperRAM::Read(uint32_t address, Mode mode)
 }
 
 
-uint32_t HyperRAM::Write(uint32_t address, uint16_t val)
+uint32_t HyperRAM::Write(uint32_t address, uint32_t val)
 {
-	// ID register 0 at 0x0
-	// ID register 1 at 0x2
-	// Configuration register 0 at 0x1000
-	// Configuration register 1 at 0x1002
-
 	MemMappedOff();
-	OCTOSPI1->DLR = 1;										// Write 2 bytes for register access, 4 for memory
-	OCTOSPI1->CR &= ~OCTOSPI_CR_FMODE;						// 00: Indirect write mode; 01: Indirect read mode; 10: Automatic polling mode; 11: Memory-mapped mode
+	OCTOSPI1->DLR = 0;										// Write 2 bytes
+	OCTOSPI1->CR &= ~OCTOSPI_CR_FMODE;						// *00: Indirect write mode; 01: Indirect read mode; 10: Automatic polling mode; 11: Memory-mapped mode
 	OCTOSPI1->WCCR |= (OCTOSPI_CCR_ADMODE_2 |				// Address: 000: None; 001: One line; 010: Two lines; 011: Four lines; *100: Eight lines
 					  OCTOSPI_CCR_ADSIZE |					// Address size 32 bits
 					  OCTOSPI_CCR_ADDTR |					// Address: double data rate
@@ -51,7 +46,7 @@ uint32_t HyperRAM::Write(uint32_t address, uint16_t val)
 					  OCTOSPI_CCR_DQSE);					// DQS Enable
 	OCTOSPI1->CCR = OCTOSPI1->WCCR;
 
-	OCTOSPI1->WTCR |= 4 << OCTOSPI_TCR_DCYC_Pos;
+	//OCTOSPI1->WTCR |= 4 << OCTOSPI_TCR_DCYC_Pos;
 
 	OCTOSPI1->DCR1 &= ~OCTOSPI_DCR1_MTYP;					// 100: HyperBus memory mode; 101: HyperBus register mode
 	OCTOSPI1->DCR1 |= (Memory << OCTOSPI_DCR1_MTYP_Pos);	// 100: HyperBus memory mode; 101: HyperBus register mode

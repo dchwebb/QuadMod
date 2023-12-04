@@ -8,7 +8,7 @@ public:
 	enum Mode : uint8_t {Register = 0b101, Memory = 0b100};
 
 	uint32_t Read(uint32_t address, Mode mode);
-	uint32_t Write(uint32_t address, uint16_t val);
+	uint32_t Write(uint32_t address, uint32_t val);
 
 private:
 	void MemMappedOff();

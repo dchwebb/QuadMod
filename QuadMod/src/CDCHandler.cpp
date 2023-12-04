@@ -45,7 +45,7 @@ void CDCHandler::ProcessCommand()
 			usb->SendString("Invalid register\r\n");
 		}
 
-	} else if (cmd.compare(0, 9, "writespi:") == 0) {				// write i2c register
+	} else if (cmd.compare(0, 9, "writespi:") == 0) {				// write spi register
 
 		uint8_t regNo, value;
 		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), regNo, 16);
@@ -83,7 +83,7 @@ void CDCHandler::ProcessCommand()
 
 	} else if (cmd.compare(0, 5, "wmem:") == 0) {				// Write HyperRAM Memory
 		uint32_t addr;
-		uint16_t value;
+		uint32_t value;
 		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), addr, 16);
 		if (res.ec == std::errc()) {
 			res = std::from_chars(cmd.data() + cmd.find(",") + 1, cmd.data() + cmd.size(), value, 16);
@@ -110,6 +110,7 @@ void CDCHandler::ProcessCommand()
 	cmdPending = false;
 }
 
+
 void CDCHandler::PrintString(const char* format, ...)
 {
 	va_list args;
@@ -121,7 +122,8 @@ void CDCHandler::PrintString(const char* format, ...)
 }
 
 
-char* CDCHandler::HexToString(const uint8_t* v, uint32_t len, const bool spaces) {
+char* CDCHandler::HexToString(const uint8_t* v, uint32_t len, const bool spaces)
+{
 	const uint8_t byteLen = spaces ? 3 : 2;
 	uint32_t pos = 0;
 	len = std::min(maxStrLen / byteLen, len);
@@ -134,7 +136,8 @@ char* CDCHandler::HexToString(const uint8_t* v, uint32_t len, const bool spaces)
 }
 
 
-char* CDCHandler::HexToString(const uint16_t v) {
+char* CDCHandler::HexToString(const uint16_t v)
+{
 	sprintf(stringBuf, "%04X", v);
 	return (char*)&stringBuf;
 }
