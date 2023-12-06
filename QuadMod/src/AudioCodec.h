@@ -20,6 +20,7 @@ public:
 
 	static constexpr uint32_t audioBuffSize = 34000;
 	uint16_t buffPos = 0;
+	uint16_t playBuff = 10000;
 	float audioBuffer[4][audioBuffSize] = {};
 
 private:

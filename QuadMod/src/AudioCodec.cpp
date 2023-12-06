@@ -86,10 +86,13 @@ void AudioCodec::TestOutput()
 
 	// Output: SAI1 Block A FIFO request
 	if ((SAI1_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		SAI1_Block_A->DR = dataIn.channel1;
-		SAI1_Block_A->DR = dataIn.channel3;
-		SAI1_Block_B->DR = dataIn.channel2;
-		SAI1_Block_B->DR = dataIn.channel4;
+		if (playBuff++ == audioBuffSize) {
+			playBuff = 0;
+		}
+		SAI1_Block_A->DR = audioBuffer[0][playBuff];
+		SAI1_Block_B->DR = audioBuffer[1][playBuff];
+		SAI1_Block_A->DR = audioBuffer[2][playBuff];
+		SAI1_Block_B->DR = audioBuffer[3][playBuff];
 	}
 
 	GPIOG->ODR &= ~GPIO_ODR_OD12;
