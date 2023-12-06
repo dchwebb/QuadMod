@@ -57,18 +57,11 @@ inline void AudioCodec::SendCmd(Command cmd)
 }
 
 
-
-// For generating test signals
-float sinePos = 0.0f;
-int32_t sinOutput = 0;
-int32_t triInc = 10000000;
-int32_t triOutput = 0;
-
 void AudioCodec::TestOutput()
 {
 	GPIOG->ODR |= GPIO_ODR_OD12;
 
-	// Check if SAI2 Block A has FIFO request (Input)
+	// Input: SAI2 Block A FIFO request
 	while ((SAI2_Block_A->SR & SAI_xSR_FREQ) != 0) {
 		GPIOG->ODR |= GPIO_ODR_OD6;
 		if (dataIn.leftRight) {
@@ -77,32 +70,26 @@ void AudioCodec::TestOutput()
 		} else {
 			dataIn.channel3 = SAI2_Block_A->DR;
 			dataIn.channel4 = SAI2_Block_B->DR;
+
+			audioBuffer[0][buffPos] = (float)dataIn.channel1;
+			audioBuffer[1][buffPos] = (float)dataIn.channel2;
+			audioBuffer[2][buffPos] = (float)dataIn.channel3;
+			audioBuffer[3][buffPos] = (float)dataIn.channel4;
+			if (buffPos++ == audioBuffSize) {
+				buffPos = 0;
+			}
 		}
 		dataIn.leftRight = !dataIn.leftRight;
 		GPIOG->ODR &= ~GPIO_ODR_OD6;
 	}
 
-	// Check if SAI1 Block A FIFO request (Output)
+
+	// Output: SAI1 Block A FIFO request
 	if ((SAI1_Block_A->SR & SAI_xSR_FREQ) != 0) {
-
-		// Generate test signals for output and look-back testing
-		sinePos += 0.01f;
-		if (sinePos > 2.0f * M_PI) {
-			sinePos -= 2.0f * M_PI;
-		}
-		sinOutput = (int32_t)(std::sin(sinePos) * std::numeric_limits<int32_t>::max());
-
-		int32_t newTri = triOutput + triInc;
-		if ((triInc > 0 && newTri < triOutput) || (triInc < 0 && newTri > triOutput)) {
-			triInc = -triInc;
-		} else {
-			triOutput = newTri;
-		}
-
-		SAI1_Block_A->DR = std::bit_cast<uint32_t>(triOutput);
-		SAI1_Block_A->DR = dataIn.channel2;
-		SAI1_Block_B->DR = std::bit_cast<uint32_t>(sinOutput);
-		SAI1_Block_B->DR = dataIn.channel3;
+		SAI1_Block_A->DR = dataIn.channel1;
+		SAI1_Block_A->DR = dataIn.channel3;
+		SAI1_Block_B->DR = dataIn.channel2;
+		SAI1_Block_B->DR = dataIn.channel4;
 	}
 
 	GPIOG->ODR &= ~GPIO_ODR_OD12;

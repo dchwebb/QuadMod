@@ -3,7 +3,7 @@
 #include "AudioCodec.h"
 
 volatile uint32_t SysTickVal;
-volatile uint32_t outputUSB = 0;
+volatile uint32_t outputUSB = 0;		// USB debugging
 
 extern "C" {
 #include "interrupts.h"

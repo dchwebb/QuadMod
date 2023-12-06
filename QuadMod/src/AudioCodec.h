@@ -18,6 +18,10 @@ public:
 		bool leftRight = true;		// to keep count of which channel we are receiving
 	} dataIn;
 
+	static constexpr uint32_t audioBuffSize = 34000;
+	uint16_t buffPos = 0;
+	float audioBuffer[4][audioBuffSize] = {};
+
 private:
 	struct __attribute__((__packed__)) Command {
 		enum CommandType : uint8_t {Read  = 0x43, Write = 0xC3, activateSPI = 0xDE};
