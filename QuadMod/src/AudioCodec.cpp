@@ -66,18 +66,18 @@ void AudioCodec::TestOutput()
 		GPIOG->ODR |= GPIO_ODR_OD6;
 		if (dataIn.leftRight) {
 			dataIn.channel1 = SAI2_Block_A->DR;
-			dataIn.channel2 = SAI2_Block_B->DR;
+			dataIn.channel3 = SAI2_Block_B->DR;
 		} else {
-			dataIn.channel3 = SAI2_Block_A->DR;
+			dataIn.channel2 = SAI2_Block_A->DR;
 			dataIn.channel4 = SAI2_Block_B->DR;
 
-			audioBuffer[0][buffPos] = (float)dataIn.channel1;
-			audioBuffer[1][buffPos] = (float)dataIn.channel2;
-			audioBuffer[2][buffPos] = (float)dataIn.channel3;
-			audioBuffer[3][buffPos] = (float)dataIn.channel4;
-			if (buffPos++ == audioBuffSize) {
+			if (++buffPos == audioBuffSize) {
 				buffPos = 0;
 			}
+			audioBuffer[0][buffPos] = normalise32Bit * dataIn.channel1;
+			audioBuffer[1][buffPos] = normalise32Bit * dataIn.channel2;
+			audioBuffer[2][buffPos] = normalise32Bit * dataIn.channel3;
+			audioBuffer[3][buffPos] = normalise32Bit * dataIn.channel4;
 		}
 		dataIn.leftRight = !dataIn.leftRight;
 		GPIOG->ODR &= ~GPIO_ODR_OD6;
@@ -86,13 +86,22 @@ void AudioCodec::TestOutput()
 
 	// Output: SAI1 Block A FIFO request
 	if ((SAI1_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		if (playBuff++ == audioBuffSize) {
+		if (++playBuff == audioBuffSize) {
 			playBuff = 0;
 		}
-		SAI1_Block_A->DR = audioBuffer[0][playBuff];
-		SAI1_Block_B->DR = audioBuffer[1][playBuff];
-		SAI1_Block_A->DR = audioBuffer[2][playBuff];
-		SAI1_Block_B->DR = audioBuffer[3][playBuff];
+		float leftOut  = denormalise32Bit * ((0.75 * audioBuffer[0][playBuff]) + (0.5 * audioBuffer[1][playBuff]) + (0.25 * audioBuffer[2][playBuff]));
+		float rightOut = denormalise32Bit * ((0.75 * audioBuffer[3][playBuff]) + (0.5 * audioBuffer[2][playBuff]) + (0.25 * audioBuffer[1][playBuff]));
+
+		audioBuffer[0][buffPos] += 0.75 * audioBuffer[3][playBuff];
+		audioBuffer[1][buffPos] += 0.75 * audioBuffer[0][playBuff];
+		audioBuffer[2][buffPos] += 0.75 * audioBuffer[1][playBuff];
+		audioBuffer[3][buffPos] += 0.75 * audioBuffer[2][playBuff];
+
+		//SAI1_Block_A->DR = (int32_t)(denormalise32Bit * audioBuffer[0][playBuff]); //(int32_t)leftOut;
+		SAI1_Block_A->DR = (int32_t)leftOut;
+		SAI1_Block_B->DR = (int32_t)leftOut;
+		SAI1_Block_A->DR = (int32_t)rightOut;
+		SAI1_Block_B->DR = (int32_t)rightOut;
 	}
 
 	GPIOG->ODR &= ~GPIO_ODR_OD12;

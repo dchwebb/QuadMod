@@ -2,6 +2,7 @@
 
 #include "initialisation.h"
 #include "GpioPin.h"
+#include <cmath>
 
 class AudioCodec {
 public:
@@ -11,16 +12,16 @@ public:
 	void TestOutput();
 
 	struct {
-		uint32_t channel1;
-		uint32_t channel2;
-		uint32_t channel3;
-		uint32_t channel4;
+		int32_t channel1;
+		int32_t channel2;
+		int32_t channel3;
+		int32_t channel4;
 		bool leftRight = true;		// to keep count of which channel we are receiving
 	} dataIn;
 
-	static constexpr uint32_t audioBuffSize = 34000;
+	static constexpr uint32_t audioBuffSize = 14000;
 	uint16_t buffPos = 0;
-	uint16_t playBuff = 10000;
+	uint16_t playBuff = 1000;
 	float audioBuffer[4][audioBuffSize] = {};
 
 private:
@@ -33,10 +34,12 @@ private:
 		uint16_t address;
 		CommandType cmdCode;
 	};
-
 	void SendCmd(Command cmd);
 
 	GpioPin pdnPin{GPIOD, 15, GpioPin::Type::Output};		// PDN pin is used to bring Codec out of reset
+
+	static constexpr float normalise32Bit = 1.0f / std::pow(2, 31);
+	static constexpr float denormalise32Bit = std::pow(2, 30);
 };
 
 extern AudioCodec audioCodec;
