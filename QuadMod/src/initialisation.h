@@ -11,6 +11,15 @@ struct ADCValues {
 	uint16_t val2;
 };
 
+struct DMALinkedList {
+	uint32_t TR1;
+	uint32_t TR2;
+	uint32_t BR1;
+	uint32_t SAR;
+	uint32_t DAR;
+	uint32_t LLR;
+};
+
 extern volatile ADCValues adc;
 
 void InitSystemClock();

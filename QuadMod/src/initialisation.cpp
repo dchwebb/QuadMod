@@ -270,6 +270,8 @@ void InitAdcPins(ADC_TypeDef* ADC_No, std::initializer_list<uint8_t> channels)
 }
 
 
+DMALinkedList dmaLinkedList;
+
 void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 {
 	// Initialize Clocks
@@ -285,6 +287,10 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 	GPDMA1_Channel0->CTR1 |= DMA_CTR1_DINC;				// Increment destination address
 	GPDMA1_Channel0->CTR1 |= DMA_CTR1_SDW_LOG2_0;		// Source data size: 00: 8 bit; 01 = 16 bit; 10 = 32 bit
 	GPDMA1_Channel0->CTR1 |= DMA_CTR1_DDW_LOG2_0;		// Destination data size: 00: 8 bit; 01 = 16 bit; 10 = 32 bit
+
+//	GPDMA1_Channel0->CBR1 |= DMA_CBR1_DDEC;				// Decrement destination address after block transfer
+//	GPDMA1_Channel0->CTR3 |= channels << DMA_CTR3_DAO_Pos;	// No of bytes to decrement destination address
+
 
 	GPDMA1_Channel0->CFCR = 0x7F << DMA_CFCR_TCF_Pos;	// clear all interrupts for this stream
 
@@ -330,6 +336,20 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 	GPDMA1_Channel0->CBR1 |= channels * 2;				// Number of bytes (data items * 2) to transfer
 	GPDMA1_Channel0->CSAR= (uint32_t)(&(ADC2->DR));	// Configure the source data register address
 	GPDMA1_Channel0->CDAR = (uint32_t)(buffer);		// Configure the memory address
+
+	GPDMA1_Channel0->CLBAR = (uint32_t)&dmaLinkedList & 0xFFFF0000;
+
+	// Get the linked list address low 16 bits and divide by four
+	uint16_t addrLow = ((uint32_t)&dmaLinkedList & 0xFFFF) >> 2;
+	GPDMA1_Channel0->CLLR = addrLow << DMA_CLLR_LA_Pos;		// Configure the memory address
+	GPDMA1_Channel0->CLLR |= DMA_CLLR_UT1 | DMA_CLLR_UT2 | DMA_CLLR_UB1 | DMA_CLLR_UDA | DMA_CLLR_USA | DMA_CLLR_ULL;	// Update the data count and destination address from the linked list item
+
+	dmaLinkedList.TR1 = GPDMA1_Channel0->CTR1;
+	dmaLinkedList.TR2 = GPDMA1_Channel0->CTR2;
+	dmaLinkedList.BR1 = GPDMA1_Channel0->CBR1;
+	dmaLinkedList.SAR = GPDMA1_Channel0->CSAR;
+	dmaLinkedList.DAR = GPDMA1_Channel0->CDAR;
+	dmaLinkedList.LLR = GPDMA1_Channel0->CLLR;
 
 	GPDMA1_Channel0->CCR |= DMA_CCR_EN;				// Enable DMA and wait
 	wait_loop_index = (SystemCoreClock / (100000UL * 2UL));
