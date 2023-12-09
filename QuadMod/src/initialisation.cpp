@@ -261,38 +261,22 @@ void InitAdcPins(ADC_TypeDef* ADC_No, std::initializer_list<uint8_t> channels)
 
 		// 000: 3 cycles, 001: 15 cycles, 010: 28 cycles, 011: 56 cycles, 100: 84 cycles, 101: 112 cycles, 110: 144 cycles, 111: 480 cycles
 		if (channel < 10)
-			ADC_No->SMPR1 |= 0b010 << (3 * channel);
+			ADC_No->SMPR1 |= 0b111 << (3 * channel);
 		else
-			ADC_No->SMPR2 |= 0b010 << (3 * (channel - 10));
+			ADC_No->SMPR2 |= 0b111 << (3 * (channel - 10));
 
 		sequence++;
 	}
 }
 
 
-DMALinkedList dmaLinkedList;
-
 void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 {
 	// Initialize Clocks
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPDMA1EN;
 	RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN;
-	RCC->CCIPR5 |= (3 << RCC_CCIPR5_ADCDACSEL_Pos);		// 000: rcc_hclk; 001: sys_ck; 010: pll2_r_ck; *011: hse_ck; 100: hsi_ker_ck; 101: csi_ker_ck
+	RCC->CCIPR5 |= (3 << RCC_CCIPR5_ADCDACSEL_Pos);	// 000: rcc_hclk; 001: sys_ck; 010: pll2_r_ck; *011: hse_ck; 100: hsi_ker_ck; 101: csi_ker_ck
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOFEN;
-
-	GPDMA1_Channel0->CTR2 |= (1 << DMA_CTR2_REQSEL_Pos);		// See page 621 for DMA channel assignments
-
-	GPDMA1_Channel0->CCR &= ~DMA_CCR_EN;
-	GPDMA1_Channel0->CLLR |= DMA_CLLR_UB1;				// Circular mode to keep refilling buffer
-	GPDMA1_Channel0->CTR1 |= DMA_CTR1_DINC;				// Increment destination address
-	GPDMA1_Channel0->CTR1 |= DMA_CTR1_SDW_LOG2_0;		// Source data size: 00: 8 bit; 01 = 16 bit; 10 = 32 bit
-	GPDMA1_Channel0->CTR1 |= DMA_CTR1_DDW_LOG2_0;		// Destination data size: 00: 8 bit; 01 = 16 bit; 10 = 32 bit
-
-//	GPDMA1_Channel0->CBR1 |= DMA_CBR1_DDEC;				// Decrement destination address after block transfer
-//	GPDMA1_Channel0->CTR3 |= channels << DMA_CTR3_DAO_Pos;	// No of bytes to decrement destination address
-
-
-	GPDMA1_Channel0->CFCR = 0x7F << DMA_CFCR_TCF_Pos;	// clear all interrupts for this stream
 
 	ADC2->CR &= ~ADC_CR_DEEPPWD;					// Deep power down: 0: not in deep-power down	1: ADC in deep-power-down (default reset state)
 	ADC2->CR |= ADC_CR_ADVREGEN;					// Enable ADC internal voltage regulator
@@ -324,26 +308,30 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 	PF13 ADC2_IN2
 	PF14 ADC2_IN6
 	*/
-
 	InitAdcPins(ADC2, {2, 6});
 
 	// Enable ADC
 	ADC2->CR |= ADC_CR_ADEN;
 	while ((ADC2->ISR & ADC_ISR_ADRDY) == 0) {}
 
-	GPDMA1_Channel0->CFCR = 0x7F << DMA_CFCR_TCF_Pos;	// clear all interrupts for this stream
+	// Initialise DMA registers
+	GPDMA1_Channel0->CCR &= ~DMA_CCR_EN;
+	GPDMA1_Channel0->CTR1 |= DMA_CTR1_DINC;					// Increment destination address
+	GPDMA1_Channel0->CTR1 |= DMA_CTR1_SDW_LOG2_0;			// Source data size: 00: 8 bit; 01 = 16 bit; 10 = 32 bit
+	GPDMA1_Channel0->CTR1 |= DMA_CTR1_DDW_LOG2_0;			// Destination data size: 00: 8 bit; 01 = 16 bit; 10 = 32 bit
+	GPDMA1_Channel0->CTR2 |= (1 << DMA_CTR2_REQSEL_Pos);	// See page 621 for DMA channel assignments
+	GPDMA1_Channel0->CBR1 |= channels * 2;					// Number of bytes (data items * 2) to transfer
+	GPDMA1_Channel0->CSAR= (uint32_t)(&(ADC2->DR));			// Configure the source data register address
+	GPDMA1_Channel0->CDAR = (uint32_t)(buffer);				// Configure the memory address
 
-	GPDMA1_Channel0->CBR1 |= channels * 2;				// Number of bytes (data items * 2) to transfer
-	GPDMA1_Channel0->CSAR= (uint32_t)(&(ADC2->DR));	// Configure the source data register address
-	GPDMA1_Channel0->CDAR = (uint32_t)(buffer);		// Configure the memory address
+	static DMALinkedList dmaLinkedList;						// Create a linked list node which holds register values to be reloaded each cycle
+	GPDMA1_Channel0->CLBAR = (uint32_t)&dmaLinkedList & 0xFFFF0000;		// Linked list base address (top 16 bits)
+	uint16_t addrLow = ((uint32_t)&dmaLinkedList & 0xFFFF);	// Get the linked list address low 16 bits
 
-	GPDMA1_Channel0->CLBAR = (uint32_t)&dmaLinkedList & 0xFFFF0000;
+	// Configure the linked list register with the low bits of the linked list memory address and the registers to load on restart
+	GPDMA1_Channel0->CLLR = addrLow | DMA_CLLR_UT1 | DMA_CLLR_UT2 | DMA_CLLR_UB1 | DMA_CLLR_UDA | DMA_CLLR_USA | DMA_CLLR_ULL;
 
-	// Get the linked list address low 16 bits and divide by four
-	uint16_t addrLow = ((uint32_t)&dmaLinkedList & 0xFFFF) >> 2;
-	GPDMA1_Channel0->CLLR = addrLow << DMA_CLLR_LA_Pos;		// Configure the memory address
-	GPDMA1_Channel0->CLLR |= DMA_CLLR_UT1 | DMA_CLLR_UT2 | DMA_CLLR_UB1 | DMA_CLLR_UDA | DMA_CLLR_USA | DMA_CLLR_ULL;	// Update the data count and destination address from the linked list item
-
+	// Store the configured register values in the linked list node to be reloaded when conversion complete
 	dmaLinkedList.TR1 = GPDMA1_Channel0->CTR1;
 	dmaLinkedList.TR2 = GPDMA1_Channel0->CTR2;
 	dmaLinkedList.BR1 = GPDMA1_Channel0->CBR1;
@@ -351,14 +339,12 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 	dmaLinkedList.DAR = GPDMA1_Channel0->CDAR;
 	dmaLinkedList.LLR = GPDMA1_Channel0->CLLR;
 
-	GPDMA1_Channel0->CCR |= DMA_CCR_EN;				// Enable DMA and wait
-	wait_loop_index = (SystemCoreClock / (100000UL * 2UL));
-	while (wait_loop_index != 0UL) {
-		wait_loop_index--;
-	}
+	GPDMA1_Channel0->CFCR = 0x7F << DMA_CFCR_TCF_Pos;	// clear all interrupts for this stream
+	GPDMA1_Channel0->CCR |= DMA_CCR_EN;					// Enable DMA
 
-	ADC2->CR |= ADC_CR_ADSTART;						// Start ADC
+	ADC2->CR |= ADC_CR_ADSTART;							// Start ADC
 }
+
 
 /*
 void InitDAC()
