@@ -4,6 +4,7 @@
 
 volatile uint32_t SysTickVal;
 volatile uint32_t outputUSB = 0;		// USB debugging
+volatile ADCValues adc;
 
 extern "C" {
 #include "interrupts.h"
