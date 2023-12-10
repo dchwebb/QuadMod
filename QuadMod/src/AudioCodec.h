@@ -12,17 +12,14 @@ public:
 	void TestOutput();
 
 	struct {
-		int32_t channel1;
-		int32_t channel2;
-		int32_t channel3;
-		int32_t channel4;
+		float channel1;
+		float channel2;
+		float channel3;
+		float channel4;
 		bool leftRight = true;		// to keep count of which channel we are receiving
 	} dataIn;
 
-	static constexpr uint32_t audioBuffSize = 14000;
-	uint16_t buffPos = 0;
-	uint16_t playBuff = 1000;
-	float audioBuffer[4][audioBuffSize] = {};
+
 
 private:
 	struct __attribute__((__packed__)) Command {
