@@ -8,6 +8,8 @@ public:
 	std::pair<float, float> GetSamples(float* samples);
 
 private:
+	float FastTanh(float x);
+
 	static constexpr uint32_t audioBuffSize = 34000;
 	int32_t writePos = 0;
 	int32_t readPos = 1000;

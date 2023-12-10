@@ -36,7 +36,7 @@ private:
 	GpioPin pdnPin{GPIOD, 15, GpioPin::Type::Output};		// PDN pin is used to bring Codec out of reset
 
 	static constexpr float normalise32Bit = 1.0f / std::pow(2, 31);
-	static constexpr float denormalise32Bit = std::pow(2, 30);
+	static constexpr float denormalise32Bit = std::pow(2, 31);
 };
 
 extern AudioCodec audioCodec;
