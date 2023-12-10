@@ -25,10 +25,10 @@ std::pair<float, float> Delay::GetSamples(float* recordedSamples)
 	float feedback = feedbackScale * adc.delayFeedback;
 
 	// Store the latest recorded sample and the delayed sample back to the audio buffer, shuffling each sample along the stereo field
-	audioBuffer[0][writePos] = recordedSamples[0] + feedback * newSample[3];
-	audioBuffer[1][writePos] = recordedSamples[1] + feedback * newSample[0];
-	audioBuffer[2][writePos] = recordedSamples[2] + feedback * newSample[1];
-	audioBuffer[3][writePos] = recordedSamples[3] + feedback * newSample[2];
+	audioBuffer[0][writePos] = lpFilter.CalcFilter(recordedSamples[0] + feedback * newSample[3], 0);
+	audioBuffer[1][writePos] = lpFilter.CalcFilter(recordedSamples[1] + feedback * newSample[0], 1);
+	audioBuffer[2][writePos] = lpFilter.CalcFilter(recordedSamples[2] + feedback * newSample[1], 2);
+	audioBuffer[3][writePos] = lpFilter.CalcFilter(recordedSamples[3] + feedback * newSample[2], 3);
 
 	calcDelay = std::min((uint32_t)(1000 + adc.delayTime) * 6, audioBuffSize);
 
@@ -44,8 +44,8 @@ std::pair<float, float> Delay::GetSamples(float* recordedSamples)
 	}
 
 	// Arrange the delay lines from left to right in the stereo field
-	float leftOut  = FastTanh((0.6 * newSample[0]) + (0.4 * newSample[1]) + (0.25 * newSample[2]));
-	float rightOut = FastTanh((0.6 * newSample[3]) + (0.4 * newSample[2]) + (0.25 * newSample[1]));
+	float leftOut  = FastTanh((0.5 * newSample[0]) + (0.36 * newSample[1]) + (0.15 * newSample[2]));
+	float rightOut = FastTanh((0.5 * newSample[3]) + (0.36 * newSample[2]) + (0.15 * newSample[1]));
 
 	return std::make_pair(leftOut, rightOut);
 }
@@ -58,4 +58,10 @@ float Delay::FastTanh(float x)
 	float a = x * (135135.0f + x2 * (17325.0f + x2 * (378.0f + x2)));
 	float b = 135135.0f + x2 * (62370.0f + x2 * (3150.0f + x2 * 28.0f));
 	return a / b;
+}
+
+
+void Delay::UpdateFilter()
+{
+	lpFilter.Update(false);
 }

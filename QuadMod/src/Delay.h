@@ -1,11 +1,13 @@
 #pragma once
 
 #include "initialisation.h"
+#include "Filter.h"
 #include <tuple>
 
 class Delay {
 public:
 	std::pair<float, float> GetSamples(float* samples);
+	void UpdateFilter();
 
 private:
 	float FastTanh(float x);
@@ -24,6 +26,13 @@ private:
 	int16_t delayHysteresis = 900;
 	static constexpr int16_t crossfade = 6000;
 	static constexpr int16_t tempoHysteresis = 100;
+
+	float lpInitCutoff = 0.5f;
+	float lpFinalCutoff = 0.1f;
+	float lpCutoffInc = 0.99998f;
+	float lpFilterCutoff = lpInitCutoff;
+
+	Filter<2> lpFilter{filterPass::LowPass, &adc.delayFilter};
 };
 
 extern Delay delay;

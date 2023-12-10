@@ -64,7 +64,7 @@ void InitHardware()
 {
 	InitSysTick();
 	InitMPU();
-	InitADC2(reinterpret_cast<volatile uint16_t*>(&adc), 2);
+	InitADC2(reinterpret_cast<volatile uint16_t*>(&adc), 3);
 
 	// Debug pins - PG12, PG6
 	GpioPin::Init(GPIOG, 6, GpioPin::Type::Output);
@@ -307,8 +307,9 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 	Configure ADC Channels to be converted:
 	PF13 ADC2_IN2
 	PF14 ADC2_IN6
+	PB1 ADC12_IN5
 	*/
-	InitAdcPins(ADC2, {2, 6});
+	InitAdcPins(ADC2, {2, 6, 5});
 
 	// Enable ADC
 	ADC2->CR |= ADC_CR_ADEN;

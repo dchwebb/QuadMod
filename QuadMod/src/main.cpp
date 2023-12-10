@@ -1,6 +1,7 @@
 #include "initialisation.h"
 #include "USB.h"
 #include "AudioCodec.h"
+#include "Delay.h"
 
 volatile uint32_t SysTickVal;
 volatile uint32_t outputUSB = 0;		// USB debugging
@@ -28,6 +29,7 @@ int main(void)
 		}
 #endif
 		usb.cdc.ProcessCommand();
+		delay.UpdateFilter();
 	}
 }
 

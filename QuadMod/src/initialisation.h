@@ -9,6 +9,7 @@ static constexpr uint32_t sampleRate = 48000;
 struct ADCValues {
 	uint16_t delayFeedback;
 	uint16_t delayTime;
+	uint16_t delayFilter;
 };
 
 struct DMALinkedList {
