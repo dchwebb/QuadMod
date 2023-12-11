@@ -3,10 +3,10 @@
 
 Delay delay;
 
-std::pair<float, float> Delay::GetSamples(float* recordedSamples)
+std::pair<float, float> Delay::GetSamples(const float* recordedSamples)
 {
-	if (++writePos == audioBuffSize) {	writePos = 0; }
-	if (++readPos == audioBuffSize) {	readPos = 0; }
+	if (++writePos == audioBuffSize)   { writePos = 0; }
+	if (++readPos == audioBuffSize)    { readPos = 0; }
 	if (++oldReadPos == audioBuffSize) { oldReadPos = 0;}
 
 	float newSample[4] = {audioBuffer[0][readPos], audioBuffer[1][readPos], audioBuffer[2][readPos], audioBuffer[3][readPos]};
@@ -22,7 +22,7 @@ std::pair<float, float> Delay::GetSamples(float* recordedSamples)
 	}
 
 	static constexpr float feedbackScale = 1.0f / 4096.0f;
-	float feedback = feedbackScale * adc.delayFeedback;
+	const float feedback = feedbackScale * adc.delayFeedback;
 
 	// Store the latest recorded sample and the delayed sample back to the audio buffer, shuffling each sample along the stereo field
 	audioBuffer[0][writePos] = lpFilter.CalcFilter(recordedSamples[0] + feedback * newSample[3], 0);
@@ -44,15 +44,15 @@ std::pair<float, float> Delay::GetSamples(float* recordedSamples)
 	}
 
 	// Arrange the delay lines from left to right in the stereo field
-	float leftOut  = FastTanh((0.5 * newSample[0]) + (0.36 * newSample[1]) + (0.15 * newSample[2]));
-	float rightOut = FastTanh((0.5 * newSample[3]) + (0.36 * newSample[2]) + (0.15 * newSample[1]));
+	const float leftOut  = FastTanh((0.5 * newSample[0]) + (0.36 * newSample[1]) + (0.15 * newSample[2]));
+	const float rightOut = FastTanh((0.5 * newSample[3]) + (0.36 * newSample[2]) + (0.15 * newSample[1]));
 
 	return std::make_pair(leftOut, rightOut);
 }
 
 
 // Algorithm source: https://varietyofsound.wordpress.com/2011/02/14/efficient-tanh-computation-using-lamberts-continued-fraction/
-float Delay::FastTanh(float x)
+float Delay::FastTanh(const float x)
 {
 	float x2 = x * x;
 	float a = x * (135135.0f + x2 * (17325.0f + x2 * (378.0f + x2)));

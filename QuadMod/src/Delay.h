@@ -2,11 +2,12 @@
 
 #include "initialisation.h"
 #include "Filter.h"
+#include "EFfect.h"
 #include <tuple>
 
-class Delay {
+class Delay : public Effect {
 public:
-	std::pair<float, float> GetSamples(float* samples);
+	std::pair<float, float> GetSamples(const float* samples);
 	void UpdateFilter();
 
 private:
@@ -19,8 +20,8 @@ private:
 
 	int32_t oldReadPos;
 	uint16_t delayCrossfade;			// Counter that ticks down during a crossfade following delay length change
-	int32_t currentDelay = 0;				// Used to trigger crossfade from old to new read position
-	int32_t calcDelay = 0;					// Delay time according to whether clocked and with multipliers applied
+	int32_t currentDelay = 0;			// Used to trigger crossfade from old to new read position
+	int32_t calcDelay = 0;				// Delay time according to whether clocked and with multipliers applied
 	int16_t delayPotVal;				// For hysteresis checking
 
 	int16_t delayHysteresis = 900;

@@ -18,6 +18,7 @@ int main(void)
 	SystemInit();						// Activates floating point coprocessor and resets clock
 	InitSystemClock();					// Configure the clock and PLL
 	InitHardware();
+	audioCodec.effect = &delay;
 	audioCodec.Init();
 	usb.InitUSB();
 

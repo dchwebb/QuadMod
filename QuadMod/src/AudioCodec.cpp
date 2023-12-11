@@ -1,5 +1,4 @@
 #include "AudioCodec.h"
-#include "Delay.h"
 #include "stdio.h"
 #include <numbers>
 #include <cmath>
@@ -79,7 +78,7 @@ void AudioCodec::TestOutput()
 
 	// Output: SAI1 Block A FIFO request
 	if ((SAI1_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		auto [left, right] = delay.GetSamples(&dataIn.channel1);
+		auto [left, right] = effect->GetSamples(&dataIn.channel1);
 
 		SAI1_Block_A->DR = (int32_t)(denormalise32Bit * left);
 		SAI1_Block_B->DR = (int32_t)(denormalise32Bit * left);

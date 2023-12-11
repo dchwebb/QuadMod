@@ -2,6 +2,7 @@
 
 #include "initialisation.h"
 #include "GpioPin.h"
+#include "Effect.h"
 #include <cmath>
 
 class AudioCodec {
@@ -19,7 +20,7 @@ public:
 		bool leftRight = true;		// to keep count of which channel we are receiving
 	} dataIn;
 
-
+	Effect* effect;
 
 private:
 	struct __attribute__((__packed__)) Command {
