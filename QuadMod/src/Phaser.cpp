@@ -7,6 +7,8 @@
 
 Phaser phaser;
 
+//__attribute__((optimize("O0")))
+
 std::pair<float, float> Phaser::GetSamples(const float* recordedSamples)
 {
 	//float channel0EndPhase = lfoPhase;
@@ -28,9 +30,7 @@ std::pair<float, float> Phaser::GetSamples(const float* recordedSamples)
 		}
 
 		// Run the sample through each of the all-pass filters
-		for (uint32_t f = 0; f < filterCount; ++f) {
-			out[channel] = FilterSample(channel, out[channel], f);
-		}
+		out[channel] = FilterSamples(channel, out[channel]);
 
 		// Add all-pass signal to the output (depth = 0: input only; depth = 1: evenly balanced input and output
 		out[channel] = (1.0f - 0.5f * depth) * recordedSamples[channel] + 0.5f * depth * out[channel];
@@ -53,12 +53,49 @@ std::pair<float, float> Phaser::GetSamples(const float* recordedSamples)
 }
 
 
+float Phaser::FilterSamples(const uint32_t channel, float sample)
+{
+    // Transfer function is (b0 * sample) + (b1 * x1) + (a1 * y1) but a1 = b0 and b1 = -1.0 so simplify calculation
+	// filters[f].y1 = (b0 * sample) + (b1 * filters[f].x1) + (a1 * filters[f].y1);
+
+	const float freq = baseFrequency * std::pow(sweepWidth, lfo(allpass[channel].phase));
+	const float w0 = std::min(freq * inverseSampleRate, 0.99f * std::numbers::pi_v<float>);
+
+	// Only store one coefficient as a1 = b0 and b1 = 1.0
+	float coeff = -std::tan((0.5f * w0) - (std::numbers::pi_v<float> / 4));
+
+	for (uint32_t f = 0; f < filterCount; ++f) {
+		float out = (coeff * (sample + allpass[channel].oldVal[f + 1])) - allpass[channel].oldVal[f];
+		allpass[channel].oldVal[f] = sample;
+		sample = out;
+	}
+	allpass[channel].oldVal[4] = sample;
+	return sample;
+}
+
+
+void Phaser::UpdateCoefficients(const uint32_t channel)
+{
+	// This code based on calculations by Julius O. Smith:
+	// https://ccrma.stanford.edu/~jos/pasp/Classic_Virtual_Analog_Phase.html
+
+	// Avoid passing pi/2 to the tan function...
+	//const float freq = baseFrequency + sweepWidth * lfo(allpass[channel].phase);
+	const float freq = baseFrequency * std::pow(sweepWidth, lfo(allpass[channel].phase));
+	const float w0 = std::min(freq * inverseSampleRate, 0.99f * std::numbers::pi_v<float>);
+
+	// Only store one coefficient as a1 = b0 and b1 = 1.0
+	allpass[channel].coeff = -std::tan((0.5f * w0) - (std::numbers::pi_v<float> / 4));
+
+}
+
+
 void Phaser::IdleJobs()
 {
 	GPIOG->ODR |= GPIO_ODR_OD6;
 
 	// Sequentially update the filters for each channel during the idle time between sample processing
-	UpdateCoefficients(refreshChannel);
+	//UpdateCoefficients(refreshChannel);
 	if (++refreshChannel > 3) {
 		refreshChannel = 0;
 	}
@@ -77,32 +114,6 @@ float __attribute__((optimize("O1"))) Phaser::lfo(const float phase)
 	} else {
 		return 2.0f * (phase - 0.75f);
 	}
-}
-
-
-float __attribute__((optimize("O1"))) Phaser::FilterSample(const uint32_t channel, const float sample, const uint32_t f)
-{
-    // Transfer function is (b0 * sample) + (b1 * x1) + (a1 * y1) but a1 = b0 and b1 = -1.0 so simplify calculation
-	// filters[f].y1 = (b0 * sample) + (b1 * filters[f].x1) + (a1 * filters[f].y1);
-	allpass[channel].filters[f].y1 = (allpass[channel].coeff * (sample + allpass[channel].filters[f].y1)) - allpass[channel].filters[f].x1;
-	allpass[channel].filters[f].x1 = sample;
-    return allpass[channel].filters[f].y1;
-}
-
-
-void __attribute__((optimize("O1"))) Phaser::UpdateCoefficients(const uint32_t channel)
-{
-	// This code based on calculations by Julius O. Smith:
-	// https://ccrma.stanford.edu/~jos/pasp/Classic_Virtual_Analog_Phase.html
-
-	// Avoid passing pi/2 to the tan function...
-	//const float freq = baseFrequency + sweepWidth * lfo(allpass[channel].phase);
-	const float freq = baseFrequency * std::pow(sweepWidth, lfo(allpass[channel].phase));
-	const float w0 = std::min(freq * inverseSampleRate, 0.99f * std::numbers::pi_v<float>);
-
-	// Only store one coefficient as a1 = b0 and b1 = 1.0
-	allpass[channel].coeff = -std::tan((0.5f * w0) - (std::numbers::pi_v<float> / 4));
-
 }
 
 #pragma GCC pop_options

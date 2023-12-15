@@ -15,6 +15,7 @@ public:
 private:
 	float lfo(const float phase);
 	float FilterSample(const uint32_t channel, const float sample, const uint32_t filter);
+	float FilterSamples(const uint32_t channel, const float sample);
 	void UpdateCoefficients(const uint32_t channel);
 
 	static constexpr uint32_t filterCount = 4;	// number of allpass filters to use per channel
@@ -25,7 +26,10 @@ private:
 		struct {
 			float x1;
 			float y1;
-		} filters[filterCount];			// Previous samples
+		} filters[filterCount + 1];			// Previous samples
+
+
+		float oldVal[filterCount + 1];			// Previous samples
 
 	} allpass[4];
 
