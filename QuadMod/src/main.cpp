@@ -2,6 +2,7 @@
 #include "USB.h"
 #include "AudioCodec.h"
 #include "Delay.h"
+#include "Phaser.h"
 
 volatile uint32_t SysTickVal;
 volatile uint32_t outputUSB = 0;		// USB debugging
@@ -18,7 +19,7 @@ int main(void)
 	SystemInit();						// Activates floating point coprocessor and resets clock
 	InitSystemClock();					// Configure the clock and PLL
 	InitHardware();
-	audioCodec.effect = &delay;
+	audioCodec.effect = &phaser;
 	audioCodec.Init();
 	usb.InitUSB();
 
@@ -30,7 +31,12 @@ int main(void)
 		}
 #endif
 		usb.cdc.ProcessCommand();
-		delay.UpdateFilter();
+
+		// When the audio codec has output samples, idle jobs (ie filter recalculation) can be done by the active effect
+		if (audioCodec.outputDone) {
+			audioCodec.outputDone = false;
+			audioCodec.effect->IdleJobs();
+		}
 	}
 }
 

@@ -1,29 +1,19 @@
+#pragma GCC push_options
+#pragma GCC optimize ("O1")
+
 #include "Phaser.h"
 #include <numbers>
 #include <cmath>
 
 Phaser phaser;
 
-std::pair<float, float> Phaser::GetSamples(float* recordedSamples)
+std::pair<float, float> Phaser::GetSamples(const float* recordedSamples)
 {
-	float ph, channel0EndPhase = lfoPhase;
+	//float channel0EndPhase = lfoPhase;
 
-	// Go through each channel of audio that's passed in, applying one or more allpass filters
-	// to each. Each channel will be treated identically in a (non-stereo) phaser, but we have
-	// to have separate filter objects for each channel since the filters store the last few samples
-	// passed through them.
+	float out[4] = {recordedSamples[0], recordedSamples[1], recordedSamples[2], recordedSamples[3]};
 
-	// Filters are stored with all channel 0 filters first, then all channel 1 filters, etc.
-
-	for (int channel = 0; channel < 4; ++channel) {
-		ph = lfoPhase;
-
-		// For stereo phasing, keep the channels 90 degrees out of phase with each other
-		if (stereo != 0 && channel != 0) {
-			ph = fmodf(ph + 0.25, 1.0);
-		}
-
-		float out = recordedSamples[channel];
+	for (uint32_t channel = 0; channel < 4; ++channel) {
 
 		// If feedback is enabled, include the feedback from the last sample in the
 		// input of the allpass filter chain. This is actually not accurate to how
@@ -32,57 +22,53 @@ std::pair<float, float> Phaser::GetSamples(float* recordedSamples)
 		// sampling frequency. To truly model an analog phaser with feedback involves
 		// modelling a delay-free loop, which is beyond the scope of this example.
 
-		if (feedback != 0.0 && channel < numLastFilterOutputs) {
-			out += feedback * lastFilterOutputs[channel];
+		// last filtered value is output of final filter in bank
+		if (feedback != 0.0) {
+			out[channel] += feedback * allpass[channel].filters[filterCount - 1].y1;
 		}
 
-		// Filter the sample in place putting the output sample in place of the input
-		for (int j = 0; j < filtersPerChannel; ++j) {
-			// First, update the current allpass filter coefficients depending on the parameter settings and the LFO phase
-
-			// Recalculating the filter coefficients is much more expensive than calculating
-			// a sample. Only update the coefficients at a fraction of the sample rate; since
-			// the LFO moves slowly, the difference won't generally be audible.
-			if (false) {
-				allpassFilters[channel * filtersPerChannel + j]->MakeAllpass(inverseSampleRate,	baseFrequency + sweepWidth * lfo(ph));
-			}
-			out = allpassFilters[channel * filtersPerChannel + j]->ProcessSample(out);
+		// Run the sample through each of the all-pass filters
+		for (uint32_t f = 0; f < filterCount; ++f) {
+			out[channel] = FilterSample(channel, out[channel], f);
 		}
 
-		if (channel < numLastFilterOutputs) {
-			lastFilterOutputs[channel] = out;
+		// Add all-pass signal to the output (depth = 0: input only; depth = 1: evenly balanced input and output
+		out[channel] = (1.0f - 0.5f * depth) * recordedSamples[channel] + 0.5f * depth * out[channel];
+
+		// Update the LFO phase
+		float ph = allpass[0].phase + (channel * 0.125);	// Apply a 45 degree phase shift to each channel
+		ph += lfoFrequency * inverseSampleRate;				// Increment the phase by the LFO frequency
+		while (ph >= 1.0) {
+			ph -= 1.0;										// Ensure phase is between 0 and 1
 		}
 
-		// Add the allpass signal to the output, though maintaining constant level
-		// depth = 0 --> input only ; depth = 1 --> evenly balanced input and output
-		out = (1.0f - 0.5f * depth) * recordedSamples[channel] + 0.5f * depth * out;
-
-		// Update the LFO phase, keeping it in the range 0-1
-		ph += lfoFrequency * inverseSampleRate;
-		if (ph >= 1.0) {
-			ph -= 1.0;
-		}
-
-
-		// Use channel 0 only to keep the phase in sync between calls to processBlock()
-		// Otherwise quadrature phase on multiple channels will create problems.
-		if (channel == 0) {
-			channel0EndPhase = ph;
-		}
+		// Update the filter frequency for idle jobs calculation
+		allpass[channel].phase = ph;
 	}
 
-	lfoPhase = channel0EndPhase;
-
-	float leftOut  = 0;
-	float rightOut = 0;
+	const float leftOut  = (0.5 * out[2]) + (0.36 * out[1]) + (0.15 * out[0]);
+	const float rightOut = (0.5 * out[3]) + (0.36 * out[0]) + (0.15 * out[1]);
 
 	return std::make_pair(leftOut, rightOut);
 }
 
 
+void Phaser::IdleJobs()
+{
+	GPIOG->ODR |= GPIO_ODR_OD6;
+
+	// Sequentially update the filters for each channel during the idle time between sample processing
+	UpdateCoefficients(refreshChannel);
+	if (++refreshChannel > 3) {
+		refreshChannel = 0;
+	}
+
+	GPIOG->ODR &= ~GPIO_ODR_OD6;
+}
+
 
 // Function for calculating LFO waveforms. Phase runs from 0-1, output is scaled from 0 to 1
-float Phaser::lfo(const float phase)
+float __attribute__((optimize("O1"))) Phaser::lfo(const float phase)
 {
 	if (phase < 0.25f) {
 		return 0.5f + 2.0f * phase;
@@ -93,23 +79,30 @@ float Phaser::lfo(const float phase)
 	}
 }
 
-float AllpassFilter::ProcessSample(const float sample)
+
+float __attribute__((optimize("O1"))) Phaser::FilterSample(const uint32_t channel, const float sample, const uint32_t f)
 {
-    // Process one sample, storing the last input and output
-    y1 = (b0 * sample) + (b1 * x1) + (a1 * y1);
-    x1 = sample;
-    return y1;
+    // Transfer function is (b0 * sample) + (b1 * x1) + (a1 * y1) but a1 = b0 and b1 = -1.0 so simplify calculation
+	// filters[f].y1 = (b0 * sample) + (b1 * filters[f].x1) + (a1 * filters[f].y1);
+	allpass[channel].filters[f].y1 = (allpass[channel].coeff * (sample + allpass[channel].filters[f].y1)) - allpass[channel].filters[f].x1;
+	allpass[channel].filters[f].x1 = sample;
+    return allpass[channel].filters[f].y1;
 }
 
-void AllpassFilter::MakeAllpass(const float inverseSampleRate, const float centreFrequency)
+
+void __attribute__((optimize("O1"))) Phaser::UpdateCoefficients(const uint32_t channel)
 {
-    // This code based on calculations by Julius O. Smith:
-    // https://ccrma.stanford.edu/~jos/pasp/Classic_Virtual_Analog_Phase.html
+	// This code based on calculations by Julius O. Smith:
+	// https://ccrma.stanford.edu/~jos/pasp/Classic_Virtual_Analog_Phase.html
 
-    // Avoid passing pi/2 to the tan function...
-    const float w0 = std::min(centreFrequency * inverseSampleRate, 0.99f * (float)std::numbers::pi);
-    const float tan_half_w0 = std::tan(0.5f * w0);
+	// Avoid passing pi/2 to the tan function...
+	//const float freq = baseFrequency + sweepWidth * lfo(allpass[channel].phase);
+	const float freq = baseFrequency * std::pow(sweepWidth, lfo(allpass[channel].phase));
+	const float w0 = std::min(freq * inverseSampleRate, 0.99f * std::numbers::pi_v<float>);
 
-    b0 = a1 = (float)((1.0 - tan_half_w0) / (1.0 + tan_half_w0));
-    b1 = -1.0f;
+	// Only store one coefficient as a1 = b0 and b1 = 1.0
+	allpass[channel].coeff = -std::tan((0.5f * w0) - (std::numbers::pi_v<float> / 4));
+
 }
+
+#pragma GCC pop_options

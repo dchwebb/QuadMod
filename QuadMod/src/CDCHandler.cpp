@@ -2,6 +2,9 @@
 #include "CDCHandler.h"
 #include "AudioCodec.h"
 #include "HyperRAM.h"
+#include "Phaser.h"
+#include "PassThrough.h"
+#include "Delay.h"
 #include <charconv>
 #include <stdarg.h>
 #include <cmath>
@@ -31,6 +34,9 @@ void CDCHandler::ProcessCommand()
 				"mreg:AAAAAAAA  -  Get HyperRAM Register at address 0xAAAAAAAA\r\n"
 				"mmem:AAAAAAAA  -  Get HyperRAM Memory at address 0xAAAAAAAA\r\n"
 				"wmem:AAAAAAAA,VVVV  -  Write HyperRAM Memory at address 0xAAAAAAAA\r\n"
+				"none             -  No effect\r\n"
+				"phaser           -  Set effect to phaser\r\n"
+				"delay            -  Set effect to delay\r\n"
 				"\r\n"
 		);
 
@@ -96,6 +102,15 @@ void CDCHandler::ProcessCommand()
 		} else {
 			usb->SendString("Invalid register\r\n");
 		}
+
+	} else if (cmd.compare("none") == 0) {
+		audioCodec.effect = &passThrough;
+
+	} else if (cmd.compare("phaser") == 0) {
+		audioCodec.effect = &phaser;
+
+	} else if (cmd.compare("delay") == 0) {
+		audioCodec.effect = &delay;
 
 	} else if (cmd.compare("savecfg") == 0) {			// Save configuration
 		//config.SaveConfig();

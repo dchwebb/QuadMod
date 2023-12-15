@@ -65,6 +65,7 @@ void InitHardware()
 	InitSysTick();
 	InitMPU();
 	InitADC2(reinterpret_cast<volatile uint16_t*>(&adc), 3);
+	//InitDAC();
 
 	// Debug pins - PG12, PG6
 	GpioPin::Init(GPIOG, 6, GpioPin::Type::Output);
@@ -347,194 +348,17 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 }
 
 
-/*
 void InitDAC()
 {
 	// Configure 4 DAC outputs PA4 and PA5 are regular DAC1 buffered outputs; PA2 and PB1 are DAC3 via OpAmp1 and OpAmp3 (Manual p.782)
-
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;			// Enable GPIO Clock
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;			// Enable GPIO Clock
-	RCC->AHB2ENR |= RCC_AHB2ENR_DAC1EN | RCC_AHB2ENR_DAC2EN | RCC_AHB2ENR_DAC3EN | RCC_AHB2ENR_DAC4EN;				// Enable DAC Clock
+	RCC->AHB2ENR |= RCC_AHB2ENR_DAC1EN;				// Enable DAC Clock
 
 	DAC1->MCR &= ~DAC_MCR_MODE1_Msk;				// Set to normal mode: DAC1 channel1 is connected to external pin with Buffer enabled
 	DAC1->CR |= DAC_CR_EN1;							// Enable DAC using PA4 (DAC_OUT1)
 
-	DAC1->MCR &= ~DAC_MCR_MODE2_Msk;				// Set to normal mode: DAC1 channel2 is connected to external pin with Buffer enabled
-	DAC1->CR |= DAC_CR_EN2;							// Enable DAC using PA5 (DAC_OUT2)
-
-	DAC2->MCR &= ~DAC_MCR_MODE1_Msk;				// Set to normal mode: DAC2 channel1 is connected to external pin with Buffer enabled
-	DAC2->CR |= DAC_CR_EN1;							// Enable DAC using PA6 (DAC_OUT1)
-
-	// output triggered with DAC->DHR12R1 = x;
-
-	// Opamp for DAC3 Channel 1: Follower configuration mode - output on PA2
-	DAC3->MCR |= DAC_MCR_MODE1_0 | DAC_MCR_MODE1_1;	// 011: DAC channel1 is connected to on chip peripherals with Buffer disabled
-	DAC3->CR |= DAC_CR_EN1;							// Enable DAC
-
-	OPAMP1->CSR |= OPAMP_CSR_VMSEL;					// 11: Opamp_out connected to OPAMPx_VINM input
-	OPAMP1->CSR |= OPAMP_CSR_VPSEL;					// 11: DAC3_CH1  connected to OPAMP1 VINP input
-	OPAMP1->CSR |= OPAMP_CSR_OPAMPxEN;				// Enable OpAmp: voltage on pin OPAMPx_VINP is buffered to pin OPAMPx_VOUT (PA2)
-
-	// Opamp for DAC3 Channel 2: Follower configuration mode - output on PB1
-	DAC3->MCR |= DAC_MCR_MODE2_0 | DAC_MCR_MODE2_1;	// 011: DAC channel2 is connected to on chip peripherals with Buffer disabled
-	DAC3->CR |= DAC_CR_EN2;							// Enable DAC
-
-	OPAMP3->CSR |= OPAMP_CSR_VMSEL;					// 11: Opamp_out connected to OPAMPx_VINM input
-	OPAMP3->CSR |= OPAMP_CSR_VPSEL;					// 11: DAC3_CH2  connected to OPAMP1 VINP input
-	OPAMP3->CSR |= OPAMP_CSR_OPAMPxEN;				// Enable OpAmp: voltage on pin OPAMPx_VINP is buffered to pin OPAMPx_VOUT (PB1)
-
-	// Opamp for DAC4 Channel 1: Follower configuration mode - output on PB12
-	DAC4->MCR |= DAC_MCR_MODE1_0 | DAC_MCR_MODE1_1;	// 011: DAC channel1 is connected to on chip peripherals with Buffer disabled
-	DAC4->CR |= DAC_CR_EN1;							// Enable DAC
-
-	OPAMP4->CSR |= OPAMP_CSR_VMSEL;					// 11: Opamp_out connected to OPAMPx_VINM input
-	OPAMP4->CSR |= OPAMP_CSR_VPSEL;					// 11: DAC4_CH1  connected to OPAMP1 VINP input
-	OPAMP4->CSR |= OPAMP_CSR_OPAMPxEN;				// Enable OpAmp: voltage on pin OPAMPx_VINP is buffered to pin OPAMPx_VOUT (PB12)
-
-	// Opamp for DAC4 Channel 2: Follower configuration mode - output on PA8
-	DAC4->MCR |= DAC_MCR_MODE2_0 | DAC_MCR_MODE2_1;	// 011: DAC channel2 is connected to on chip peripherals with Buffer disabled
-	DAC4->CR |= DAC_CR_EN2;							// Enable DAC
-
-	OPAMP5->CSR |= OPAMP_CSR_VMSEL;					// 11: Opamp_out connected to OPAMPx_VINM input
-	OPAMP5->CSR |= OPAMP_CSR_VPSEL;					// 11: DAC4_CH2  connected to OPAMP1 VINP input
-	OPAMP5->CSR |= OPAMP_CSR_OPAMPxEN;				// Enable OpAmp: voltage on pin OPAMPx_VINP is buffered to pin OPAMPx_VOUT (PA8)
-
+//	DAC1->MCR &= ~DAC_MCR_MODE2_Msk;				// Set to normal mode: DAC1 channel2 is connected to external pin with Buffer enabled
+//	DAC1->CR |= DAC_CR_EN2;							// Enable DAC using PA5 (DAC_OUT2)
 }
-
-
-
-
-void InitMidiUART()
-{
-	// PC11: UART4_RX (AF5) or USART3_RX (AF7)
-
-	RCC->APB1ENR1 |= RCC_APB1ENR1_UART4EN;			// UART4 clock enable
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;			// GPIO port C
-
-	GPIOC->MODER &= ~GPIO_MODER_MODE11_0;			// Set alternate function on PE0
-	GPIOC->AFR[1] |= 5 << GPIO_AFRH_AFSEL11_Pos;	// Alternate function on PC11 for USART4_RX is AF5
-
-	// By default clock source is muxed to peripheral clock 1 which is system clock
-	// Calculations depended on oversampling mode set in CR1 OVER8. Default = 0: Oversampling by 16
-
-	UART4->BRR = SystemCoreClock / 31250;			// clk / desired_baud
-	UART4->CR1 &= ~USART_CR1_M;						// 0: 1 Start bit, 8 Data bits, n Stop bit; 	1: 1 Start bit, 9 Data bits, n Stop bit
-	UART4->CR1 |= USART_CR1_RE;						// Receive enable
-	UART4->CR2 |= USART_CR2_RXINV;					// Invert UART receive to allow use of inverting buffer
-
-	// Set up interrupts
-	UART4->CR1 |= USART_CR1_RXNEIE;
-	NVIC_SetPriority(UART4_IRQn, 1);				// Lower is higher priority
-	NVIC_EnableIRQ(UART4_IRQn);
-
-	UART4->CR1 |= USART_CR1_UE;						// UART Enable
-}
-
-
-void InitPWMTimer()
-{
-	// TIM3: Channel 1: PE2 (AF2)
-	// 		 Channel 2: PE3 (AF2)
-	// 		 Channel 3: PE4 (AF2)
-	// 		 Channel 4: PE5 (AF2)
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;			// Enable GPIO Clock
-	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM3EN;
-
-	// Enable channels 1 - 4 PWM output pins on PE2-5
-	GPIOE->MODER &= ~(GPIO_MODER_MODE2_0 | GPIO_MODER_MODE3_0 | GPIO_MODER_MODE4_0 | GPIO_MODER_MODE5_0);
-	GPIOE->AFR[0] |= GPIO_AFRL_AFSEL2_1 | GPIO_AFRL_AFSEL3_1 | GPIO_AFRL_AFSEL4_1 | GPIO_AFRL_AFSEL5_1;			// AF2
-
-	TIM3->CCMR1 |= TIM_CCMR1_OC1PE;					// Output compare 1 preload enable
-	TIM3->CCMR1 |= TIM_CCMR1_OC2PE;					// Output compare 2 preload enable
-	TIM3->CCMR2 |= TIM_CCMR2_OC3PE;					// Output compare 3 preload enable
-	TIM3->CCMR2 |= TIM_CCMR2_OC4PE;					// Output compare 4 preload enable
-
-	TIM3->CCMR1 |= (TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2);	// 0110: PWM mode 1 - In upcounting, channel 1 active if TIMx_CNT<TIMx_CCR1
-	TIM3->CCMR1 |= (TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2);	// 0110: PWM mode 1 - In upcounting, channel 2 active if TIMx_CNT<TIMx_CCR2
-	TIM3->CCMR2 |= (TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2);	// 0110: PWM mode 1 - In upcounting, channel 3 active if TIMx_CNT<TIMx_CCR3
-	TIM3->CCMR2 |= (TIM_CCMR2_OC4M_1 | TIM_CCMR2_OC4M_2);	// 0110: PWM mode 1 - In upcounting, channel 3 active if TIMx_CNT<TIMx_CCR3
-
-	TIM3->CCR1 = 0;									// Initialise PWM level to 0
-	TIM3->CCR2 = 0;
-	TIM3->CCR3 = 0;
-	TIM3->CCR4 = 0;
-
-	// Timing calculations: Clock = 170MHz / (PSC + 1) = 21.25m counts per second
-	// ARR = number of counts per PWM tick = 4095
-	// 21.25m / ARR ~= 5.2kHz of PWM square wave with 4095 levels of output
-
-	TIM3->ARR = 4095;								// Total number of PWM ticks
-	TIM3->PSC = 7;									// Should give ~5.2kHz
-	TIM3->CR1 |= TIM_CR1_ARPE;						// 1: TIMx_ARR register is buffered
-	TIM3->CCER |= (TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E);		// Capture mode enabled / OC1 signal is output on the corresponding output pin
-	TIM3->EGR |= TIM_EGR_UG;						// 1: Re-initialize the counter and generates an update of the registers
-
-	TIM3->CR1 |= TIM_CR1_CEN;						// Enable counter
-
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// TIM4: PD12 TIM4_CH1 (AF2)
-	// 		 PD13 TIM4_CH2 (AF2)
-	// 		 PD14 TIM4_CH3 (AF2)
-	// 		 PB9  TIM4_CH4 (AF2)
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;			// Enable GPIO Clock
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;			// Enable GPIO Clock
-	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM4EN;
-
-	// Enable channels 1 - 3 PWM output pins on PD12-14
-	GPIOD->MODER &= ~(GPIO_MODER_MODE12_0 | GPIO_MODER_MODE13_0 | GPIO_MODER_MODE14_0);
-	GPIOD->AFR[1] |= GPIO_AFRH_AFSEL12_1 | GPIO_AFRH_AFSEL13_1 | GPIO_AFRH_AFSEL14_1;			// AF2
-
-	// Enable channel 4 PWM output pin on PB9
-	GPIOB->MODER &= ~GPIO_MODER_MODE9_0;
-	GPIOB->AFR[1] |= GPIO_AFRH_AFSEL9_1;			// AF2
-
-	TIM4->CCMR1 |= TIM_CCMR1_OC1PE;					// Output compare 1 preload enable
-	TIM4->CCMR1 |= TIM_CCMR1_OC2PE;					// Output compare 2 preload enable
-	TIM4->CCMR2 |= TIM_CCMR2_OC3PE;					// Output compare 3 preload enable
-	TIM4->CCMR2 |= TIM_CCMR2_OC4PE;					// Output compare 4 preload enable
-
-	TIM4->CCMR1 |= (TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2);	// 0110: PWM mode 1 - In upcounting, channel 1 active if TIMx_CNT<TIMx_CCR1
-	TIM4->CCMR1 |= (TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2);	// 0110: PWM mode 1 - In upcounting, channel 2 active if TIMx_CNT<TIMx_CCR2
-	TIM4->CCMR2 |= (TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2);	// 0110: PWM mode 1 - In upcounting, channel 3 active if TIMx_CNT<TIMx_CCR3
-	TIM4->CCMR2 |= (TIM_CCMR2_OC4M_1 | TIM_CCMR2_OC4M_2);	// 0110: PWM mode 1 - In upcounting, channel 3 active if TIMx_CNT<TIMx_CCR3
-
-	TIM4->CCR1 = 0;									// Initialise PWM level to 0
-	TIM4->CCR2 = 0;
-	TIM4->CCR3 = 0;
-	TIM4->CCR4 = 0;
-
-	// Timing calculations: Clock = 170MHz / (PSC + 1) = 21.25m counts per second
-	// ARR = number of counts per PWM tick = 2047
-	// 21.25m / ARR ~= 5.2kHz of PWM square wave with 2047 levels of output
-
-	TIM4->ARR = 4095;								// Total number of PWM ticks
-	TIM4->PSC = 7;									// Should give ~5.2kHz
-	TIM4->CR1 |= TIM_CR1_ARPE;						// 1: TIMx_ARR register is buffered
-	TIM4->CCER |= (TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E);		// Capture mode enabled / OC1 signal is output on the corresponding output pin
-	TIM4->EGR |= TIM_EGR_UG;						// 1: Re-initialize the counter and generates an update of the registers
-
-	TIM4->CR1 |= TIM_CR1_CEN;						// Enable counter
-}
-
-
-
-//	Setup Timer 2 on an interrupt to trigger sample output
-void InitEnvTimer() {
-	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;			// Enable Timer 2
-	TIM2->PSC = 16;									// Set prescaler
-	TIM2->ARR = 500; 								// Set auto reload register - 170Mhz / (PSC + 1) / ARR = ~20kHz
-
-	TIM2->DIER |= TIM_DIER_UIE;						// DMA/interrupt enable register
-	NVIC_EnableIRQ(TIM2_IRQn);
-	NVIC_SetPriority(TIM2_IRQn, 2);					// Lower is higher priority
-
-	TIM2->CR1 |= TIM_CR1_CEN;
-	TIM2->EGR |= TIM_EGR_UG;						//  Re-initializes counter and generates update of registers
-}
-
-
-
-
 
 
 void InitCordic()
@@ -544,7 +368,6 @@ void InitCordic()
 
 
 
-*/
 
 
 

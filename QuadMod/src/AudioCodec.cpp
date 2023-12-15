@@ -63,7 +63,7 @@ void AudioCodec::TestOutput()
 
 	// Input: SAI2 Block A FIFO request
 	while ((SAI2_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		GPIOG->ODR |= GPIO_ODR_OD6;
+		//GPIOG->ODR |= GPIO_ODR_OD6;
 		if (dataIn.leftRight) {
 			dataIn.channel1 = normalise32Bit * (int32_t)SAI2_Block_A->DR;
 			dataIn.channel3 = normalise32Bit * (int32_t)SAI2_Block_B->DR;
@@ -72,7 +72,7 @@ void AudioCodec::TestOutput()
 			dataIn.channel4 = normalise32Bit * (int32_t)SAI2_Block_B->DR;
 		}
 		dataIn.leftRight = !dataIn.leftRight;
-		GPIOG->ODR &= ~GPIO_ODR_OD6;
+		//GPIOG->ODR &= ~GPIO_ODR_OD6;
 	}
 
 
@@ -80,11 +80,25 @@ void AudioCodec::TestOutput()
 	if ((SAI1_Block_A->SR & SAI_xSR_FREQ) != 0) {
 		auto [left, right] = effect->GetSamples(&dataIn.channel1);
 
-		SAI1_Block_A->DR = (int32_t)(denormalise32Bit * left);
-		SAI1_Block_B->DR = (int32_t)(denormalise32Bit * left);
-		SAI1_Block_A->DR = (int32_t)(denormalise32Bit * right);
-		SAI1_Block_B->DR = (int32_t)(denormalise32Bit * right);
+		// Main stereo outputs are Block A; Block B outputs are debug only
+		SAI1_Block_A->DR = Denormalise(left);
+		SAI1_Block_B->DR = Denormalise(left);
+		SAI1_Block_A->DR = Denormalise(right);
+		SAI1_Block_B->DR = Denormalise(right);
+
+		outputDone = true;			// Tell the main loop it can run idle jobs
 	}
 
 	GPIOG->ODR &= ~GPIO_ODR_OD12;
 }
+
+
+int32_t AudioCodec::Denormalise(const float x)
+{
+	// Apply FastTan approximation to limit sample from -1 to +1
+	float x2 = x * x;
+	float a = x * (135135.0f + x2 * (17325.0f + x2 * (378.0f + x2)));
+	float b = 135135.0f + x2 * (62370.0f + x2 * (3150.0f + x2 * 28.0f));
+	return (int32_t)(denormalise32Bit * (a / b));
+}
+

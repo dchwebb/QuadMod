@@ -7,12 +7,11 @@
 
 class Delay : public Effect {
 public:
+	// functions inherited from Effect for sample generation and filter recalculation
 	std::pair<float, float> GetSamples(const float* samples);
-	void UpdateFilter();
+	void IdleJobs();
 
 private:
-	float FastTanh(float x);
-
 	static constexpr uint32_t audioBuffSize = 34000;
 	int32_t writePos = 0;
 	int32_t readPos = 1000;
@@ -28,11 +27,7 @@ private:
 	static constexpr int16_t crossfade = 6000;
 	static constexpr int16_t tempoHysteresis = 100;
 
-	float lpInitCutoff = 0.5f;
-	float lpFinalCutoff = 0.1f;
-	float lpCutoffInc = 0.99998f;
-	float lpFilterCutoff = lpInitCutoff;
-
+	float lpFilterCutoff = 0.5f;
 	Filter<2> lpFilter{filterPass::LowPass, &adc.delayFilter};
 };
 

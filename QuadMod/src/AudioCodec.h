@@ -20,9 +20,12 @@ public:
 		bool leftRight = true;		// to keep count of which channel we are receiving
 	} dataIn;
 
-	Effect* effect;
+	Effect* effect;					// Current effect in use
+	bool outputDone = false;			// To alert the main loop it can run idle jobs
 
 private:
+	int32_t Denormalise(float x);
+
 	struct __attribute__((__packed__)) Command {
 		enum CommandType : uint8_t {Read  = 0x43, Write = 0xC3, activateSPI = 0xDE};
 		enum RegisterAddress : uint16_t {PowerManagement = 0x00, AudioInterfaceFormat = 0x01, AnalogInput = 0x0B, AnalogFilter = 0x0A, SpiMode = 0xADDA};

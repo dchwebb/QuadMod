@@ -21,27 +21,27 @@ size_t _write(int handle, const unsigned char* buf, size_t bufSize)
 
 inline void ClearRxInterrupt(const uint8_t ep)
 {
-	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_REG_MASK) & ~USB_EP_VTRX;
+	const uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_REG_MASK) & ~USB_EP_VTRX;
 	USB_EPR[ep].EPR = wRegVal | USB_EP_VTTX;
 }
 
 inline void ClearTxInterrupt(const uint8_t ep)
 {
-	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_REG_MASK) & ~USB_EP_VTTX;
+	const uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_REG_MASK) & ~USB_EP_VTTX;
 	USB_EPR[ep].EPR = wRegVal | USB_EP_VTRX;
 }
 
 
 inline void SetTxStatus(const uint8_t ep, const uint16_t status)		// Set endpoint transmit status - have to use XOR to toggle bits
 {
-	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_TX_DTOGMASK) ^ status;
+	const uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_TX_DTOGMASK) ^ status;
 	USB_EPR[ep].EPR = wRegVal | USB_EP_VTRX | USB_EP_VTTX;
 }
 
 
 inline void SetRxStatus(const uint8_t ep, const uint16_t status)		// Set endpoint receive status - have to use XOR to toggle bits
 {
-	uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_RX_DTOGMASK) ^ status;
+	const uint16_t wRegVal = (USB_EPR[ep].EPR & USB_CHEP_RX_DTOGMASK) ^ status;
 	USB_EPR[ep].EPR = wRegVal | USB_EP_VTRX | USB_EP_VTTX;
 }
 
@@ -165,7 +165,7 @@ void USBMain::USBInterruptHandler()								// Originally in Drivers\STM32F4xx_HA
 
 	/////////// 	8000 		USB_ISTR_CTR: Correct Transfer
 	while (ReadInterrupts(USB_ISTR_CTR)) {					// Originally PCD_EP_ISR_Handler
-		const uint8_t epIndex = USBP->ISTR & USB_ISTR_IDN;		// Extract highest priority endpoint number
+		const uint8_t epIndex = USBP->ISTR & USB_ISTR_IDN;	// Extract highest priority endpoint number
 
 #if (USB_DEBUG)
 		usbDebug[usbDebugNo].endpoint = epIndex;
@@ -239,16 +239,16 @@ void USBMain::USBInterruptHandler()								// Originally in Drivers\STM32F4xx_HA
 
 				ClearTxInterrupt(epIndex);
 
-				uint16_t txBytes = USB_PMA[epIndex].GetTXCount();
+				const uint16_t txBytes = USB_PMA[epIndex].GetTXCount();
 				if (classByEP[epIndex]->inBuffSize >= txBytes) {					// Transmitting data larger than buffer size
 					classByEP[epIndex]->inBuffSize -= txBytes;
 					classByEP[epIndex]->inBuff += txBytes;
 
 					// Send IN packet if data to be sent, or size of last block in sequence is exactly size of maximum packet
 					if (classByEP[epIndex]->inBuffSize > 0 || (txBytes == ep_maxPacket && classByEP[epIndex]->inBuffSize == 0)) {
-					EPStartXfer(Direction::in, epIndex, classByEP[epIndex]->inBuffSize);
+						EPStartXfer(Direction::in, epIndex, classByEP[epIndex]->inBuffSize);
+					}
 				}
-			}
 				if (classByEP[epIndex]->inBuffSize == 0) {
 					transmitting = false;
 					classByEP[epIndex]->DataIn();
@@ -382,7 +382,9 @@ void USBMain::EP0In(const uint8_t* buff, const uint32_t size)
 	EPStartXfer(Direction::in, 0, ep0.inBuffSize);		// sends blank request back
 
 #if (USB_DEBUG)
-	USBUpdateDbg({}, {}, {}, ep0.inBuffSize, {}, (uint32_t*)ep0.inBuff);
+	usbDebug[usbDebugNo].PacketSize = ep0.inBuffSize;
+	usbDebug[usbDebugNo].xferBuff0 = ((uint32_t*)ep0.inBuff)[0];
+	usbDebug[usbDebugNo].xferBuff1 = ((uint32_t*)ep0.inBuff)[1];
 #endif
 }
 
@@ -516,14 +518,14 @@ void USBMain::SerialToUnicode()
 
 bool USBMain::ReadInterrupts(const uint32_t interrupt)
 {
-#if (USB_DEBUG)
-	if ((USBP->ISTR & interrupt) == interrupt && usbDebugEvent < USB_DEBUG_COUNT) {
-		usbDebugNo = usbDebugEvent % USB_DEBUG_COUNT;
-		usbDebug[usbDebugNo].eventNo = usbDebugEvent;
-		usbDebug[usbDebugNo].Interrupt = USBP->ISTR;
-		usbDebugEvent++;
-	}
-#endif
+//#if (USB_DEBUG)
+//	if ((USBP->ISTR & interrupt) == interrupt && usbDebugEvent < USB_DEBUG_COUNT) {
+//		usbDebugNo = usbDebugEvent % USB_DEBUG_COUNT;
+//		usbDebug[usbDebugNo].eventNo = usbDebugEvent;
+//		usbDebug[usbDebugNo].Interrupt = USBP->ISTR;
+//		usbDebugEvent++;
+//	}
+//#endif
 
 	return (USBP->ISTR & interrupt) == interrupt;
 }
@@ -604,7 +606,7 @@ void USBMain::OutputDebug()
 {
 	USBDebug = false;
 
-	uartSendString("Event,Interrupt,Name,Desc,Endpoint,mRequest,Request,Value,Index,Length,PacketSize,XferBuff,\n");
+	uart.SendString("Event,Interrupt,Name,Desc,Endpoint,mRequest,Request,Value,Index,Length,PacketSize,XferBuff,\n");
 	uint16_t evNo = usbDebugEvent % USB_DEBUG_COUNT;
 	std::string interrupt, subtype;
 
@@ -824,4 +826,4 @@ Event	Int	Name	Desc							ep	mReq	Req	Val	Idx	Len	PacketSize	XferBuff
 */
 #endif
 
-
+//#pragma GCC pop_options

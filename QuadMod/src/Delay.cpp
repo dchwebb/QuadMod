@@ -44,24 +44,15 @@ std::pair<float, float> Delay::GetSamples(const float* recordedSamples)
 	}
 
 	// Arrange the delay lines from left to right in the stereo field
-	const float leftOut  = FastTanh((0.5 * newSample[0]) + (0.36 * newSample[1]) + (0.15 * newSample[2]));
-	const float rightOut = FastTanh((0.5 * newSample[3]) + (0.36 * newSample[2]) + (0.15 * newSample[1]));
+	const float leftOut  = (0.5 * newSample[0]) + (0.36 * newSample[1]) + (0.15 * newSample[2]);
+	const float rightOut = (0.5 * newSample[3]) + (0.36 * newSample[2]) + (0.15 * newSample[1]);
 
 	return std::make_pair(leftOut, rightOut);
 }
 
 
-// Algorithm source: https://varietyofsound.wordpress.com/2011/02/14/efficient-tanh-computation-using-lamberts-continued-fraction/
-float Delay::FastTanh(const float x)
-{
-	float x2 = x * x;
-	float a = x * (135135.0f + x2 * (17325.0f + x2 * (378.0f + x2)));
-	float b = 135135.0f + x2 * (62370.0f + x2 * (3150.0f + x2 * 28.0f));
-	return a / b;
-}
 
-
-void Delay::UpdateFilter()
+void Delay::IdleJobs()
 {
 	lpFilter.Update(false);
 }
