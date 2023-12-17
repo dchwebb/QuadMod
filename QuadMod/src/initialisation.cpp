@@ -65,6 +65,7 @@ void InitHardware()
 	InitSysTick();
 	InitMPU();
 	InitADC2(reinterpret_cast<volatile uint16_t*>(&adc), 3);
+	InitCordic();
 	//InitDAC();
 
 	// Debug pins - PG12, PG6

@@ -1,3 +1,6 @@
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+
 #include "USB.h"
 
 bool USBDebug = true;		// Used if outputting debug over USB
@@ -826,4 +829,4 @@ Event	Int	Name	Desc							ep	mReq	Req	Val	Idx	Len	PacketSize	XferBuff
 */
 #endif
 
-//#pragma GCC pop_options
+#pragma GCC pop_options

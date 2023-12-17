@@ -7,11 +7,20 @@ static constexpr uint32_t sysTick = 1000;						// 1ms
 static constexpr uint32_t sampleRate = 48000;
 static constexpr float inverseSampleRate  = 1.0f / (float)sampleRate;
 
-struct ADCValues {
-	uint16_t delayFeedback;
-	uint16_t delayTime;
-	uint16_t delayFilter;
+union ADCValues {
+	struct {
+		uint16_t delayFeedback;
+		uint16_t delayTime;
+		uint16_t delayFilter;
+	};
+	struct {
+		uint16_t lfoSpeed;
+		uint16_t lfoRange;
+		uint16_t feedback;
+	};
 };
+
+
 
 struct DMALinkedList {
 	uint32_t TR1;

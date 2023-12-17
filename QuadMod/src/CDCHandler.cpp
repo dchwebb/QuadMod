@@ -4,6 +4,7 @@
 #include "HyperRAM.h"
 #include "Phaser.h"
 #include "PassThrough.h"
+#include "Cordic.h"
 #include "Delay.h"
 #include <charconv>
 #include <stdarg.h>
@@ -37,8 +38,15 @@ void CDCHandler::ProcessCommand()
 				"none             -  No effect\r\n"
 				"phaser           -  Set effect to phaser\r\n"
 				"delay            -  Set effect to delay\r\n"
+				"sin:xx.x         -  Sine Test\r\n"
 				"\r\n"
 		);
+
+	} else if (cmd.compare(0, 4, "sin:") == 0) {					// Set envelope duration multiplier
+		const float val = ParseFloat(cmd, ':', -10.0f, 10.0f);
+		float sin = std::sin(val);
+		float cordic = Cordic::Sin(val);
+		printf("Sine: %.6f Cordic: %.6f\r\n", sin, cordic);
 
 
 	} else if (cmd.compare(0, 8, "readspi:") == 0) {				// Read spi register
