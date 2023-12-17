@@ -1,25 +1,58 @@
 #pragma once
 #include "initialisation.h"
+#include <cmath>
 
 class Cordic {
 public:
-	enum class trig {sin, cos, tan};
+
+	inline static constexpr int TrigToQ31(float x)
+	{
+		while (x > pi) 		x -= pi_x_2;
+		while (x < -pi) 	x += pi_x_2;
+
+		// convert float to q1_31 format, dividing by pi
+		return (int)(x * (float)M_1_PI * 2147483648.0f);
+	}
+
 	static float Sin(float x)
 	{
-		// use CORDIC sine
+		CORDIC->CSR = (1 << CORDIC_CSR_FUNC_Pos) | 		// 0: Cos, 1: Sin, 2: Phase, 3: Modulus, 4: Arctan, 5: cosh, 6: sinh, 7: Arctanh, 8: ln, 9: Square Root
+				(6 << CORDIC_CSR_PRECISION_Pos);		// Set precision to 6 (gives 6 * 4 = 24 iterations in 6 clock cycles)
+
+		CORDIC->WDATA = TrigToQ31(x);
+
+		// convert values back to floats scaling by * 2 at the same time
+		float sin = (float)((int)CORDIC->RDATA) / 2147483648.0f;	// command will block until RDATA is ready - no need to poll RRDY flag
+		return sin;
+	}
+
+
+	static float Cos(float x)
+	{
+		CORDIC->CSR = (0 << CORDIC_CSR_FUNC_Pos) | 		// 0: Cos, 1: Sin, 2: Phase, 3: Modulus, 4: Arctan, 5: cosh, 6: sinh, 7: Arctanh, 8: ln, 9: Square Root
+				(6 << CORDIC_CSR_PRECISION_Pos);		// Set precision to 6 (gives 6 * 4 = 24 iterations in 6 clock cycles)
+
+		CORDIC->WDATA = TrigToQ31(x);
+
+		// convert values back to floats scaling by * 2 at the same time
+		float cos = (float)((int)CORDIC->RDATA) / 2147483648.0f;
+		return cos;
+	}
+
+
+
+	static float Tan(float x)
+	{
 		CORDIC->CSR = (1 << CORDIC_CSR_FUNC_Pos) | 		// 0: Cos, 1: Sin, 2: Phase, 3: Modulus, 4: Arctan, 5: cosh, 6: sinh, 7: Arctanh, 8: ln, 9: Square Root
 				CORDIC_CSR_NRES |						// 2 Results as we need both sin and cos
 				(6 << CORDIC_CSR_PRECISION_Pos);		// Set precision to 6 (gives 6 * 4 = 24 iterations in 6 clock cycles)
 
-		// convert float to q1_31 format, dividing by pi
-		int q31 = (int)(x * M_1_PI * 2147483648.0f);
-
-		CORDIC->WDATA = q31;
+		CORDIC->WDATA = TrigToQ31(x);
 
 		// convert values back to floats scaling by * 2 at the same time
-		float sin = (float)((int)CORDIC->RDATA) / 2147483648.0f;	// command will block until RDATA is ready - no need to poll RRDY flag
-		float cos = (float)((int)CORDIC->RDATA) / 2147483648.0f;
-		return sin;
+		float sin = (float)((int)CORDIC->RDATA);	// command will block until RDATA is ready - no need to poll RRDY flag
+		float cos = (float)((int)CORDIC->RDATA);
+		return sin / cos;
 	}
 
 

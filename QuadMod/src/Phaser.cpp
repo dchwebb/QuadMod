@@ -2,6 +2,7 @@
 #pragma GCC optimize ("O1")
 
 #include "Phaser.h"
+#include "Cordic.h"
 #include <numbers>
 #include <cmath>
 
@@ -70,8 +71,9 @@ float Phaser::FilterSamples(const uint32_t channel, float sample, const float ph
 	const float freq = baseFrequency + lfoSweepWidth * lfo(phase);
 
 	//const float freq = baseFrequency * std::pow(sweepWidth, lfo(phase));
-	const float w0 = std::min(freq * inverseSampleRate, 0.99f * std::numbers::pi_v<float>);
-	const float coeff = -std::tan((0.5f * w0) - (std::numbers::pi_v<float> / 4));
+	const float w0 = std::min(freq * inverseSampleRate, 0.99f * pi);
+	//const float coeff = -std::tan((0.5f * w0) - (float)M_PI_4);
+	const float coeff = -Cordic::Tan((0.5f * w0) - (float)M_PI_4);
 
 	for (uint32_t f = 0; f < filterCount; ++f) {
 		const float out = (coeff * (sample + allpass[channel].oldVal[f + 1])) - allpass[channel].oldVal[f];
@@ -118,9 +120,9 @@ void Phaser::IdleJobs()
 // Function for calculating LFO waveforms. Phase runs from 0 to 1, output is scaled from 0 to 1
 float __attribute__((optimize("O1"))) Phaser::lfo(const float phase)
 {
-//#define LFOSINE
+#define LFOSINE
 #ifdef LFOSINE
-	return 0.5f + 0.5f * std::sin(2.0 * std::numbers::pi_v<float> * phase);
+	return 0.5f + 0.5f * Cordic::Sin(2.0f * pi * phase);
 #else
 	if (phase < 0.25f) {
 		return 0.5f + 2.0f * phase;

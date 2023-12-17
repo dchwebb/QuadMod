@@ -1,11 +1,14 @@
 #pragma once
 
 #include "stm32h563xx.h"
+#include <numbers>
 
 extern volatile uint32_t SysTickVal;
 static constexpr uint32_t sysTick = 1000;						// 1ms
 static constexpr uint32_t sampleRate = 48000;
 static constexpr float inverseSampleRate  = 1.0f / (float)sampleRate;
+static constexpr float pi = std::numbers::pi_v<float>;
+static constexpr float pi_x_2 = pi * 2.0f;
 
 union ADCValues {
 	struct {

@@ -48,6 +48,18 @@ void CDCHandler::ProcessCommand()
 		float cordic = Cordic::Sin(val);
 		printf("Sine: %.6f Cordic: %.6f\r\n", sin, cordic);
 
+	} else if (cmd.compare(0, 4, "cos:") == 0) {					// Set envelope duration multiplier
+		const float val = ParseFloat(cmd, ':', -10.0f, 10.0f);
+		float cos = std::cos(val);
+		float cordic = Cordic::Cos(val);
+		printf("Cos: %.6f Cordic: %.6f\r\n", cos, cordic);
+
+	} else if (cmd.compare(0, 4, "tan:") == 0) {					// Set envelope duration multiplier
+		const float val = ParseFloat(cmd, ':', -10.0f, 10.0f);
+		float tan = std::tan(val);
+		float cordic = Cordic::Tan(val);
+		printf("Tan: %.6f Cordic: %.6f\r\n", tan, cordic);
+
 
 	} else if (cmd.compare(0, 8, "readspi:") == 0) {				// Read spi register
 		uint8_t regNo;
