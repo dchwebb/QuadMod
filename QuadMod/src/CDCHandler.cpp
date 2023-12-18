@@ -1,6 +1,7 @@
 #include "USB.h"
 #include "CDCHandler.h"
 #include "AudioCodec.h"
+#include "EffectManager.h"
 #include "HyperRAM.h"
 #include "Phaser.h"
 #include "PassThrough.h"
@@ -124,13 +125,13 @@ void CDCHandler::ProcessCommand()
 		}
 
 	} else if (cmd.compare("none") == 0) {
-		audioCodec.effect = &passThrough;
+		effectManager.effect = &passThrough;
 
 	} else if (cmd.compare("phaser") == 0) {
-		audioCodec.effect = &phaser;
+		effectManager.effect = &phaser;
 
 	} else if (cmd.compare("delay") == 0) {
-		audioCodec.effect = &delay;
+		effectManager.effect = &delay;
 
 	} else if (cmd.compare("savecfg") == 0) {			// Save configuration
 		//config.SaveConfig();

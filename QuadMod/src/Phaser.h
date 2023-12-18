@@ -6,7 +6,7 @@
 
 class Phaser : public Effect {
 public:
-	std::pair<float, float> GetSamples(const float* recordedSamples);
+	void GetSamples(float* samples);
 	void IdleJobs();
 
 private:

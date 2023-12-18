@@ -3,7 +3,7 @@
 
 Delay delay;
 
-std::pair<float, float> Delay::GetSamples(const float* recordedSamples)
+void Delay::GetSamples(float* samples)
 {
 	if (++writePos == audioBuffSize)   { writePos = 0; }
 	if (++readPos == audioBuffSize)    { readPos = 0; }
@@ -25,10 +25,10 @@ std::pair<float, float> Delay::GetSamples(const float* recordedSamples)
 	const float feedback = feedbackScale * adc.delayFeedback;
 
 	// Store the latest recorded sample and the delayed sample back to the audio buffer, shuffling each sample along the stereo field
-	audioBuffer[0][writePos] = lpFilter.CalcFilter(recordedSamples[0] + feedback * newSample[3], 0);
-	audioBuffer[1][writePos] = lpFilter.CalcFilter(recordedSamples[1] + feedback * newSample[0], 1);
-	audioBuffer[2][writePos] = lpFilter.CalcFilter(recordedSamples[2] + feedback * newSample[1], 2);
-	audioBuffer[3][writePos] = lpFilter.CalcFilter(recordedSamples[3] + feedback * newSample[2], 3);
+	audioBuffer[0][writePos] = lpFilter.CalcFilter(samples[0] + feedback * newSample[3], 0);
+	audioBuffer[1][writePos] = lpFilter.CalcFilter(samples[1] + feedback * newSample[0], 1);
+	audioBuffer[2][writePos] = lpFilter.CalcFilter(samples[2] + feedback * newSample[1], 2);
+	audioBuffer[3][writePos] = lpFilter.CalcFilter(samples[3] + feedback * newSample[2], 3);
 
 	calcDelay = std::min((uint32_t)(1000 + adc.delayTime) * 6, audioBuffSize);
 
@@ -43,11 +43,16 @@ std::pair<float, float> Delay::GetSamples(const float* recordedSamples)
 		currentDelay = calcDelay;
 	}
 
-	// Arrange the delay lines from left to right in the stereo field
-	const float leftOut  = (0.5 * newSample[0]) + (0.36 * newSample[1]) + (0.15 * newSample[2]);
-	const float rightOut = (0.5 * newSample[3]) + (0.36 * newSample[2]) + (0.15 * newSample[1]);
+	samples[0] = newSample[0];
+	samples[1] = newSample[1];
+	samples[2] = newSample[2];
+	samples[3] = newSample[3];
 
-	return std::make_pair(leftOut, rightOut);
+//	// Arrange the delay lines from left to right in the stereo field
+//	const float leftOut  = (0.5 * newSample[0]) + (0.36 * newSample[1]) + (0.15 * newSample[2]);
+//	const float rightOut = (0.5 * newSample[3]) + (0.36 * newSample[2]) + (0.15 * newSample[1]);
+//
+//	return std::make_pair(leftOut, rightOut);
 }
 
 

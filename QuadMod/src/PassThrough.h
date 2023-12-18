@@ -6,7 +6,7 @@
 
 class PassThrough : public Effect {
 public:
-	std::pair<float, float> GetSamples(const float* recordedSamples);
+	void GetSamples(float* recordedSamples);
 	void IdleJobs();
 
 private:

@@ -10,7 +10,7 @@ public:
 	void Init();
 	uint8_t ReadData(uint16_t address);
 	void WriteData(uint16_t address, uint8_t data);
-	void TestOutput();
+	void Interrupt();
 
 	struct {
 		float channel1;
@@ -20,7 +20,6 @@ public:
 		bool leftRight = true;		// to keep count of which channel we are receiving
 	} dataIn;
 
-	Effect* effect;					// Current effect in use
 	bool outputDone = false;			// To alert the main loop it can run idle jobs
 
 private:

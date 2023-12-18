@@ -8,7 +8,7 @@
 class Delay : public Effect {
 public:
 	// functions inherited from Effect for sample generation and filter recalculation
-	std::pair<float, float> GetSamples(const float* samples);
+	void GetSamples(float* samples);
 	void IdleJobs();
 
 private:

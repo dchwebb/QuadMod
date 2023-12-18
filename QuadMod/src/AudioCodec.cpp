@@ -1,5 +1,6 @@
 #include "AudioCodec.h"
-#include "stdio.h"
+#include "EffectManager.h"
+#include <stdio.h>
 #include <numbers>
 #include <cmath>
 #include <bit>
@@ -57,13 +58,12 @@ inline void AudioCodec::SendCmd(Command cmd)
 }
 
 
-void AudioCodec::TestOutput()
+void AudioCodec::Interrupt()
 {
 	GPIOG->ODR |= GPIO_ODR_OD12;
 
 	// Input: SAI2 Block A FIFO request
 	while ((SAI2_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		//GPIOG->ODR |= GPIO_ODR_OD6;
 		if (dataIn.leftRight) {
 			dataIn.channel1 = normalise32Bit * (int32_t)SAI2_Block_A->DR;
 			dataIn.channel3 = normalise32Bit * (int32_t)SAI2_Block_B->DR;
@@ -72,13 +72,12 @@ void AudioCodec::TestOutput()
 			dataIn.channel4 = normalise32Bit * (int32_t)SAI2_Block_B->DR;
 		}
 		dataIn.leftRight = !dataIn.leftRight;
-		//GPIOG->ODR &= ~GPIO_ODR_OD6;
 	}
 
 
 	// Output: SAI1 Block A FIFO request
 	if ((SAI1_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		auto [left, right] = effect->GetSamples(&dataIn.channel1);
+		auto [left, right] = effectManager.ProcessSamples(&dataIn.channel1);
 
 		// Main stereo outputs are Block A; Block B outputs are debug only
 		SAI1_Block_A->DR = Denormalise(left);

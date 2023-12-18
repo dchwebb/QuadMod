@@ -1,6 +1,6 @@
 void SAI1_IRQHandler(void)
 {
-	audioCodec.TestOutput();
+	audioCodec.Interrupt();
 }
 
 void USB_DRD_FS_IRQHandler()

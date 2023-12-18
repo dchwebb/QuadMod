@@ -1,6 +1,7 @@
 #include "initialisation.h"
 #include "USB.h"
 #include "AudioCodec.h"
+#include "EffectManager.h"
 #include "Delay.h"
 #include "Phaser.h"
 
@@ -19,7 +20,7 @@ int main(void)
 	SystemInit();						// Activates floating point coprocessor and resets clock
 	InitSystemClock();					// Configure the clock and PLL
 	InitHardware();
-	audioCodec.effect = &phaser;
+	effectManager.effect = &phaser;
 	audioCodec.Init();
 	usb.InitUSB();
 
@@ -35,7 +36,7 @@ int main(void)
 		// When the audio codec has output samples, idle jobs (ie filter recalculation) can be done by the active effect
 		if (audioCodec.outputDone) {
 			audioCodec.outputDone = false;
-			audioCodec.effect->IdleJobs();
+			effectManager.IdleJobs();
 		}
 	}
 }
