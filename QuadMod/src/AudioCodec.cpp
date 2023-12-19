@@ -64,20 +64,20 @@ void AudioCodec::Interrupt()
 
 	// Input: SAI2 Block A FIFO request
 	while ((SAI2_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		if (dataIn.leftRight) {
-			dataIn.channel1 = normalise32Bit * (int32_t)SAI2_Block_A->DR;
-			dataIn.channel3 = normalise32Bit * (int32_t)SAI2_Block_B->DR;
+		if (leftRight) {
+			dataIn.ch[0] = normalise32Bit * (int32_t)SAI2_Block_A->DR;
+			dataIn.ch[2] = normalise32Bit * (int32_t)SAI2_Block_B->DR;
 		} else {
-			dataIn.channel2 = normalise32Bit * (int32_t)SAI2_Block_A->DR;
-			dataIn.channel4 = normalise32Bit * (int32_t)SAI2_Block_B->DR;
+			dataIn.ch[1] = normalise32Bit * (int32_t)SAI2_Block_A->DR;
+			dataIn.ch[3] = normalise32Bit * (int32_t)SAI2_Block_B->DR;
 		}
-		dataIn.leftRight = !dataIn.leftRight;
+		leftRight = !leftRight;
 	}
 
 
 	// Output: SAI1 Block A FIFO request
 	if ((SAI1_Block_A->SR & SAI_xSR_FREQ) != 0) {
-		auto [left, right] = effectManager.ProcessSamples(&dataIn.channel1);
+		auto [left, right] = effectManager.ProcessSamples(dataIn);
 
 		// Main stereo outputs are Block A; Block B outputs are debug only
 		SAI1_Block_A->DR = Denormalise(left);

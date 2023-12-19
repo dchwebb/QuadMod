@@ -1,5 +1,6 @@
 #pragma once
 #include "initialisation.h"
+#include "AudioCodec.h"
 #include "Effect.h"
 #include <tuple>
 
@@ -8,7 +9,7 @@ public:
 	Effect* effect;					// Current effect in use
 	bool delayOn = true;
 
-	std::pair<float, float> ProcessSamples(float* samples);
+	std::pair<float, float> ProcessSamples(Samples& samples);
 	void IdleJobs();
 
 };

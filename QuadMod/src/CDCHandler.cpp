@@ -4,7 +4,6 @@
 #include "EffectManager.h"
 #include "HyperRAM.h"
 #include "Phaser.h"
-#include "PassThrough.h"
 #include "Cordic.h"
 #include "Delay.h"
 #include <charconv>
@@ -38,10 +37,41 @@ void CDCHandler::ProcessCommand()
 				"wmem:AAAAAAAA,VVVV  -  Write HyperRAM Memory at address 0xAAAAAAAA\r\n"
 				"none             -  No effect\r\n"
 				"phaser           -  Set effect to phaser\r\n"
-				"delay            -  Set effect to delay\r\n"
+				"delay            -  Delay on/off\r\n"
 				"sin:xx.x         -  Sine Test\r\n"
 				"\r\n"
 		);
+
+	} else if (cmd.compare("settings") == 0) {
+		printf("delay:%s\r\n"
+				"lfoSpeed: %d\r\n"
+				"lfoRange: %d\r\n"
+				"feedback: %d\r\n",
+				effectManager.delayOn ? "on" : "off",
+				adc.lfoSpeed,
+				adc.lfoRange,
+				adc.feedback);
+
+	} else if (cmd.compare(0, 9, "lfoSpeed:") == 0) {
+		const int32_t val = ParseInt(cmd, ':', 0, 4095);
+		if (val >= 0) {
+			adc.lfoSpeed = val;
+		}
+		printf("lfoSpeed: %d\r\n", adc.lfoSpeed);
+
+	} else if (cmd.compare(0, 9, "lfoRange:") == 0) {
+		const int32_t val = ParseInt(cmd, ':', 0, 4095);
+		if (val >= 0) {
+			adc.lfoRange = val;
+		}
+		printf("lfoRange: %d\r\n", adc.lfoRange);
+
+	} else if (cmd.compare(0, 9, "feedback:") == 0) {
+		const int32_t val = ParseInt(cmd, ':', 0, 4095);
+		if (val >= 0) {
+			adc.feedback = val;
+		}
+		printf("feedback: %d\r\n", adc.feedback);
 
 	} else if (cmd.compare(0, 4, "sin:") == 0) {					// Set envelope duration multiplier
 		const float val = ParseFloat(cmd, ':', -10.0f, 10.0f);
@@ -124,14 +154,12 @@ void CDCHandler::ProcessCommand()
 			usb->SendString("Invalid register\r\n");
 		}
 
-	} else if (cmd.compare("none") == 0) {
-		effectManager.effect = &passThrough;
 
 	} else if (cmd.compare("phaser") == 0) {
 		effectManager.effect = &phaser;
 
 	} else if (cmd.compare("delay") == 0) {
-		effectManager.effect = &delay;
+		effectManager.delayOn = !effectManager.delayOn;
 
 	} else if (cmd.compare("savecfg") == 0) {			// Save configuration
 		//config.SaveConfig();

@@ -10,19 +10,28 @@ static constexpr float inverseSampleRate  = 1.0f / (float)sampleRate;
 static constexpr float pi = std::numbers::pi_v<float>;
 static constexpr float pi_x_2 = pi * 2.0f;
 
-union ADCValues {
-	struct {
-		uint16_t delayFeedback;
-		uint16_t delayTime;
-		uint16_t delayFilter;
-	};
-	struct {
-		uint16_t lfoSpeed;
-		uint16_t lfoRange;
-		uint16_t feedback;
-	};
-};
+//union ADCValues {
+//	struct {
+//		uint16_t delayFeedback;
+//		uint16_t delayTime;
+//		uint16_t delayFilter;
+//	};
+//	struct {
+//		uint16_t lfoSpeed;
+//		uint16_t lfoRange;
+//		uint16_t feedback;
+//	};
+//};
 
+
+struct ADCValues {
+	uint16_t delayFeedback;
+	uint16_t delayTime;
+	uint16_t delayFilter;
+	uint16_t lfoSpeed = 2048;
+	uint16_t lfoRange = 2048;
+	uint16_t feedback = 2048;
+};
 
 
 struct DMALinkedList {

@@ -6,7 +6,7 @@
 
 class Phaser : public Effect {
 public:
-	void GetSamples(float* samples);
+	void GetSamples(Samples& samples);
 	void IdleJobs();
 
 private:

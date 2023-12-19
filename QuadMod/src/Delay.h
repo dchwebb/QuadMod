@@ -8,7 +8,7 @@
 class Delay : public Effect {
 public:
 	// functions inherited from Effect for sample generation and filter recalculation
-	void GetSamples(float* samples);
+	void GetSamples(Samples& samples);
 	void IdleJobs();
 
 private:

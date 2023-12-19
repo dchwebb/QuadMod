@@ -5,6 +5,8 @@
 #include "Effect.h"
 #include <cmath>
 
+
+
 class AudioCodec {
 public:
 	void Init();
@@ -12,14 +14,9 @@ public:
 	void WriteData(uint16_t address, uint8_t data);
 	void Interrupt();
 
-	struct {
-		float channel1;
-		float channel2;
-		float channel3;
-		float channel4;
-		bool leftRight = true;		// to keep count of which channel we are receiving
-	} dataIn;
+	Samples dataIn;
 
+	bool leftRight = true;		// to keep count of which channel we are receiving
 	bool outputDone = false;			// To alert the main loop it can run idle jobs
 
 private:

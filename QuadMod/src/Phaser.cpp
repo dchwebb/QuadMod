@@ -13,20 +13,20 @@ uint32_t debugCnt = 0;
 
 //__attribute__((optimize("O0")))
 
-void Phaser::GetSamples(float* samples)
+void Phaser::GetSamples(Samples& samples)
 {
 	lfoFrequency = (float)adc.lfoSpeed / 1000.0f;
 	lfoSweepWidth = (float)adc.lfoRange * 10.0f;
 	feedback = (float)adc.feedback / 4096.0f;
 	float lfoPhase = lfoInitPhase + lfoFrequency * inverseSampleRate;
 
-	float origSamples[4] = {samples[0], samples[1], samples[2], samples[3]};
+	Samples origSamples = samples;
 
 	for (uint32_t channel = 0; channel < 4; ++channel) {
 
 		// last filtered value is output of final filter in bank
 		if (feedback != 0.0) {
-			samples[channel] += feedback * allpass[(channel + 1) & 3].oldVal[filterCount];
+			samples.ch[channel] += feedback * allpass[(channel + 1) & 3].oldVal[filterCount];
 		}
 
 		while (lfoPhase >= 1.0) {
@@ -34,10 +34,10 @@ void Phaser::GetSamples(float* samples)
 		}
 
 		// Run the sample through each of the all-pass filters
-		samples[channel] = FilterSamples(channel, samples[channel], lfoPhase);
+		samples.ch[channel] = FilterSamples(channel, samples.ch[channel], lfoPhase);
 
 		// Add all-pass signal to the output (depth = 0: input only; depth = 1: evenly balanced input and output
-		samples[channel] = (1.0f - 0.5f * depth) * origSamples[channel] + 0.5f * depth * samples[channel];
+		samples.ch[channel] = (1.0f - 0.5f * depth) * origSamples.ch[channel] + 0.5f * depth * samples.ch[channel];
 
 		if (channel == 0) {
 			lfoInitPhase = lfoPhase;
