@@ -3,50 +3,40 @@
 #include <numbers>
 #include <cmath>
 
-
 // https://code.soundsoftware.ac.uk/projects/audio_effects_textbook_code/repository/show/effects/phaser
 
 Phaser phaser;
 
-uint8_t debugRollover = 0;
-uint32_t debugCnt = 0;
 
 //__attribute__((optimize("O0")))
 
 void Phaser::GetSamples(Samples& samples)
 {
 	lfoFrequency = (float)adc.lfoSpeed / 1000.0f;
-	lfoSweepWidth = (float)adc.lfoRange * 10.0f;
+	lfoSweepWidth = (float)adc.lfoRange * 5.0f;
 	feedback = (float)adc.feedback / 4096.0f;
 	float lfoPhase = lfoInitPhase + lfoFrequency * inverseSampleRate;
 
-	Samples origSamples = samples;
-
 	for (uint32_t channel = 0; channel < 4; ++channel) {
 
-		// last filtered value is output of final filter in bank
+		// Feedback from one channel to the next: last filtered value is output of final filter in bank
 		if (feedback != 0.0) {
 			samples.ch[channel] += feedback * allpass[(channel + 1) & 3].oldVal[filterCount];
 		}
 
-		while (lfoPhase >= 1.0) {
-			lfoPhase -= 1.0;										// Ensure phase is between 0 and 1
+		while (lfoPhase >= 1.0) {					// Ensure phase is between 0 and 1
+			lfoPhase -= 1.0;
 		}
 
 		// Run the sample through each of the all-pass filters
 		samples.ch[channel] = FilterSamples(channel, samples.ch[channel], lfoPhase);
 
-		// Add all-pass signal to the output (depth = 0: input only; depth = 1: evenly balanced input and output
-		samples.ch[channel] = (1.0f - 0.5f * depth) * origSamples.ch[channel] + 0.5f * depth * samples.ch[channel];
-
-		if (channel == 0) {
+		if (channel == 0) {						// Apply a 45 degree phase shift to each channel
 			lfoInitPhase = lfoPhase;
 		} else {
-			lfoPhase += 0.25;					// Apply a 45 degree phase shift to each channel
+			lfoPhase += 0.25;
 		}
-
 	}
-
 }
 
 
@@ -79,7 +69,7 @@ void Phaser::IdleJobs()
 
 
 // Function for calculating LFO waveforms. Phase runs from 0 to 1, output is scaled from 0 to 1
-float __attribute__((optimize("O1"))) Phaser::lfo(const float phase)
+float Phaser::lfo(const float phase)
 {
 #define LFOSINE
 #ifdef LFOSINE

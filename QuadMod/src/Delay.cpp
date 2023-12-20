@@ -44,12 +44,6 @@ void Delay::GetSamples(Samples& samples)
 	}
 
 	samples = newSample;
-
-//	// Arrange the delay lines from left to right in the stereo field
-//	const float leftOut  = (0.5 * newSample[0]) + (0.36 * newSample[1]) + (0.15 * newSample[2]);
-//	const float rightOut = (0.5 * newSample[3]) + (0.36 * newSample[2]) + (0.15 * newSample[1]);
-//
-//	return std::make_pair(leftOut, rightOut);
 }
 
 

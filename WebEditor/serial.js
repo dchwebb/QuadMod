@@ -1,7 +1,7 @@
 let webserial;
 let portButton;				// Connect/Disconnect button
-let readingsSpan;			// DOM element where the incoming readings go
-let initSettings = false;	// indicates when waiting for initial settings to be transmitted
+let results;				// DOM element to display incoming serial data
+let message = "";			// store partial data when transmitted in chunks
 
 document.addEventListener("DOMContentLoaded", setup);					// run the setup function when page is loaded
 
@@ -14,7 +14,7 @@ function setup()
 		const textInput = document.getElementById("txt");				// user text input
 		textInput.addEventListener("keyup", readTextInput);
   
-		readingsSpan = document.getElementById("results");				// span for incoming serial messages
+		results = document.getElementById("results");				// span for incoming serial messages
 
 		webserial = new WebSerialPort();
 		if (webserial) {
@@ -43,46 +43,65 @@ async function openClosePort()
 
 function portOpened()
 {
-	setTimeout(()=>{ webserial.sendSerial("settings\r"); }, 500);		// Add some delay to the settings call as results were being truncated
-	initSettings = true;
+	//setTimeout(()=>{ webserial.sendSerial("settings\r"); }, 500);		// Add some delay to the settings call as results were being truncated
+	webserial.sendSerial("settings\r");
+	results.innerHTML = "";
 }
 
 
 function serialRead(event) 
 {
-	let settings = event.detail.data;
+	message += event.detail.data;
 
-	if (initSettings) {
-		let data = settings.match("delay:(.*)\r");
-		if (data != null) {
-			document.getElementById("delayOnOff").checked = data[1] == "on" ? true : false;
-		}
-
-		data = settings.match("lfoSpeed:(.*)\r");
-		if (data != null) {
-			document.getElementById("lfoSpeed").value = parseInt(data[1]);
-		}
-
-		data = settings.match("lfoRange:(.*)\r");
-		if (data != null) {
-			document.getElementById("lfoRange").value = parseInt(data[1]);
-		}
-
-		data = settings.match("feedback:(.*)\r");
-		if (data != null) {
-			document.getElementById("feedback").value = parseInt(data[1]);
-			initSettings = false;
-		}
+	let lastChar = message.substr(message.length - 1);				// data may be received in chunks - only process if terminated in CR/LF
+	if (!['\r', '\n'].includes(lastChar)) {
+		return;
 	}
 
-	readingsSpan.innerHTML += settings;
+
+	let data = message.match("delay:(.*)\r");
+	if (data != null) {
+		document.getElementById("delayOnOff").checked = data[1] == "on" ? true : false;
+	}
+
+	data = message.match("lfoSpeed:(.*)\r");
+	if (data != null) {
+		document.getElementById("lfoSpeed").value = parseInt(data[1]);
+	}
+
+	data = message.match("lfoRange:(.*)\r");
+	if (data != null) {
+		document.getElementById("lfoRange").value = parseInt(data[1]);
+	}
+
+	data = message.match("feedback:(.*)\r");
+	if (data != null) {
+		document.getElementById("feedback").value = parseInt(data[1]);
+	}
+
+	data = message.match("effectMix:(.*)\r");
+	if (data != null) {
+		document.getElementById("effectMix").value = parseInt(data[1]);
+	}
+
+	data = message.match("delayMix:(.*)\r");
+	if (data != null) {
+		document.getElementById("delayMix").value = parseInt(data[1]);
+	}
+
+
+
+	results.innerHTML += message;
+	results.scrollTop = results.scrollHeight ;
+
+	message = "";
 }
 
 
 function readTextInput(event) 
 {
 	// listen for the enter key (keyCode = 13) and transmit text field once found
-	if (event.keyCode = 13) {
+	if (event.keyCode == 13) {
 		webserial.sendSerial(event.target.value + '\r');
 	}
 }
@@ -92,24 +111,34 @@ function delayOnOff()
 	webserial.sendSerial(`delay\r`);
 }
 
-
 function lfoSpeed() 
 {
-	let lfoSpeed = document.getElementById("lfoSpeed").value;
-	webserial.sendSerial(`lfoSpeed:${lfoSpeed}\r`);
+	let val = document.getElementById("lfoSpeed").value;
+	webserial.sendSerial(`lfoSpeed:${val}\r`);
 }
-
 
 function lfoRange()
 {
-	let lfoRange = document.getElementById("lfoRange").value;
-	webserial.sendSerial(`lfoRange:${lfoRange}\r`);
+	let val = document.getElementById("lfoRange").value;
+	webserial.sendSerial(`lfoRange:${val}\r`);
 }
 
 function feedback()
 {
-	let feedback = document.getElementById("feedback").value;
-	webserial.sendSerial(`feedback:${feedback}\r`);
+	let val = document.getElementById("feedback").value;
+	webserial.sendSerial(`feedback:${val}\r`);
+}
+
+function effectMix()
+{
+	let val = document.getElementById("effectMix").value;
+	webserial.sendSerial(`effectMix:${val}\r`);
+}
+
+function delayMix()
+{
+	let val = document.getElementById("delayMix").value;
+	webserial.sendSerial(`delayMix:${val}\r`);
 }
 
 

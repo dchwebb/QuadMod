@@ -28,9 +28,11 @@ struct ADCValues {
 	uint16_t delayFeedback;
 	uint16_t delayTime;
 	uint16_t delayFilter;
-	uint16_t lfoSpeed = 2048;
-	uint16_t lfoRange = 2048;
-	uint16_t feedback = 2048;
+	uint16_t lfoSpeed = 720;
+	uint16_t lfoRange = 630;
+	uint16_t feedback = 1250;
+	uint16_t effectMix = 2048;
+	uint16_t delayMix = 2048;
 };
 
 

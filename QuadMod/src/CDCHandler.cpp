@@ -32,13 +32,13 @@ void CDCHandler::ProcessCommand()
 				"info           -  Show diagnostic information\r\n"
 				"readspi:HH     -  Read codec register at 0xHH\r\n"
 				"writespi:RR,VV -  Write value 0xVV to audio codec register 0xRR\r\n"
-				"mreg:AAAAAAAA  -  Get HyperRAM Register at address 0xAAAAAAAA\r\n"
-				"mmem:AAAAAAAA  -  Get HyperRAM Memory at address 0xAAAAAAAA\r\n"
-				"wmem:AAAAAAAA,VVVV  -  Write HyperRAM Memory at address 0xAAAAAAAA\r\n"
-				"none             -  No effect\r\n"
-				"phaser           -  Set effect to phaser\r\n"
-				"delay            -  Delay on/off\r\n"
-				"sin:xx.x         -  Sine Test\r\n"
+				//"mreg:AAAAAAAA  -  Get HyperRAM Register at address 0xAAAAAAAA\r\n"
+				//"mmem:AAAAAAAA  -  Get HyperRAM Memory at address 0xAAAAAAAA\r\n"
+				//"wmem:AAAAAAAA,VVVV  -  Write HyperRAM Memory at address 0xAAAAAAAA\r\n"
+				"none           -  No effect\r\n"
+				"phaser         -  Set effect to phaser\r\n"
+				"delay          -  Delay on/off\r\n"
+				"sin:xx.x       -  Sine Test\r\n"
 				"\r\n"
 		);
 
@@ -46,11 +46,16 @@ void CDCHandler::ProcessCommand()
 		printf("delay:%s\r\n"
 				"lfoSpeed: %d\r\n"
 				"lfoRange: %d\r\n"
-				"feedback: %d\r\n",
+				"feedback: %d\r\n"
+				"effectMix: %d\r\n"
+				"delayMix: %d\r\n",
 				effectManager.delayOn ? "on" : "off",
 				adc.lfoSpeed,
 				adc.lfoRange,
-				adc.feedback);
+				adc.feedback,
+				adc.effectMix,
+				adc.delayMix
+				);
 
 	} else if (cmd.compare(0, 9, "lfoSpeed:") == 0) {
 		const int32_t val = ParseInt(cmd, ':', 0, 4095);
@@ -72,6 +77,20 @@ void CDCHandler::ProcessCommand()
 			adc.feedback = val;
 		}
 		printf("feedback: %d\r\n", adc.feedback);
+
+	} else if (cmd.compare(0, 10, "effectMix:") == 0) {
+		const int32_t val = ParseInt(cmd, ':', 0, 4095);
+		if (val >= 0) {
+			adc.effectMix = val;
+		}
+		printf("effectMix: %d\r\n", adc.effectMix);
+
+	} else if (cmd.compare(0, 9, "delayMix:") == 0) {
+		const int32_t val = ParseInt(cmd, ':', 0, 4095);
+		if (val >= 0) {
+			adc.delayMix = val;
+		}
+		printf("delayMix: %d\r\n", adc.delayMix);
 
 	} else if (cmd.compare(0, 4, "sin:") == 0) {					// Set envelope duration multiplier
 		const float val = ParseFloat(cmd, ':', -10.0f, 10.0f);
@@ -160,6 +179,7 @@ void CDCHandler::ProcessCommand()
 
 	} else if (cmd.compare("delay") == 0) {
 		effectManager.delayOn = !effectManager.delayOn;
+		printf("delay:%s\r\n", effectManager.delayOn ? "on" : "off");
 
 	} else if (cmd.compare("savecfg") == 0) {			// Save configuration
 		//config.SaveConfig();
