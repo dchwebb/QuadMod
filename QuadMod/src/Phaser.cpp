@@ -22,9 +22,10 @@ void Phaser::GetSamples(Samples& samples)
 		// Feedback from one channel to the next: last filtered value is output of final filter in bank
 		if (feedback != 0.0) {
 			samples.ch[channel] += feedback * allpass[(channel + 1) & 3].oldVal[filterCount];
+			samples.ch[channel] *= (1.0f - 0.2f * feedback);	// Slightly reduce the level of the sample to avoid distortion
 		}
 
-		while (lfoPhase >= 1.0) {					// Ensure phase is between 0 and 1
+		while (lfoPhase >= 1.0) {				// Ensure phase is between 0 and 1
 			lfoPhase -= 1.0;
 		}
 
@@ -45,10 +46,7 @@ float Phaser::FilterSamples(const uint32_t channel, float sample, const float ph
     // Transfer function is y1 = (b0 * sample) + (b1 * x1) + (a1 * y1) but a1 = b0 and b1 = -1.0 so simplify calculation
 
 	const float freq = baseFrequency + lfoSweepWidth * lfo(phase);
-
-	//const float freq = baseFrequency * std::pow(sweepWidth, lfo(phase));
 	const float w0 = std::min(freq * inverseSampleRate, 0.99f * pi);
-	//const float coeff = -std::tan((0.5f * w0) - (float)M_PI_4);
 	const float coeff = -Cordic::Tan((0.5f * w0) - (float)M_PI_4);
 
 	for (uint32_t f = 0; f < filterCount; ++f) {

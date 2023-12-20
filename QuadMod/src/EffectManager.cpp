@@ -16,21 +16,26 @@ std::pair<float, float> EffectManager::ProcessSamples(Samples& samples)
 	}
 
 	// Stereo mix with effects only
-	const float fxOutL  = (0.5 * samples.ch[0]) + (0.36 * samples.ch[1]) + (0.15 * samples.ch[2]);
-	const float fxOutR = (0.5 * samples.ch[3]) + (0.36 * samples.ch[2]) + (0.15 * samples.ch[1]);
+	const float fxOutL = (0.30 * samples.ch[0]) + (0.26 * samples.ch[1]) + (0.24 * samples.ch[2]) + (0.20 * samples.ch[3]);
+	const float fxOutR = (0.20 * samples.ch[0]) + (0.24 * samples.ch[1]) + (0.26 * samples.ch[2]) + (0.30 * samples.ch[3]);
 
+	float mixOutL, mixOutR;
 
 	if (delayOn) {
 		delay.GetSamples(samples);
+
+		// Arrange the delay lines from left to right in the stereo field
+		const float delayOutL  = (0.5 * samples.ch[0]) + (0.36 * samples.ch[1]) + (0.15 * samples.ch[2]);
+		const float delayOutR = (0.5 * samples.ch[3]) + (0.36 * samples.ch[2]) + (0.15 * samples.ch[1]);
+
+		const float delayMix = adc.delayMix / 4096.0f;
+		mixOutL = (1.0f - delayMix) * fxOutL + delayMix * delayOutL;
+		mixOutR = (1.0f - delayMix) * fxOutR + delayMix * delayOutR;
+
+	} else {
+		mixOutL = fxOutL;
+		mixOutR = fxOutR;
 	}
-
-	// Arrange the delay lines from left to right in the stereo field
-	const float delayOutL  = (0.5 * samples.ch[0]) + (0.36 * samples.ch[1]) + (0.15 * samples.ch[2]);
-	const float delayOutR = (0.5 * samples.ch[3]) + (0.36 * samples.ch[2]) + (0.15 * samples.ch[1]);
-
-	const float delayMix = adc.delayMix / 4096.0f;
-	const float mixOutL = (1.0f - delayMix) * fxOutL + delayMix * delayOutL;
-	const float mixOutR = (1.0f - delayMix) * fxOutR + delayMix * delayOutR;
 
 	return std::make_pair(mixOutL, mixOutR);
 
