@@ -62,8 +62,8 @@ public:
 		CORDIC->WDATA = TrigToQ31(x);
 
 		// convert values back to floats scaling by * 2 at the same time
-		float sin = (float)((int)CORDIC->RDATA);	// command will block until RDATA is ready - no need to poll RRDY flag
-		float cos = (float)((int)CORDIC->RDATA);
+		const float sin = (float)((int)CORDIC->RDATA);	// command will block until RDATA is ready - no need to poll RRDY flag
+		const float cos = (float)((int)CORDIC->RDATA);
 		return sin / cos;
 	}
 
@@ -89,9 +89,9 @@ public:
 		CORDIC->WDATA = q31;
 
 		// convert values back to floats scaling by * 2 at the same time
-		float sinh = (float)((int)CORDIC->RDATA) / 1073741824.0f;	// command will block until RDATA is ready - no need to poll RRDY flag
-		float cosh = (float)((int)CORDIC->RDATA) / 1073741824.0f;
-		float res = sinh + cosh;
+		const float sinh = (float)((int)CORDIC->RDATA) / 1073741824.0f;	// command will block until RDATA is ready - no need to poll RRDY flag
+		const float cosh = (float)((int)CORDIC->RDATA) / 1073741824.0f;
+		const float res = sinh + cosh;
 		if (x < -1.118f) {
 			return res * 0.3678794411714f;				// multiply by e^-1 to correct range offset
 		} else {

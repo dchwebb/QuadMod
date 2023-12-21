@@ -1,6 +1,5 @@
 #include "Phaser.h"
 #include "Cordic.h"
-#include <numbers>
 #include <cmath>
 
 // Code loosely based on:
@@ -13,10 +12,10 @@ void Phaser::GetSamples(Samples& samples)
 	const uint32_t lfoFreq = adc.lfoSpeed * 32;
 	uint32_t lfoPhase = lfoInitPhase + lfoFreq;
 
-	const float lfoSweepWidth = (float)adc.lfoRange * 5.0f;
+	const float lfoSweepWidth = static_cast<float>(adc.lfoRange) * 5.0f;
 
 	static constexpr float feedbackScale = 1.0f / 4096.0f;
-	const float feedback = (float)adc.feedback * feedbackScale;
+	const float feedback = static_cast<float>(adc.feedback) * feedbackScale;
 
 
 	for (uint32_t channel = 0; channel < 4; ++channel) {
@@ -42,12 +41,12 @@ void Phaser::GetSamples(Samples& samples)
 
 float Phaser::FilterSamples(const uint32_t channel, float sample, const float lfoSweepWidth, const uint32_t phase)
 {
-    // Transfer function is y1 = (b0 * sample) + (b1 * x1) + (a1 * y1) but a1 = b0 and b1 = -1.0 so simplify calculation
-	const float freq = baseFrequency + lfoSweepWidth * (0.5f + 0.5f * Cordic::Sin(phase));
+ 	const float freq = baseFrequency + lfoSweepWidth * (0.5f + 0.5f * Cordic::Sin(phase));
 	const float w0 = std::min(freq * inverseSampleRate, 0.99f * pi);
 	const float coeff = -Cordic::Tan((0.5f * w0) - (float)M_PI_4);
 
 	for (uint32_t f = 0; f < filterCount; ++f) {
+	   // Transfer function is y1 = (b0 * sample) + (b1 * x1) + (a1 * y1) but a1 = b0 and b1 = -1.0 so simplify calculation
 		const float out = (coeff * (sample + allpass[channel].oldVal[f + 1])) - allpass[channel].oldVal[f];
 		allpass[channel].oldVal[f] = sample;
 		sample = out;

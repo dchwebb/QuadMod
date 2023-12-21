@@ -4,6 +4,7 @@
 #include "EffectManager.h"
 #include "HyperRAM.h"
 #include "Phaser.h"
+#include "Flanger.h"
 #include "Cordic.h"
 #include "Delay.h"
 #include <charconv>
@@ -178,6 +179,9 @@ void CDCHandler::ProcessCommand()
 
 	} else if (cmd.compare("phaser") == 0) {
 		effectManager.effect = &phaser;
+
+	} else if (cmd.compare("flanger") == 0) {
+		effectManager.effect = &flanger;
 
 	} else if (cmd.compare("delay") == 0) {
 		effectManager.delayOn = !effectManager.delayOn;
