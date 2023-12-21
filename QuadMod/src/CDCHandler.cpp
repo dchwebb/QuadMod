@@ -173,6 +173,8 @@ void CDCHandler::ProcessCommand()
 			usb->SendString("Invalid register\r\n");
 		}
 
+	} else if (cmd.compare("none") == 0) {
+		effectManager.effect = nullptr;
 
 	} else if (cmd.compare("phaser") == 0) {
 		effectManager.effect = &phaser;

@@ -7,12 +7,14 @@ std::pair<float, float> EffectManager::ProcessSamples(Samples& samples)
 {
 	Samples origSamples = samples;
 
-	effect->GetSamples(samples);
+	if (effect != nullptr) {
+		effect->GetSamples(samples);
 
-	// Scale mix from 0 (dry) to  1 (fully wet)
-	const float effectMix = adc.effectMix / 4096.0f;
-	for (uint32_t i = 0; i < 4; ++i) {
-		samples.ch[i] = (1.0f - effectMix) * origSamples.ch[i] + effectMix * samples.ch[i];
+		// Scale mix from 0 (dry) to  1 (fully wet)
+		const float effectMix = adc.effectMix / 4096.0f;
+		for (uint32_t i = 0; i < 4; ++i) {
+			samples.ch[i] = (1.0f - effectMix) * origSamples.ch[i] + effectMix * samples.ch[i];
+		}
 	}
 
 	// Stereo mix with effects only

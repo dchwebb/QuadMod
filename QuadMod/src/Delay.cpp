@@ -13,10 +13,10 @@ void Delay::GetSamples(Samples& samples)
 
 	// Cross fade if moving playback position
 	if (delayCrossfade > 0) {
-		float scale = static_cast<float>(delayCrossfade) / static_cast<float>(crossfade);
+		const float scale = static_cast<float>(delayCrossfade) / static_cast<float>(crossfade);
 		for (uint32_t ch = 0; ch < 4; ++ch) {
-			float oldSample = audioBuffer[oldReadPos].ch[ch];
-			newSample.ch[ch] = static_cast<float>(newSample.ch[ch]) * (1.0f - scale) + static_cast<float>(oldSample) * (scale);
+			const float oldSample = audioBuffer[oldReadPos].ch[ch];
+			newSample.ch[ch] = newSample.ch[ch] * (1.0f - scale) + oldSample * scale;
 		}
 		--delayCrossfade;
 	}
@@ -30,9 +30,7 @@ void Delay::GetSamples(Samples& samples)
 
 		audioBuffer[writePos].ch[ch] = lpFilter.CalcFilter(samples.ch[ch] + feedback * newSample.ch[newCh], ch);
 	}
-//	audioBuffer[writePos].ch[1] = lpFilter.CalcFilter(samples.ch[1] + feedback * newSample.ch[0], 1);
-//	audioBuffer[writePos].ch[2] = lpFilter.CalcFilter(samples.ch[2] + feedback * newSample.ch[1], 2);
-//	audioBuffer[writePos].ch[3] = lpFilter.CalcFilter(samples.ch[3] + feedback * newSample.ch[2], 3);
+
 
 	calcDelay = std::min((uint32_t)(1000 + adc.delayTime) * 6, audioBuffSize);
 
