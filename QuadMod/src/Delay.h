@@ -15,7 +15,7 @@ private:
 	static constexpr uint32_t audioBuffSize = 34000;
 	int32_t writePos = 0;
 	int32_t readPos = 1000;
-	float audioBuffer[4][audioBuffSize] = {};
+	Samples audioBuffer[audioBuffSize] = {};
 
 	int32_t oldReadPos;
 	uint16_t delayCrossfade;			// Counter that ticks down during a crossfade following delay length change

@@ -9,13 +9,13 @@ void Delay::GetSamples(Samples& samples)
 	if (++readPos == audioBuffSize)    { readPos = 0; }
 	if (++oldReadPos == audioBuffSize) { oldReadPos = 0;}
 
-	Samples newSample = {audioBuffer[0][readPos], audioBuffer[1][readPos], audioBuffer[2][readPos], audioBuffer[3][readPos]};
+	Samples newSample = audioBuffer[readPos];
 
 	// Cross fade if moving playback position
 	if (delayCrossfade > 0) {
 		float scale = static_cast<float>(delayCrossfade) / static_cast<float>(crossfade);
 		for (uint32_t ch = 0; ch < 4; ++ch) {
-			float oldSample = audioBuffer[ch][oldReadPos];
+			float oldSample = audioBuffer[oldReadPos].ch[ch];
 			newSample.ch[ch] = static_cast<float>(newSample.ch[ch]) * (1.0f - scale) + static_cast<float>(oldSample) * (scale);
 		}
 		--delayCrossfade;
@@ -25,10 +25,14 @@ void Delay::GetSamples(Samples& samples)
 	const float feedback = feedbackScale * adc.delayFeedback;
 
 	// Store the latest recorded sample and the delayed sample back to the audio buffer, shuffling each sample along the stereo field
-	audioBuffer[0][writePos] = lpFilter.CalcFilter(samples.ch[0] + feedback * newSample.ch[3], 0);
-	audioBuffer[1][writePos] = lpFilter.CalcFilter(samples.ch[1] + feedback * newSample.ch[0], 1);
-	audioBuffer[2][writePos] = lpFilter.CalcFilter(samples.ch[2] + feedback * newSample.ch[1], 2);
-	audioBuffer[3][writePos] = lpFilter.CalcFilter(samples.ch[3] + feedback * newSample.ch[2], 3);
+	for (uint32_t ch = 0; ch < 4; ++ch) {
+		uint32_t newCh = (ch + 3) & 3;
+
+		audioBuffer[writePos].ch[ch] = lpFilter.CalcFilter(samples.ch[ch] + feedback * newSample.ch[newCh], ch);
+	}
+//	audioBuffer[writePos].ch[1] = lpFilter.CalcFilter(samples.ch[1] + feedback * newSample.ch[0], 1);
+//	audioBuffer[writePos].ch[2] = lpFilter.CalcFilter(samples.ch[2] + feedback * newSample.ch[1], 2);
+//	audioBuffer[writePos].ch[3] = lpFilter.CalcFilter(samples.ch[3] + feedback * newSample.ch[2], 3);
 
 	calcDelay = std::min((uint32_t)(1000 + adc.delayTime) * 6, audioBuffSize);
 
