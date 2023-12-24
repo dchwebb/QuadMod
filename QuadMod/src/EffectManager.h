@@ -7,7 +7,7 @@
 class EffectManager {
 public:
 	Effect* effect;					// Current effect in use
-	bool delayOn = true;
+	bool delayOn = false;
 
 	std::pair<float, float> ProcessSamples(Samples& samples);
 	void IdleJobs();

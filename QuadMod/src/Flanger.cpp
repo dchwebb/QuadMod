@@ -7,15 +7,54 @@
 
 Flanger flanger;
 
+float debugOffset[1000];
+uint32_t debugPos;
+
 void Flanger::GetSamples(Samples& samples)
 {
-	if (++writePos == audioBuffSize)   { writePos = 0; }
-	if (++readPos == audioBuffSize)    { readPos = 0; }
+	const uint32_t lfoFreq = adc.lfoSpeed * 128;
+	uint32_t lfoPhase = lfoInitPhase + lfoFreq;
+	lfoInitPhase = lfoPhase;
 
-	Samples newSample = audioBuffer[readPos];
-	audioBuffer[writePos] = samples;
+	// lfoSweepWidth needs to be between baseFrequency and audioBuffSize
+	const float lfoSweepWidth = baseFrequency + (static_cast<float>(adc.lfoRange)  / 4096.0f) * 100.0f;
+
+	static constexpr float feedbackScale = 1.0f / 4096.0f;
+	const float feedback = static_cast<float>(adc.feedback) * feedbackScale;
+
+	if (++writePos == audioBuffSize) {
+		writePos = 0;
+	}
 
 	for (uint32_t channel = 0; channel < 4; ++channel) {
+
+		// Calculate read position
+		const float readOffset = (baseFrequency + lfoSweepWidth * (0.5f + 0.5f * Cordic::Sin(lfoPhase)));
+		volatile float readPos = writePos + readOffset;
+		while (readPos >= (float)audioBuffSize) {
+			readPos -= audioBuffSize;
+		}
+
+		if (channel == 0) {
+			debugOffset[debugPos++] = readPos;
+			if (debugPos == 1000) {
+				debugPos = 0;
+			}
+		}
+
+		// Interpolate two samples
+		volatile const uint32_t floor = std::floor(readPos);
+		uint32_t ceil = std::ceil(readPos);
+		if (ceil >= (float)audioBuffSize) {
+			ceil -= audioBuffSize;
+		}
+
+		const float flangeSample = std::lerp(audioBuffer[floor].ch[channel], audioBuffer[ceil].ch[channel], readPos - floor);
+
+		audioBuffer[writePos].ch[channel] = samples.ch[channel] + feedback * flangeSample;
+
+
+		samples.ch[channel] = flangeSample;
 
 	}
 }

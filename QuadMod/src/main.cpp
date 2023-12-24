@@ -4,6 +4,7 @@
 #include "EffectManager.h"
 #include "Delay.h"
 #include "Phaser.h"
+#include "Flanger.h"
 
 volatile uint32_t SysTickVal;
 volatile uint32_t outputUSB = 0;		// USB debugging
@@ -20,7 +21,7 @@ int main(void)
 	SystemInit();						// Activates floating point coprocessor and resets clock
 	InitSystemClock();					// Configure the clock and PLL
 	InitHardware();
-	effectManager.effect = &phaser;
+	effectManager.effect = &flanger;
 	audioCodec.Init();
 	usb.InitUSB();
 
