@@ -79,6 +79,11 @@ function serialRead(event)
 		document.getElementById("feedback").value = parseInt(data[1]);
 	}
 
+	data = message.match("baseFreq:(.*)\r");
+	if (data != null) {
+		document.getElementById("baseFreq").value = parseInt(data[1]);
+	}
+	
 	data = message.match("effectMix:(.*)\r");
 	if (data != null) {
 		document.getElementById("effectMix").value = parseInt(data[1]);
@@ -127,6 +132,12 @@ function feedback()
 {
 	let val = document.getElementById("feedback").value;
 	webserial.sendSerial(`feedback:${val}\r`);
+}
+
+function baseFreq()
+{
+	let val = document.getElementById("baseFreq").value;
+	webserial.sendSerial(`baseFreq:${val}\r`);
 }
 
 function effectMix()

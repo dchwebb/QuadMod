@@ -48,12 +48,14 @@ void CDCHandler::ProcessCommand()
 				"lfoSpeed: %d\r\n"
 				"lfoRange: %d\r\n"
 				"feedback: %d\r\n"
+				"baseFreq: %d\r\n"
 				"effectMix: %d\r\n"
 				"delayMix: %d\r\n",
 				effectManager.delayOn ? "on" : "off",
 				adc.lfoSpeed,
 				adc.lfoRange,
 				adc.feedback,
+				adc.baseFreq,
 				adc.effectMix,
 				adc.delayMix
 				);
@@ -78,6 +80,13 @@ void CDCHandler::ProcessCommand()
 			adc.feedback = val;
 		}
 		printf("feedback: %d\r\n", adc.feedback);
+
+	} else if (cmd.compare(0, 9, "baseFreq:") == 0) {
+		const int32_t val = ParseInt(cmd, ':', 0, 4095);
+		if (val >= 0) {
+			adc.baseFreq = val;
+		}
+		printf("baseFreq: %d\r\n", adc.baseFreq);
 
 	} else if (cmd.compare(0, 10, "effectMix:") == 0) {
 		const int32_t val = ParseInt(cmd, ':', 0, 4095);

@@ -22,6 +22,9 @@ void Flanger::GetSamples(Samples& samples)
 	static constexpr float feedbackScale = 1.0f / 4096.0f;
 	const float feedback = static_cast<float>(adc.feedback) * feedbackScale;
 
+	static constexpr float freqScale = 50.0f / 4096.0f;
+	baseFrequency = adc.baseFreq * freqScale;
+
 	if (++writePos == audioBuffSize) {
 		writePos = 0;
 	}
@@ -56,6 +59,10 @@ void Flanger::GetSamples(Samples& samples)
 
 		samples.ch[channel] = flangeSample;
 
+		if (channel > 0) {
+			static constexpr uint32_t phaseDiff = std::pow(2, 30);		// Apply a 45 degree phase shift to each channel
+			lfoPhase += phaseDiff;
+		}
 	}
 }
 
