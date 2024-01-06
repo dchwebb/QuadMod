@@ -3,6 +3,15 @@ let portButton;				// Connect/Disconnect button
 let results;				// DOM element to display incoming serial data
 let message = "";			// store partial data when transmitted in chunks
 
+var editors = [
+	{id: 'lfoSpeed', type: 'range'},
+	{id: 'lfoRange', type: 'range'},
+	{id: 'feedback', type: 'range'},
+	{id: 'baseFreq', type: 'range'},
+	{id: 'effectMix', type: 'range'},
+	{id: 'delayMix', type: 'range'},
+];
+
 document.addEventListener("DOMContentLoaded", setup);					// run the setup function when page is loaded
 
 // get the DOM elements and assign listeners
@@ -49,6 +58,23 @@ function portOpened()
 }
 
 
+window.onload = afterLoad;
+function afterLoad() 
+{
+	// Create range pickers html	
+	var html = '';
+	for (i = 0; i < editors.length; i++) {
+		var picker = editors[i].id;
+		html += `<div style="padding: 3px;">${picker}</div>` +
+			`<div style="padding: 10px;">` + 
+			`<input id="${picker}" onchange="rangeEdit('${picker}');" value="100" min="0" max="4095" type="range" class="topcoat-range">` +
+			`</div>`
+	}
+
+	document.getElementById("rangePickers").innerHTML = html;
+}
+
+
 function serialRead(event) 
 {
 	message += event.detail.data;
@@ -58,42 +84,20 @@ function serialRead(event)
 		return;
 	}
 
-
 	let data = message.match("delay:(.*)\r");
 	if (data != null) {
 		document.getElementById("delayOnOff").checked = data[1] == "on" ? true : false;
 	}
 
-	data = message.match("lfoSpeed:(.*)\r");
-	if (data != null) {
-		document.getElementById("lfoSpeed").value = parseInt(data[1]);
-	}
+	// Get values of range pickers
+	for (i = 0; i < editors.length; i++) {
+		var picker = document.getElementById(editors[i].id);
 
-	data = message.match("lfoRange:(.*)\r");
-	if (data != null) {
-		document.getElementById("lfoRange").value = parseInt(data[1]);
+		data = message.match(editors[i].id + ":(.*)\r");
+		if (data != null) {
+			picker.value = parseInt(data[1]);
+		}
 	}
-
-	data = message.match("feedback:(.*)\r");
-	if (data != null) {
-		document.getElementById("feedback").value = parseInt(data[1]);
-	}
-
-	data = message.match("baseFreq:(.*)\r");
-	if (data != null) {
-		document.getElementById("baseFreq").value = parseInt(data[1]);
-	}
-	
-	data = message.match("effectMix:(.*)\r");
-	if (data != null) {
-		document.getElementById("effectMix").value = parseInt(data[1]);
-	}
-
-	data = message.match("delayMix:(.*)\r");
-	if (data != null) {
-		document.getElementById("delayMix").value = parseInt(data[1]);
-	}
-
 
 
 	results.innerHTML += message;
@@ -111,45 +115,17 @@ function readTextInput(event)
 	}
 }
 
+
+function rangeEdit(range)
+{
+	let val = document.getElementById(range).value;
+	webserial.sendSerial(`${range}:${val}\r`);
+}
+
+
 function delayOnOff()
 {
 	webserial.sendSerial(`delay\r`);
-}
-
-function lfoSpeed() 
-{
-	let val = document.getElementById("lfoSpeed").value;
-	webserial.sendSerial(`lfoSpeed:${val}\r`);
-}
-
-function lfoRange()
-{
-	let val = document.getElementById("lfoRange").value;
-	webserial.sendSerial(`lfoRange:${val}\r`);
-}
-
-function feedback()
-{
-	let val = document.getElementById("feedback").value;
-	webserial.sendSerial(`feedback:${val}\r`);
-}
-
-function baseFreq()
-{
-	let val = document.getElementById("baseFreq").value;
-	webserial.sendSerial(`baseFreq:${val}\r`);
-}
-
-function effectMix()
-{
-	let val = document.getElementById("effectMix").value;
-	webserial.sendSerial(`effectMix:${val}\r`);
-}
-
-function delayMix()
-{
-	let val = document.getElementById("delayMix").value;
-	webserial.sendSerial(`delayMix:${val}\r`);
 }
 
 
