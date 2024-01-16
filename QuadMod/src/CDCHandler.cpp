@@ -188,9 +188,11 @@ void CDCHandler::ProcessCommand()
 
 	} else if (cmd.compare("phaser") == 0) {
 		effectManager.effect = &phaser;
+		printf("Effect set to phaser\r\n");
 
 	} else if (cmd.compare("flanger") == 0) {
 		effectManager.effect = &flanger;
+		printf("Effect set to flanger\r\n");
 
 	} else if (cmd.compare("delay") == 0) {
 		effectManager.delayOn = !effectManager.delayOn;

@@ -7,6 +7,9 @@
 class EffectManager {
 public:
 	Effect* effect;					// Current effect in use
+	static constexpr uint32_t audioBuffSize = 4000;
+	Samples audioBuffer[audioBuffSize] = {};
+
 	bool delayOn = false;
 
 	std::pair<float, float> ProcessSamples(Samples& samples);

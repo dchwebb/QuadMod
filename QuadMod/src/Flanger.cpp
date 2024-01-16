@@ -1,4 +1,5 @@
 #include "Flanger.h"
+#include "EffectManager.h"
 #include "Cordic.h"
 #include <cmath>
 
@@ -25,7 +26,7 @@ void Flanger::GetSamples(Samples& samples)
 	static constexpr float freqScale = 50.0f / 4096.0f;
 	baseFrequency = adc.baseFreq * freqScale;
 
-	if (++writePos == audioBuffSize) {
+	if (++writePos == effectManager.audioBuffSize) {
 		writePos = 0;
 	}
 
@@ -34,8 +35,8 @@ void Flanger::GetSamples(Samples& samples)
 		// Calculate read position
 		const float readOffset = (baseFrequency + lfoSweepWidth * (0.5f + 0.5f * Cordic::Sin(lfoPhase)));
 		volatile float readPos = writePos + readOffset;
-		while (readPos >= (float)audioBuffSize) {
-			readPos -= audioBuffSize;
+		while (readPos >= static_cast<float>(effectManager.audioBuffSize)) {
+			readPos -= effectManager.audioBuffSize;
 		}
 
 		if (channel == 0) {
@@ -48,13 +49,13 @@ void Flanger::GetSamples(Samples& samples)
 		// Interpolate two samples
 		volatile const uint32_t floor = std::floor(readPos);
 		uint32_t ceil = std::ceil(readPos);
-		if (ceil >= (float)audioBuffSize) {
-			ceil -= audioBuffSize;
+		if (ceil >= static_cast<float>(effectManager.audioBuffSize)) {
+			ceil -= effectManager.audioBuffSize;
 		}
 
-		const float flangeSample = std::lerp(audioBuffer[floor].ch[channel], audioBuffer[ceil].ch[channel], readPos - floor);
+		const float flangeSample = std::lerp(effectManager.audioBuffer[floor].ch[channel], effectManager.audioBuffer[ceil].ch[channel], readPos - floor);
 
-		audioBuffer[writePos].ch[channel] = samples.ch[channel] + feedback * flangeSample;
+		effectManager.audioBuffer[writePos].ch[channel] = samples.ch[channel] + feedback * flangeSample;
 
 
 		samples.ch[channel] = flangeSample;
