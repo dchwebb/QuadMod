@@ -1,7 +1,7 @@
 #pragma once
 #include "initialisation.h"
 #include "Effect.h"
-
+#include "Filter.h"
 
 class RingMod : public Effect {
 public:
@@ -18,6 +18,9 @@ private:
 	uint32_t crossingOffset[4] = {};
 	static constexpr uint32_t startCycle = 100;
 	static constexpr uint32_t minCycle = 20;
+
+	float lpFilterCutoff = 0.5f;
+	FixedFilter<2, 4> lpFilter{filterPass::LowPass, 0.1f};
 };
 
 extern RingMod ringMod;

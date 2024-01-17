@@ -283,22 +283,22 @@ private:
 
 
 // Filter with fixed cut off (eg control smoothing)
-template<uint32_t poles = 2>
+template<uint32_t poles = 2, uint32_t channels = 1>
 class FixedFilter {
 	static constexpr uint32_t sections = (poles + 1) / 2;
 public:
-	FixedFilter(filterPass pass, float frequency) : filter{pass} {
+	FixedFilter(filterPass pass, float frequency) : filter{pass} {		// frequency = cutoff frequency / half sampling rate
 		filter.CalcCoeff(frequency);
 	}
 
-	float FilterSample(const float sample)
+	float FilterSample(const float sample, const uint32_t chn = 0)
 	{
-		return filter.FilterSample(sample, iirReg);
+		return filter.FilterSample(sample, iirReg[chn]);
 	}
 
 private:
 	IIRFilter<poles> filter;
-	IIRRegisters<poles> iirReg;
+	IIRRegisters<poles> iirReg[channels];
 };
 
 
@@ -350,9 +350,9 @@ public:
 	}
 
 
-	float CalcFilter(const float sample, const uint32_t c)
+	float CalcFilter(const float sample, const uint32_t chn)
 	{
-		return iirFilter[activeFilter].FilterSample(sample, iirReg[c]);		//	Take a new sample and return filtered value
+		return iirFilter[activeFilter].FilterSample(sample, iirReg[chn]);		//	Take a new sample and return filtered value
 	}
 
 private:

@@ -17,13 +17,22 @@ inline float SampleFromOffset(uint32_t writePos, uint32_t offset, uint32_t chann
 void RingMod::GetSamples(Samples& samples)
 {
 	for (uint32_t channel = 0; channel < 4; ++channel) {
-		effectManager.audioBuffer[writePos].ch[channel] = samples.ch[channel];
+		effectManager.audioBuffer[writePos].ch[channel] = lpFilter.FilterSample(samples.ch[channel], channel);
+		//effectManager.audioBuffer[writePos].ch[channel] = samples.ch[channel];
 
 		// Calculate read position - only increments every other sample to generate octave down
 		if (writePos & 1) {
 			if (++readOffset[channel] == effectManager.audioBuffSize) {
 				readOffset[channel] = 0;
 			}
+		}
+
+		// Check to see if write sample is at a zero crossing
+		if (effectManager.audioBuffer[writePos].ch[channel] > 0 && lessThanZero[write][channel]) {
+			crossingOffset[channel] = 0;
+			lessThanZero[write][channel] = false;
+		} else if (effectManager.audioBuffer[writePos].ch[channel] < 0 && !lessThanZero[write][channel]) {
+			lessThanZero[write][channel] = true;
 		}
 
 		// Get current read sample
@@ -44,15 +53,6 @@ void RingMod::GetSamples(Samples& samples)
 		if (++crossingOffset[channel] == effectManager.audioBuffSize) {
 			crossingOffset[channel] = 0;
 		}
-
-		// Check to see if write sample is at a zero crossing
-		if (samples.ch[channel] > 0 && lessThanZero[write][channel]) {
-			crossingOffset[channel] = 0;
-			lessThanZero[write][channel] = false;
-		} else if (samples.ch[channel] < 0 && !lessThanZero[write][channel]) {
-			lessThanZero[write][channel] = true;
-		}
-
 		samples.ch[channel] = readSample;
 	}
 
