@@ -5,6 +5,7 @@
 #include "Delay.h"
 #include "Phaser.h"
 #include "Flanger.h"
+#include "RingMod.h"
 
 volatile uint32_t SysTickVal;
 volatile uint32_t outputUSB = 0;		// USB debugging
@@ -21,7 +22,7 @@ int main(void)
 	SystemInit();						// Activates floating point coprocessor and resets clock
 	InitSystemClock();					// Configure the clock and PLL
 	InitHardware();
-	effectManager.effect = &flanger;
+	effectManager.effect = &ringMod;
 	audioCodec.Init();
 	usb.InitUSB();
 
