@@ -5,6 +5,7 @@
 #include "HyperRAM.h"
 #include "Phaser.h"
 #include "Flanger.h"
+#include "RingMod.h"
 #include "Cordic.h"
 #include "Delay.h"
 #include <charconv>
@@ -45,6 +46,7 @@ void CDCHandler::ProcessCommand()
 
 	} else if (cmd.compare("settings") == 0) {
 		printf("delay:%s\r\n"
+				"octave:%s\r\n"
 				"lfoSpeed: %d\r\n"
 				"lfoRange: %d\r\n"
 				"feedback: %d\r\n"
@@ -52,6 +54,7 @@ void CDCHandler::ProcessCommand()
 				"effectMix: %d\r\n"
 				"delayMix: %d\r\n",
 				effectManager.delayOn ? "on" : "off",
+				ringMod.octaveOnly ? "on" : "off",
 				adc.lfoSpeed,
 				adc.lfoRange,
 				adc.feedback,
@@ -197,6 +200,10 @@ void CDCHandler::ProcessCommand()
 	} else if (cmd.compare("delay") == 0) {
 		effectManager.delayOn = !effectManager.delayOn;
 		printf("delay:%s\r\n", effectManager.delayOn ? "on" : "off");
+
+	} else if (cmd.compare("octave") == 0) {
+		ringMod.octaveOnly = !ringMod.octaveOnly;
+		printf("octaveOnly:%s\r\n", ringMod.octaveOnly ? "on" : "off");
 
 	} else if (cmd.compare("savecfg") == 0) {			// Save configuration
 		//config.SaveConfig();

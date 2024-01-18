@@ -8,6 +8,7 @@ public:
 	void GetSamples(Samples& samples);
 	void IdleJobs();
 
+	bool octaveOnly = false;
 private:
 	enum {read, write};
 
@@ -20,7 +21,7 @@ private:
 	static constexpr uint32_t minCycle = 20;
 
 	float lpFilterCutoff = 0.5f;
-	FixedFilter<2, 4> lpFilter{filterPass::LowPass, 0.1f};
+	FixedFilter<2, 8> lpFilter{filterPass::LowPass, 0.1f};
 };
 
 extern RingMod ringMod;

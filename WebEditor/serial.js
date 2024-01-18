@@ -4,6 +4,8 @@ let results;				// DOM element to display incoming serial data
 let message = "";			// store partial data when transmitted in chunks
 
 var editors = [
+	{id: 'delay', type: 'checkbox'},
+	{id: 'octave', type: 'checkbox'},
 	{id: 'lfoSpeed', type: 'range'},
 	{id: 'lfoRange', type: 'range'},
 	{id: 'feedback', type: 'range'},
@@ -62,16 +64,29 @@ window.onload = afterLoad;
 function afterLoad() 
 {
 	// Create range pickers html	
-	var html = '';
+	var rangeHtml = '';
+	var checkboxHtml = '';
 	for (i = 0; i < editors.length; i++) {
 		var picker = editors[i].id;
-		html += `<div style="padding: 3px;">${picker}</div>` +
-			`<div style="padding: 10px;">` + 
-			`<input id="${picker}" onchange="rangeEdit('${picker}');" value="100" min="0" max="4095" type="range" class="topcoat-range">` +
-			`</div>`
+
+		switch (editors[i].type) {
+		case "range":
+			rangeHtml += `<div style="padding: 3px;">${picker}</div>` +
+				`<div style="padding: 10px;">` + 
+				`<input id="${picker}" onchange="rangeEdit('${picker}');" value="100" min="0" max="4095" type="range" class="topcoat-range">` +
+				`</div>`
+			break;
+		
+		case "checkbox":
+			checkboxHtml += `<label style="padding: 10px;" class="topcoat-checkbox">` +
+				`<input id="${picker}" type="checkbox" onclick="checkboxEdit('${picker}');"><div class="topcoat-checkbox__checkmark"></div>${picker}` +
+				`</label>`
+			break;
+		} 
 	}
 
-	document.getElementById("rangePickers").innerHTML = html;
+	document.getElementById("rangePickers").innerHTML = rangeHtml;
+	document.getElementById("checkboxPickers").innerHTML = checkboxHtml;
 }
 
 
@@ -89,13 +104,20 @@ function serialRead(event)
 		document.getElementById("delayOnOff").checked = data[1] == "on" ? true : false;
 	}
 
-	// Get values of range pickers
+	// Get values of range and checkbox pickers
 	for (i = 0; i < editors.length; i++) {
 		var picker = document.getElementById(editors[i].id);
 
 		data = message.match(editors[i].id + ":(.*)\r");
 		if (data != null) {
-			picker.value = parseInt(data[1]);
+			switch (editors[i].type) {
+			case "range":
+				picker.value = parseInt(data[1]);
+				break;
+			case "checkbox":
+				picker.checked = data[1] == "on" ? true : false;
+				break;
+			}
 		}
 	}
 
@@ -123,9 +145,10 @@ function rangeEdit(range)
 }
 
 
-function delayOnOff()
+function checkboxEdit(checkbox)
 {
-	webserial.sendSerial(`delay\r`);
+	let id = document.getElementById(checkbox).id;
+	webserial.sendSerial(`${id}\r`);
 }
 
 

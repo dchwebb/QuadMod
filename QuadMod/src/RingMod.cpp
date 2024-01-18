@@ -53,7 +53,13 @@ void RingMod::GetSamples(Samples& samples)
 		if (++crossingOffset[channel] == effectManager.audioBuffSize) {
 			crossingOffset[channel] = 0;
 		}
-		samples.ch[channel] = readSample;
+
+		if (octaveOnly) {
+			samples.ch[channel] = lpFilter.FilterSample(readSample, channel + 4);
+		} else {
+			samples.ch[channel] *= lpFilter.FilterSample(readSample, channel + 4);
+		}
+		//samples.ch[channel] = readSample;
 	}
 
 	if (++writePos == effectManager.audioBuffSize) {
