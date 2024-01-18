@@ -45,7 +45,8 @@ void CDCHandler::ProcessCommand()
 		);
 
 	} else if (cmd.compare("settings") == 0) {
-		printf("delay:%s\r\n"
+		printf("effect:%s\r\n"
+				"delay:%s\r\n"
 				"octave:%s\r\n"
 				"lfoSpeed: %d\r\n"
 				"lfoRange: %d\r\n"
@@ -53,6 +54,7 @@ void CDCHandler::ProcessCommand()
 				"baseFreq: %d\r\n"
 				"effectMix: %d\r\n"
 				"delayMix: %d\r\n",
+				effectManager.effect == &phaser ? "phaser" : (effectManager.effect == &flanger ? "flanger" : "ringmod"),
 				effectManager.delayOn ? "on" : "off",
 				ringMod.octaveOnly ? "on" : "off",
 				adc.lfoSpeed,
@@ -196,6 +198,10 @@ void CDCHandler::ProcessCommand()
 	} else if (cmd.compare("flanger") == 0) {
 		effectManager.effect = &flanger;
 		printf("Effect set to flanger\r\n");
+
+	} else if (cmd.compare("ringmod") == 0) {
+		effectManager.effect = &ringMod;
+		printf("Effect set to ringmod\r\n");
 
 	} else if (cmd.compare("delay") == 0) {
 		effectManager.delayOn = !effectManager.delayOn;

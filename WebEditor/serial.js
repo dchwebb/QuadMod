@@ -14,6 +14,8 @@ var editors = [
 	{id: 'delayMix', type: 'range'},
 ];
 
+var effects = ["phaser", "flanger", "ringmod"];
+
 document.addEventListener("DOMContentLoaded", setup);					// run the setup function when page is loaded
 
 // get the DOM elements and assign listeners
@@ -78,15 +80,25 @@ function afterLoad()
 			break;
 		
 		case "checkbox":
-			checkboxHtml += `<label style="padding: 10px;" class="topcoat-checkbox">` +
-				`<input id="${picker}" type="checkbox" onclick="checkboxEdit('${picker}');"><div class="topcoat-checkbox__checkmark"></div>${picker}` +
-				`</label>`
+			checkboxHtml += `<label style="padding: 5px;" class="topcoat-checkbox">` +
+				`<input id="${picker}" type="checkbox" onclick="checkboxEdit('${picker}');"><div class="topcoat-checkbox__checkmark"></div>&nbsp` +
+				 picker + `</label>`
 			break;
 		} 
 	}
 
 	document.getElementById("rangePickers").innerHTML = rangeHtml;
 	document.getElementById("checkboxPickers").innerHTML = checkboxHtml;
+
+
+	var effectHtml = '';
+	for (i = 0; i < effects.length; i++) {
+		var effect = effects[i];
+		effectHtml += `<input type="radio" id="${effect}" name="effect" onclick="SelectEffect();"><div class="topcoat-radio-button__checkmark"></div> 
+					<label class="topcoat-radio-button"> ${effect} </label> `;
+	}
+
+	document.getElementById("effectPicker").innerHTML = `<div>Effect</div><div style="padding: 3px;">${effectHtml}</div>`;
 }
 
 
@@ -99,9 +111,9 @@ function serialRead(event)
 		return;
 	}
 
-	let data = message.match("delay:(.*)\r");
+	let data = message.match("effect:(.*)\r");
 	if (data != null) {
-		document.getElementById("delayOnOff").checked = data[1] == "on" ? true : false;
+		document.getElementById(data[1]).checked = true;
 	}
 
 	// Get values of range and checkbox pickers
@@ -135,6 +147,13 @@ function readTextInput(event)
 	if (event.keyCode == 13) {
 		webserial.sendSerial(event.target.value + '\r');
 	}
+}
+
+
+function SelectEffect()
+{
+	var effect = document.querySelector('input[name="effect"]:checked').id;
+	webserial.sendSerial(`${effect}\r`);
 }
 
 

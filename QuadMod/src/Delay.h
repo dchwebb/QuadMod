@@ -29,6 +29,12 @@ private:
 
 	float lpFilterCutoff = 0.5f;
 	Filter<2> lpFilter{filterPass::LowPass, &adc.delayFilter};
+
+	uint32_t delayCounter;				// Counter used to calculate clock times in sample time
+	uint32_t lastClock;					// Time last clock signal received in sample time
+	uint32_t clockInterval;				// Clock interval in sample time
+	bool clockValid = false;
+	bool clockHigh = false;
 };
 
 extern Delay delay;

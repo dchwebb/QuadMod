@@ -5,6 +5,19 @@ Delay delay;
 
 void Delay::GetSamples(Samples& samples)
 {
+	// Check if clock received
+	if ((GPIOA->IDR & GPIO_IDR_ID6) != GPIO_IDR_ID6) {
+		if (!clockHigh) {
+			clockInterval = delayCounter - lastClock - 85;			// FIXME constant found by trial and error - probably relates to filtering group delay
+			lastClock = delayCounter;
+			clockHigh = true;
+		}
+	} else {
+		clockHigh = false;
+	}
+	clockValid = (delayCounter - lastClock < (sampleRate * 2));					// Valid clock interval is within a second
+	++delayCounter;
+
 	if (++writePos == audioBuffSize)   { writePos = 0; }
 	if (++readPos == audioBuffSize)    { readPos = 0; }
 	if (++oldReadPos == audioBuffSize) { oldReadPos = 0;}

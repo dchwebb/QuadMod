@@ -68,6 +68,8 @@ void InitHardware()
 	InitCordic();
 	//InitDAC();
 
+	GpioPin::Init(GPIOA, 6, GpioPin::Type::Input);	// PA6 - clock in
+
 	// Debug pins - PG12, PG6
 	GpioPin::Init(GPIOG, 6, GpioPin::Type::Output);
 	GpioPin::Init(GPIOG, 12, GpioPin::Type::Output);
