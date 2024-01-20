@@ -34,9 +34,9 @@ void Flanger::GetSamples(Samples& samples)
 
 		// Calculate read position
 		const float readOffset = (baseFrequency + lfoSweepWidth * (0.5f + 0.5f * Cordic::Sin(lfoPhase)));
-		volatile float readPos = writePos + readOffset;
-		while (readPos >= static_cast<float>(effectManager.audioBuffSize)) {
-			readPos -= effectManager.audioBuffSize;
+		volatile float readPos = writePos - readOffset;
+		while (readPos < 0) {
+			readPos += effectManager.audioBuffSize;
 		}
 
 		if (channel == 0) {

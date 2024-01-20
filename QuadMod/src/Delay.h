@@ -22,10 +22,13 @@ private:
 	int32_t currentDelay = 0;			// Used to trigger crossfade from old to new read position
 	int32_t calcDelay = 0;				// Delay time according to whether clocked and with multipliers applied
 	int16_t delayPotVal;				// For hysteresis checking
+	const std::array<float, 6> tempoMult = {0.5, 1, 2, 4, 6, 8};
+	float delayMult = 1.0f;				// Multipliers for delay in clocked mode
+	volatile int32_t clockAdjust = -8;
 
 	int16_t delayHysteresis = 900;
 	static constexpr int16_t crossfade = 6000;
-	static constexpr int16_t tempoHysteresis = 100;
+	static constexpr int16_t tempoHysteresis = 50;
 
 	float lpFilterCutoff = 0.5f;
 	Filter<2> lpFilter{filterPass::LowPass, &adc.delayFilter};
@@ -35,6 +38,7 @@ private:
 	uint32_t clockInterval;				// Clock interval in sample time
 	bool clockValid = false;
 	bool clockHigh = false;
+
 };
 
 extern Delay delay;

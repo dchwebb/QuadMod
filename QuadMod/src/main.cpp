@@ -22,7 +22,7 @@ int main(void)
 	SystemInit();						// Activates floating point coprocessor and resets clock
 	InitSystemClock();					// Configure the clock and PLL
 	InitHardware();
-	effectManager.effect = &phaser;
+	effectManager.effect = &flanger;
 	audioCodec.Init();
 	usb.InitUSB();
 
