@@ -51,7 +51,7 @@ float Phaser::FilterSamples(const uint32_t channel, float sample, const float lf
 		allpass[channel].oldVal[f] = sample;
 		sample = out;
 	}
-	allpass[channel].oldVal[4] = sample;
+	allpass[channel].oldVal[filterCount] = sample;
 
 	return sample;
 }

@@ -41,6 +41,7 @@ void CDCHandler::ProcessCommand()
 				"phaser         -  Set effect to phaser\r\n"
 				"delay          -  Delay on/off\r\n"
 				"sin:xx.x       -  Sine Test\r\n"
+				"filters:x      -  Phaser filter count\r\n"
 				"\r\n"
 		);
 
@@ -64,6 +65,13 @@ void CDCHandler::ProcessCommand()
 				adc.effectMix,
 				adc.delayMix
 				);
+
+	} else if (cmd.compare(0, 8, "filters:") == 0) {
+		const int32_t val = ParseInt(cmd, ':', 1, phaser.maxFilters);
+		if (val >= 1) {
+			phaser.filterCount = val;
+		}
+		printf("Phaser filter count: %ld\r\n", phaser.filterCount);
 
 	} else if (cmd.compare(0, 9, "lfoSpeed:") == 0) {
 		const int32_t val = ParseInt(cmd, ':', 0, 4095);
