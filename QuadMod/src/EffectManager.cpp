@@ -3,6 +3,18 @@
 
 EffectManager effectManager;
 
+float EffectManager::EqualPowerCrossfade(float mix1, float sample1, float sample2)
+{
+	// See https://signalsmith-audio.co.uk/writing/2021/cheap-energy-crossfade/
+	float mix2 = 1.0f - mix1;
+	float A = mix1 * mix2;
+	float B = A * (1.0f + 1.4186f * A);
+	float C = B + mix1;
+	float D = B + mix2;
+	return (sample1 * C * C) + (sample2 * D * D);
+}
+
+
 std::pair<float, float> EffectManager::ProcessSamples(Samples& samples)
 {
 	Samples origSamples = samples;
@@ -13,7 +25,7 @@ std::pair<float, float> EffectManager::ProcessSamples(Samples& samples)
 		// Scale mix from 0 (dry) to  1 (fully wet)
 		const float effectMix = adc.effectMix / 4096.0f;
 		for (uint32_t i = 0; i < 4; ++i) {
-			samples.ch[i] = (1.0f - effectMix) * origSamples.ch[i] + effectMix * samples.ch[i];
+			samples.ch[i] = EqualPowerCrossfade(effectMix, samples.ch[i], origSamples.ch[i]);
 		}
 	}
 
@@ -31,8 +43,8 @@ std::pair<float, float> EffectManager::ProcessSamples(Samples& samples)
 		const float delayOutR = (0.5f * samples.ch[3]) + (0.36f * samples.ch[2]) + (0.15f * samples.ch[1]);
 
 		const float delayMix = adc.delayMix / 4096.0f;
-		mixOutL = (1.0f - delayMix) * fxOutL + delayMix * delayOutL;
-		mixOutR = (1.0f - delayMix) * fxOutR + delayMix * delayOutR;
+		mixOutL = EqualPowerCrossfade(delayMix, delayOutL, fxOutL);
+		mixOutR = EqualPowerCrossfade(delayMix, delayOutR, fxOutR);
 
 	} else {
 		mixOutL = fxOutL;

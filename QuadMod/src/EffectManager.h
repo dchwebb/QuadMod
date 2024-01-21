@@ -14,7 +14,8 @@ public:
 
 	std::pair<float, float> ProcessSamples(Samples& samples);
 	void IdleJobs();
-
+private:
+	float EqualPowerCrossfade(float mix, float sample1, float sample2);
 };
 
 extern EffectManager effectManager;
