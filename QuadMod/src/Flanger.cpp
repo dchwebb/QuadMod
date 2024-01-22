@@ -48,13 +48,27 @@ void Flanger::GetSamples(Samples& samples)
 		}
 
 		// Interpolate two samples
-		volatile const uint32_t floor = std::floor(readPos);
-		uint32_t ceil = std::ceil(readPos);
+		volatile int32_t floor = std::floor(readPos);
+
+		if (readPos < 0.0f) {
+			volatile int susp = 1;
+			++susp;
+		}
+
+		// Handle situation where sample position is between -1 and 0
+		const float fractionalPos = readPos - floor;
+		if (floor < 0) {
+			floor += effectManager.audioBuffSize;
+		}
+
+		int32_t ceil = std::ceil(readPos);
 		if (ceil >= static_cast<float>(effectManager.audioBuffSize)) {
 			ceil -= effectManager.audioBuffSize;
 		}
 
-		const float flangeSample = std::lerp(effectManager.audioBuffer[floor].ch[channel], effectManager.audioBuffer[ceil].ch[channel], readPos - floor);
+
+
+		const float flangeSample = std::lerp(effectManager.audioBuffer[floor].ch[channel], effectManager.audioBuffer[ceil].ch[channel], fractionalPos);
 
 		effectManager.audioBuffer[writePos].ch[channel] = samples.ch[channel] + feedback * flangeSample;
 

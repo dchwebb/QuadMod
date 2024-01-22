@@ -3,14 +3,14 @@
 
 EffectManager effectManager;
 
-float EffectManager::EqualPowerCrossfade(float mix1, float sample1, float sample2)
+float EffectManager::EqualPowerCrossfade(const float mix1, const float sample1, const float sample2)
 {
 	// See https://signalsmith-audio.co.uk/writing/2021/cheap-energy-crossfade/
-	float mix2 = 1.0f - mix1;
-	float A = mix1 * mix2;
-	float B = A * (1.0f + 1.4186f * A);
-	float C = B + mix1;
-	float D = B + mix2;
+	const float mix2 = 1.0f - mix1;
+	const float A = mix1 * mix2;
+	const float B = A * (1.0f + 1.4186f * A);
+	const float C = B + mix1;
+	const float D = B + mix2;
 	return (sample1 * C * C) + (sample2 * D * D);
 }
 
