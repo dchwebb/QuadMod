@@ -7,14 +7,13 @@ class Flanger : public Effect {
 public:
 	void GetSamples(Samples& samples);
 	void IdleJobs();
-
+	bool wide = true;
 private:
-	int32_t writePos = 0;
+	float SampleFromReadOffset(const float readOffset, const uint32_t channel);
 
-	float baseFrequency = 2.0;				// Lowest frequency of allpass filters
-	//float readPos[4] = {baseFrequency, baseFrequency, baseFrequency, baseFrequency};
+	int32_t writePos = 0;
+	//float baseFrequency = 2.0;				// Lowest frequency of allpass filters
 	uint32_t lfoInitPhase = 0;
-	uint32_t lfoFreq = 0;						// LFO frequency
 };
 
 extern Flanger flanger;

@@ -49,6 +49,7 @@ void CDCHandler::ProcessCommand()
 		printf("effect:%s\r\n"
 				"delay:%s\r\n"
 				"octave:%s\r\n"
+				"wideflange:%s\r\n"
 				"lfoSpeed: %d\r\n"
 				"lfoRange: %d\r\n"
 				"feedback: %d\r\n"
@@ -58,6 +59,7 @@ void CDCHandler::ProcessCommand()
 				effectManager.effect == &phaser ? "phaser" : (effectManager.effect == &flanger ? "flanger" : "ringmod"),
 				effectManager.delayOn ? "on" : "off",
 				ringMod.octaveOnly ? "on" : "off",
+				flanger.wide ? "on" : "off",
 				adc.lfoSpeed,
 				adc.lfoRange,
 				adc.feedback,
@@ -65,6 +67,7 @@ void CDCHandler::ProcessCommand()
 				adc.effectMix,
 				adc.delayMix
 				);
+
 
 	} else if (cmd.compare(0, 8, "filters:") == 0) {
 		const int32_t val = ParseInt(cmd, ':', 1, phaser.maxFilters);
@@ -214,6 +217,10 @@ void CDCHandler::ProcessCommand()
 	} else if (cmd.compare("delay") == 0) {
 		effectManager.delayOn = !effectManager.delayOn;
 		printf("delay:%s\r\n", effectManager.delayOn ? "on" : "off");
+
+	} else if (cmd.compare("wideflange") == 0) {
+		flanger.wide = !flanger.wide;
+		printf("Wide flanger:%s\r\n", flanger.wide ? "on" : "off");
 
 	} else if (cmd.compare("octave") == 0) {
 		ringMod.octaveOnly = !ringMod.octaveOnly;

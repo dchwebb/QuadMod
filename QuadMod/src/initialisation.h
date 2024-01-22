@@ -32,7 +32,7 @@ struct ADCValues {
 	uint16_t lfoRange = 630;
 	uint16_t feedback = 1250;
 	uint16_t baseFreq = 500;
-	uint16_t effectMix = 4095;
+	uint16_t effectMix = 2048;
 	uint16_t delayMix = 2048;
 };
 

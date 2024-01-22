@@ -6,6 +6,7 @@ let message = "";			// store partial data when transmitted in chunks
 var editors = [
 	{id: 'delay', type: 'checkbox'},
 	{id: 'octave', type: 'checkbox'},
+	{id: 'wideflange', type: 'checkbox'},
 	{id: 'lfoSpeed', type: 'range'},
 	{id: 'lfoRange', type: 'range'},
 	{id: 'feedback', type: 'range'},
