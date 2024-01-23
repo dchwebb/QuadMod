@@ -8,6 +8,56 @@
 
 Flanger flanger;
 
+
+void Flanger::GetSamples(Samples& samples)
+{
+	const uint32_t lfoFreq = adc.lfoSpeed * 128;
+	uint32_t lfoPhase = lfoInitPhase + lfoFreq;
+	lfoInitPhase = lfoPhase;
+
+	// needs to be between baseFrequency and audioBuffSize
+	const float lfoSweepWidth = (adc.lfoRange / 4096.0f) * 100.0f;
+	const float feedback = adc.feedback / 4096.0f;
+	const float baseFreq = (adc.baseFreq / 4096.0f) * 2000.0f;
+
+	if (++writePos == effectManager.audioBuffSize) {
+		writePos = 0;
+	}
+	Samples wideFlange;
+
+	for (uint32_t channel = 0; channel < 4; ++channel) {
+
+		// Calculate read position
+		const float lfoPos = (0.5f + 0.5f * Cordic::Sin(lfoPhase));		// LFO sine wave scaled from 0 to 1
+		const float readOffset = 2.0f + baseFreq + (lfoSweepWidth * lfoPos);
+		const float flangeSample = SampleFromReadOffset(readOffset, channel);
+
+		// Create a second lfo in anti-phase with the first to get two samples for stereo chorussing effects
+		if (wide) {
+			const float readOffset2 = 2.0f + baseFreq + (lfoSweepWidth * (1.0f - lfoPos));
+			wideFlange.ch[channel] = SampleFromReadOffset(readOffset2, channel);
+		}
+
+		effectManager.audioBuffer[writePos].ch[channel] = samples.ch[channel] + feedback * flangeSample;
+
+		samples.ch[channel] = flangeSample;
+
+		if (channel > 0) {
+			static constexpr uint32_t phaseDiff = std::pow(2, 30);		// Apply a 45 degree phase shift to each channel
+			lfoPhase += phaseDiff;
+		}
+	}
+
+	// Add in some stereo sample
+	if (wide) {
+		for (uint32_t channel = 0; channel < 4; ++channel) {
+			samples.ch[channel] += wideFlange.ch[(channel + 1) & 3] * 0.5f;
+		}
+	}
+
+}
+
+
 float Flanger::SampleFromReadOffset(const float readOffset, const uint32_t channel)
 {
 	volatile float readPos = writePos - readOffset;
@@ -29,58 +79,7 @@ float Flanger::SampleFromReadOffset(const float readOffset, const uint32_t chann
 	}
 
 	return std::lerp(effectManager.audioBuffer[floor].ch[channel], effectManager.audioBuffer[ceil].ch[channel], fractionalPos);
-
 }
-
-
-void Flanger::GetSamples(Samples& samples)
-{
-	const uint32_t lfoFreq = adc.lfoSpeed * 128;
-	uint32_t lfoPhase = lfoInitPhase + lfoFreq;
-	lfoInitPhase = lfoPhase;
-
-	// needs to be between baseFrequency and audioBuffSize
-	const float lfoSweepWidth = (adc.lfoRange / 4096.0f) * 100.0f;
-	const float feedback = adc.feedback / 4096.0f;
-	const float baseFreq = (adc.baseFreq / 4096.0f) * 500.0f;
-
-	if (++writePos == effectManager.audioBuffSize) {
-		writePos = 0;
-	}
-	Samples wideFlange;
-
-	for (uint32_t channel = 0; channel < 4; ++channel) {
-
-		// Calculate read position
-		const float lfoPos = (0.5f + 0.5f * Cordic::Sin(lfoPhase));		// LFO sine wave scaled from 0 to 1
-		const float readOffset = 2.0f + baseFreq + (lfoSweepWidth * lfoPos);
-		const float flangeSample = SampleFromReadOffset(readOffset, channel);
-
-		if (wide) {
-			const float readOffset2 = 2.0f + baseFreq + (lfoSweepWidth * (1.0f - lfoPos));
-			const float flangeSample2 = SampleFromReadOffset(readOffset2, channel);
-			wideFlange.ch[channel] = flangeSample2;
-		}
-
-		effectManager.audioBuffer[writePos].ch[channel] = samples.ch[channel] + feedback * flangeSample;
-
-		samples.ch[channel] = flangeSample;
-
-		if (channel > 0) {
-			static constexpr uint32_t phaseDiff = std::pow(2, 30);		// Apply a 45 degree phase shift to each channel
-			lfoPhase += phaseDiff;
-		}
-	}
-
-	// Add in some stereo sample
-	if (wide) {
-		for (uint32_t channel = 0; channel < 4; ++channel) {
-			samples.ch[channel] += wideFlange.ch[(channel + 2) & 3] * 0.5f;
-		}
-	}
-
-}
-
 
 
 void Flanger::IdleJobs()
