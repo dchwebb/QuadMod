@@ -34,18 +34,14 @@
       2,
       3,
       4,
-      5,
       8,
       9,
       10,
-      11,
       12,
       13,
       14,
       15,
       16,
-      17,
-      18,
       19,
       20,
       21,
@@ -64,11 +60,11 @@
       35,
       36
     ],
-    "visible_layers": "fffffff_ffffffff",
+    "visible_layers": "ffdffdf_ffffffff",
     "zone_display_mode": 0
   },
   "meta": {
-    "filename": "STM32H563_AK4619.kicad_prl",
+    "filename": "QuadMod Components.kicad_prl",
     "version": 3
   },
   "project": {
