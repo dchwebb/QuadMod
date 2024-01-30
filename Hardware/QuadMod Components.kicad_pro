@@ -187,6 +187,10 @@
         {
           "diameter": 0.8,
           "drill": 0.4
+        },
+        {
+          "diameter": 1.0,
+          "drill": 0.6
         }
       ],
       "zones_allow_external_fillets": false
@@ -496,6 +500,10 @@
       {
         "netclass": "Power_Thin",
         "pattern": "*-5V*"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "GND"
       }
     ]
   },
