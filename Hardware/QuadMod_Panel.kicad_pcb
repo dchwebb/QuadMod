@@ -3453,7 +3453,7 @@
 
   (footprint "Custom_Footprints:Thonkiconn_Socket_MountingHole_6mm" (layer "F.Cu")
     (tstamp e12b1eb7-1b27-423a-aaf5-35e10015e5e6)
-    (at 107.5 131 180)
+    (at 108.4 131 180)
     (descr "Mounting Hole 6mm, no annular")
     (tags "mounting hole 6mm no annular")
     (attr through_hole)
