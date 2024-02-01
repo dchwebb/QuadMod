@@ -312,6 +312,17 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 	PF13 ADC2_IN2
 	PF14 ADC2_IN6
 	PB1 ADC12_IN5
+
+	Production mapping:
+	PA1 ADC12_INP1	Delay Time
+	PA2 ADC12_INP14	Delay Feedback
+	PA3 ADC12_INP15	FX Mix
+	PA6 ADC12_INP3	LFO Range
+	PA7 ADC12_INP7	Delay Mix
+	PB0	ADC12_INP9	LFO Base Frequency
+	PC1 ADC12_INP11	Delay Time Pot
+	PC4	ADC12_INP4	LFO Speed
+	PC5 ADC12_INP8	FX Feedback
 	*/
 	InitAdcPins(ADC2, {2, 6, 5});
 
