@@ -31,7 +31,7 @@
       (layer "B.Cu" (type "copper") (thickness 0.035))
       (layer "B.Mask" (type "Bottom Solder Mask") (color "Black") (thickness 0.01))
       (layer "B.SilkS" (type "Bottom Silk Screen") (color "White"))
-      (copper_finish "HAL SnPb")
+      (copper_finish "HAL lead-free")
       (dielectric_constraints no)
     )
     (pad_to_mask_clearance 0)
@@ -67,7 +67,7 @@
       (mirror false)
       (drillshape 0)
       (scaleselection 1)
-      (outputdirectory "Gerbers/Panel/")
+      (outputdirectory "Gerbers/QuadMod_Panel/")
     )
   )
 
@@ -78,7 +78,7 @@
     (at 157 131 180)
     (descr "Mounting Hole 7mm")
     (tags "mounting hole 7mm")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "MIX" (at 0 -6.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 9cb1a5b9-d1de-43b4-bd14-63de2902543b)
@@ -176,7 +176,7 @@
     (at 157 110 180)
     (descr "Mounting Hole 7mm")
     (tags "mounting hole 7mm")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "MIX" (at 0 -6.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 0c5c0c08-94c3-4a32-bc3c-e72faf7c2dfb)
@@ -779,7 +779,7 @@
     (at 137.5 151 180)
     (descr "Mounting Hole 6mm, no annular")
     (tags "mounting hole 6mm no annular")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "Ref**" (at 0 -5.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 42b5334a-69a4-4215-b685-44856fba2640)
@@ -1325,7 +1325,7 @@
     (at 163 151 180)
     (descr "Mounting Hole 6mm, no annular")
     (tags "mounting hole 6mm no annular")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "Ref**" (at 0 -5.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 7de71b34-0325-420f-8d8c-cfd1b46849b5)
@@ -1863,7 +1863,7 @@
     (at 157 89 180)
     (descr "Mounting Hole 7mm")
     (tags "mounting hole 7mm")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "MIX" (at 0 -6.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 329ed459-3d97-4918-a2f5-b49549dac300)
@@ -2154,7 +2154,7 @@
     (at 110 150.5)
     (descr "RJ45 vertical connector https://www.on-shore.com/wp-content/uploads/PJ012-8P8CX.pdf")
     (tags "RJ45 PJ012")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "REF**" (at 0 10.1) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 9ec88c61-ca41-404b-8995-d57374660ec0)
@@ -2203,7 +2203,7 @@
     (at 122 131 180)
     (descr "Mounting Hole 6mm, no annular")
     (tags "mounting hole 6mm no annular")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "Ref**" (at 0 -5.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 808ce0b5-a8f0-4cde-854c-7e17dc6cf162)
@@ -2424,7 +2424,7 @@
     (at 133 89 180)
     (descr "Mounting Hole 7mm")
     (tags "mounting hole 7mm")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "MIX" (at 0 -6.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 1c42d709-106f-4362-b09d-43ec4ddd1b67)
@@ -2452,7 +2452,7 @@
     (at 111 89 180)
     (descr "Mounting Hole 7mm")
     (tags "mounting hole 7mm")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "MIX" (at 0 -6.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp cc4d0426-73d9-47ef-a65a-806b4c1f4c5b)
@@ -2480,7 +2480,7 @@
     (at 111 110 180)
     (descr "Mounting Hole 7mm")
     (tags "mounting hole 7mm")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "MIX" (at 0 -6.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 66c0d843-2431-4805-b7bd-62a6013c75fd)
@@ -2508,7 +2508,7 @@
     (at 157 68 180)
     (descr "Mounting Hole 7mm")
     (tags "mounting hole 7mm")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "MIX" (at 0 -6.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 3e0f0234-6651-48a3-a913-fb423b16ea96)
@@ -2667,7 +2667,7 @@
     (at 133 68)
     (descr "Mounting Hole 6mm, no annular")
     (tags "mounting hole 6mm no annular")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "TYPE" (at 0 -5.4) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 4a43220b-87be-4c34-acf1-74ce02aac7e8)
@@ -2698,7 +2698,7 @@
     (at 126 151 180)
     (descr "Mounting Hole 6mm, no annular")
     (tags "mounting hole 6mm no annular")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "Ref**" (at 0 -5.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp dd6a90fa-7edb-43ec-8e86-52d207b3cfcb)
@@ -2727,7 +2727,7 @@
     (at 150.5 151 180)
     (descr "Mounting Hole 6mm, no annular")
     (tags "mounting hole 6mm no annular")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "Ref**" (at 0 -5.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 53dcd80f-c835-4524-9c77-f668847d5662)
@@ -3137,7 +3137,7 @@
     (at 111 68 180)
     (descr "Mounting Hole 7mm")
     (tags "mounting hole 7mm")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "MIX" (at 0 -6.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 352a1eba-e725-47ab-902c-5972a96beacc)
@@ -3393,7 +3393,7 @@
     (at 133 110 180)
     (descr "Mounting Hole 7mm")
     (tags "mounting hole 7mm")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "MIX" (at 0 -6.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp fe1f1782-dc14-41e1-bd3c-6681c8dd6c9a)
@@ -3456,7 +3456,7 @@
     (at 108.4 131 180)
     (descr "Mounting Hole 6mm, no annular")
     (tags "mounting hole 6mm no annular")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "Ref**" (at 0 -5.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 395e1eff-4bf5-4593-9569-eb002e735937)
@@ -3970,11 +3970,11 @@
     (tags "kb_params=eyJBbGlnbm1lbnRDaG9pY2UiOiAiQ2VudGVyIiwgIkNhcExlZnRDaG9pY2UiOiAiLyIsICJDYXBSaWdodENob2ljZSI6ICJcXCIsICJGb250Q29tYm9Cb3giOiAiUm9ib3RvLUJvbGQiLCAiSGVpZ2h0Q3RybCI6ICIxLjgiLCAiTGF5ZXJDb21ib0JveCI6ICJGLk1hc2siLCAiTXVsdGlMaW5lVGV4dCI6ICJNb3VudGpveSBNb2R1bGFyIiwgIlBhZGRpbmdCb3R0b21DdHJsIjogIjQiLCAiUGFkZGluZ0xlZnRDdHJsIjogIjI1IiwgIlBhZGRpbmdSaWdodEN0cmwiOiAiMjUiLCAiUGFkZGluZ1RvcEN0cmwiOiAiNSIsICJXaWR0aEN0cmwiOiAiIn0=")
     (attr board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "kibuzzard-65BBC0F3" (at 0 -4.960209) (layer "F.SilkS") hide
-        (effects (font (size 0 0)))
+        (effects (font (size 0 0) (thickness 0.15)))
       (tstamp 7b673d05-77e7-4b93-87f9-ac766753ac3a)
     )
     (fp_text value "G***" (at 0 4.960209) (layer "F.SilkS") hide
-        (effects (font (size 0 0)))
+        (effects (font (size 0 0) (thickness 0.15)))
       (tstamp 8ff1eb84-9217-4bb7-9c8d-88a6adb7d291)
     )
     (fp_poly
@@ -4444,7 +4444,7 @@
     (at 135.5 131 180)
     (descr "Mounting Hole 6mm, no annular")
     (tags "mounting hole 6mm no annular")
-    (attr through_hole)
+    (attr through_hole board_only exclude_from_pos_files exclude_from_bom)
     (fp_text reference "Ref**" (at 0 -5.8) (layer "F.SilkS") hide
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 5458f7c8-b51a-4e3a-8e91-a77feda75f08)

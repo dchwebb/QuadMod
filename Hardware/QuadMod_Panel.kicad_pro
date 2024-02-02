@@ -464,7 +464,7 @@
       "idf": "",
       "netlist": "../../Addatone/Hardware/",
       "specctra_dsn": "",
-      "step": "3d_models/Ampelope_Panel.step",
+      "step": "QuadMod_Panel.step",
       "vrml": ""
     },
     "page_layout_descr_file": ""
