@@ -1,5 +1,5 @@
 #pragma GCC push_options
-#pragma GCC optimize ("O0")
+#pragma GCC optimize ("O1")
 
 #include "USB.h"
 
@@ -92,8 +92,9 @@ void USBMain::ProcessSetupPacket()
 		case Request::SetAddress:
 			devAddress = static_cast<uint8_t>(req.Value) & 0x7F;			// Address address is set on the next interrupt - hold in temp storage
 
-			EPStartXfer(Direction::in, 0, 0);
 			devState = DeviceState::Addressed;
+			EPStartXfer(Direction::in, 0, 0);
+
 			break;
 
 		case Request::SetConfiguration:
@@ -197,15 +198,14 @@ void USBMain::USBInterruptHandler()								// Originally in Drivers\STM32F4xx_HA
 				}
 
 			} else {										// DIR = 1: Setup or OUT interrupt
+				ClearRxInterrupt(0);
 
 				if ((USBP->CHEP0R & USB_EP_SETUP) != 0) {
 					classByEP[0]->outBuffCount = USB_PMA[0].GetRXCount();
 					ReadPMA(USB_PMA[0].GetRXAddr(), classByEP[0]);	// Read setup data into  receive buffer
-					ClearRxInterrupt(0);							// clears 8000 interrupt
 					ProcessSetupPacket();							// Parse setup packet into request, locate data (eg descriptor) and populate TX buffer
 
 				} else {
-					ClearRxInterrupt(0);
 					classByEP[0]->outBuffCount = USB_PMA[0].GetRXCount();
 					if (classByEP[0]->outBuffCount != 0) {
 						ReadPMA(USB_PMA[0].GetRXAddr(), classByEP[0]);
@@ -521,14 +521,14 @@ void USBMain::SerialToUnicode()
 
 bool USBMain::ReadInterrupts(const uint32_t interrupt)
 {
-//#if (USB_DEBUG)
-//	if ((USBP->ISTR & interrupt) == interrupt && usbDebugEvent < USB_DEBUG_COUNT) {
-//		usbDebugNo = usbDebugEvent % USB_DEBUG_COUNT;
-//		usbDebug[usbDebugNo].eventNo = usbDebugEvent;
-//		usbDebug[usbDebugNo].Interrupt = USBP->ISTR;
-//		usbDebugEvent++;
-//	}
-//#endif
+#if (USB_DEBUG)
+	if ((USBP->ISTR & interrupt) == interrupt && usbDebugEvent < USB_DEBUG_COUNT) {
+		usbDebugNo = usbDebugEvent % USB_DEBUG_COUNT;
+		usbDebug[usbDebugNo].eventNo = usbDebugEvent;
+		usbDebug[usbDebugNo].Interrupt = USBP->ISTR;
+		usbDebugEvent++;
+	}
+#endif
 
 	return (USBP->ISTR & interrupt) == interrupt;
 }

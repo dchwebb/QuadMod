@@ -5419,7 +5419,8 @@
     (effects (font (size 3 3) (thickness 0.6) bold) (justify left bottom))
     (uuid 175c0a41-27ec-4de0-9e72-77305510af49)
   )
-  (text "Digital 3.3V Supply" (at 125.73 270.51 0)
+  (text "Digital 3.3V Supply\nCan be isolated to allow testing of just LDO"
+    (at 114.3 274.32 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 22758f4c-1167-4648-b108-d62557577d11)
   )

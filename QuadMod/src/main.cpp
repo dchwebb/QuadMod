@@ -15,6 +15,12 @@ extern "C" {
 #include "interrupts.h"
 }
 
+/*
+	Production TODO:
+	- Clock/tempo CV detection
+	- Clear buffers when switching effect type
+	- USB optimisation
+ */
 
 extern uint32_t SystemCoreClock;
 int main(void)
