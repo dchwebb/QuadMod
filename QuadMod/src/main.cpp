@@ -40,12 +40,12 @@ int main(void)
 		}
 #endif
 		usb.cdc.ProcessCommand();
-//
-//		// When the audio codec has output samples, idle jobs (ie filter recalculation) can be done by the active effect
-//		if (audioCodec.outputDone) {
-//			audioCodec.outputDone = false;
-//			effectManager.IdleJobs();
-//		}
+
+		// When the audio codec has output samples, idle jobs (ie filter recalculation) can be done by the active effect
+		if (audioCodec.outputDone) {
+			audioCodec.outputDone = false;
+			effectManager.IdleJobs();
+		}
 	}
 }
 

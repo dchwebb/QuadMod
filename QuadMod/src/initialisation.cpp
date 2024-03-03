@@ -148,7 +148,7 @@ void InitSAI()
 	GpioPin::Init(GPIOE, 4, GpioPin::Type::AlternateFunction, 6); 	// PE4 SAI1_FS_A    AF6
 	GpioPin::Init(GPIOE, 5, GpioPin::Type::AlternateFunction, 6); 	// PE5 SAI1_SCK_A   AF6
 	GpioPin::Init(GPIOE, 6, GpioPin::Type::AlternateFunction, 6); 	// PE6 SAI1_SD_A    AF6
-	//GpioPin::Init(GPIOC, 0, GpioPin::Type::AlternateFunction, 10);	// PC0 SAI2_SD_A   AF10
+	//GpioPin::Init(GPIOC, 0, GpioPin::Type::AlternateFunction, 10);	// PC1 SAI2_SD_A   AF10
 	GpioPin::Init(GPIOA, 0, GpioPin::Type::AlternateFunction, 10);	// PA0 SAI2_SD_B   AF10
 
 	SAI1_Block_A->CR1 |= SAI_xCR1_DS;					// 110: 24 bits; 111: 32 bits

@@ -26,8 +26,8 @@ void AudioCodec::Init()
 	WriteData(Command::AnalogInput,          0b1111'1111);		// Set all in channels to pseudo differential input mode
 	WriteData(Command::AnalogFilter,         0b0010'0010);		// Use a fast filter for ADC - reduces latency by ~300uS
 
-//	InitSAI();													// Configure I2S via SAI peripheral and start clocks
-//	WriteData(Command::PowerManagement,      0b0011'0111);		// Release standby state
+	InitSAI();													// Configure I2S via SAI peripheral and start clocks
+	WriteData(Command::PowerManagement,      0b0011'0111);		// Release standby state
 }
 
 
@@ -59,9 +59,15 @@ inline void AudioCodec::SendCmd(Command cmd)
 }
 
 
+// For generating test signals
+float sinePos = 0.0f;
+int32_t sinOutput = 0;
+uint32_t triInc = 10000000;
+int32_t triOutput = 0;
+
 void AudioCodec::Interrupt()
 {
-	GPIOG->ODR |= GPIO_ODR_OD12;
+	//GPIOG->ODR |= GPIO_ODR_OD12;
 
 	// Input: SAI2 Block A FIFO request
 	while ((SAI2_Block_A->SR & SAI_xSR_FREQ) != 0) {
@@ -75,7 +81,28 @@ void AudioCodec::Interrupt()
 		leftRight = !leftRight;
 	}
 
+	// Generate test signals for output and loop-back testing
+	sinePos += 0.01f;
+	if (sinePos > 2.0f * M_PI) {
+		sinePos -= 2.0f * M_PI;
+	}
+	sinOutput = (int32_t)(std::sin(sinePos) * std::numeric_limits<int32_t>::max());
 
+	int32_t newTri = triOutput + triInc;
+	if ((triInc > 0 && newTri < triOutput) || (triInc < 0 && newTri > triOutput)) {
+		triInc = -triInc;
+	} else {
+		triOutput = newTri;
+	}
+
+
+	SAI1_Block_A->DR = std::bit_cast<uint32_t>(triOutput);
+	SAI1_Block_A->DR = std::bit_cast<uint32_t>(sinOutput);
+	SAI1_Block_B->DR = std::bit_cast<uint32_t>(sinOutput);
+	SAI1_Block_B->DR = std::bit_cast<uint32_t>(triOutput);
+
+
+	/*
 	// Output: SAI1 Block A FIFO request
 	if ((SAI1_Block_A->SR & SAI_xSR_FREQ) != 0) {
 		auto [left, right] = effectManager.ProcessSamples(dataIn);
@@ -88,8 +115,8 @@ void AudioCodec::Interrupt()
 
 		outputDone = true;			// Tell the main loop it can run idle jobs
 	}
-
-	GPIOG->ODR &= ~GPIO_ODR_OD12;
+*/
+//	GPIOG->ODR &= ~GPIO_ODR_OD12;
 }
 
 
