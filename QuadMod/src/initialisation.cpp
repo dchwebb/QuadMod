@@ -2,8 +2,8 @@
 #include "GpioPin.h"
 #include <initializer_list>
 
-// 8MHz / 4(M) * 250(N) / 2(P) = 250MHz
-#define PLL_M 4
+// 12MHz / 6(M) * 250(N) / 2(P) = 250MHz
+#define PLL_M 6
 #define PLL_N 250
 #define PLL_P 1				// 01: PLLP = /2
 #define PLL_Q 4				// Divide by PPL_Q + 1
@@ -39,9 +39,9 @@ void InitSystemClock(void) {
 	RCC->CFGR1 |= RCC_CFGR1_SW;							// Select PLL1 as system clock source
 	while ((RCC->CFGR1 & RCC_CFGR1_SWS) != RCC_CFGR1_SWS);	// Wait till the main PLL is used as system clock source
 
-	// Configure PLL2 to output 12.286MHz clock for SAI: 8MHz (HSE) / 5 (M) * 192 (N) / 25(P)
+	// Configure PLL2 to output 12.286MHz clock for SAI: 12MHz (HSE) / 5 (M) * 128 (N) / 25(P)
 	RCC->PLL2CFGR = (5 << RCC_PLL2CFGR_PLL2M_Pos) | RCC_PLL2CFGR_PLL2SRC;		// Configure HSE as source for PLL2
-	RCC->PLL2DIVR = (191 << RCC_PLL2DIVR_PLL2N_Pos) | (24 << RCC_PLL2DIVR_PLL2P_Pos);
+	RCC->PLL2DIVR = (127 << RCC_PLL2DIVR_PLL2N_Pos) | (24 << RCC_PLL2DIVR_PLL2P_Pos);
 	RCC->CR |= RCC_CR_PLL2ON;							// Enable PLL2
 	RCC->PLL2CFGR = RCC_PLL2CFGR_PLL2PEN;				// Enable PLL P (drives SAI clock)
 	while ((RCC->CR & RCC_CR_PLL2RDY) == 0);			// Wait till PLL2 is ready
@@ -64,15 +64,15 @@ void InitHardware()
 {
 	InitSysTick();
 	InitMPU();
-	InitADC2(reinterpret_cast<volatile uint16_t*>(&adc), 3);
+	InitADC2(reinterpret_cast<volatile uint16_t*>(&adc), 10);
 	InitCordic();
 	//InitDAC();
 
-	GpioPin::Init(GPIOA, 6, GpioPin::Type::Input);	// PA6 - clock in
+//	GpioPin::Init(GPIOA, 6, GpioPin::Type::Input);	// PA6 - clock in
 
 	// Debug pins - PG12, PG6
-	GpioPin::Init(GPIOG, 6, GpioPin::Type::Output);
-	GpioPin::Init(GPIOG, 12, GpioPin::Type::Output);
+//	GpioPin::Init(GPIOG, 6, GpioPin::Type::Output);
+//	GpioPin::Init(GPIOG, 12, GpioPin::Type::Output);
 }
 
 
@@ -280,7 +280,7 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPDMA1EN;
 	RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN;
 	RCC->CCIPR5 |= (3 << RCC_CCIPR5_ADCDACSEL_Pos);	// 000: rcc_hclk; 001: sys_ck; 010: pll2_r_ck; *011: hse_ck; 100: hsi_ker_ck; 101: csi_ker_ck
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOFEN;
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN;
 
 	ADC2->CR &= ~ADC_CR_DEEPPWD;					// Deep power down: 0: not in deep-power down	1: ADC in deep-power-down (default reset state)
 	ADC2->CR |= ADC_CR_ADVREGEN;					// Enable ADC internal voltage regulator
@@ -292,7 +292,7 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 	}
 	while ((ADC2->CR & ADC_CR_ADVREGEN) != ADC_CR_ADVREGEN) {}
 
-	ADC12_COMMON-> CCR |= ADC_CCR_CKMODE;			// adc_hclk/4 (Synchronous clock mode)
+	ADC12_COMMON->CCR |= ADC_CCR_CKMODE;			// adc_hclk/4 (Synchronous clock mode)
 	ADC2->CFGR |= ADC_CFGR_CONT;					// 1: Continuous conversion mode for regular conversions
 	ADC2->CFGR |= ADC_CFGR_OVRMOD;					// Overrun Mode 1: ADC_DR register is overwritten with the last conversion result when an overrun is detected.
 	ADC2->CFGR |= ADC_CFGR_DMACFG;					// 0: DMA One Shot Mode selected, 1: DMA Circular Mode selected
@@ -309,22 +309,18 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 
 	/*--------------------------------------------------------------------------------------------
 	Configure ADC Channels to be converted:
-	PF13 ADC2_IN2
-	PF14 ADC2_IN6
-	PB1 ADC12_IN5
-
-	Production mapping:
 	PA1 ADC12_INP1	Delay Time
 	PA2 ADC12_INP14	Delay Feedback
 	PA3 ADC12_INP15	FX Mix
 	PA6 ADC12_INP3	LFO Range
 	PA7 ADC12_INP7	Delay Mix
 	PB0	ADC12_INP9	LFO Base Frequency
+	PB1 ADC12_IN5   Delay Filter
 	PC1 ADC12_INP11	Delay Time Pot
 	PC4	ADC12_INP4	LFO Speed
 	PC5 ADC12_INP8	FX Feedback
 	*/
-	InitAdcPins(ADC2, {2, 6, 5});
+	InitAdcPins(ADC2, {1, 14, 15, 3, 7, 9, 5, 11, 4, 8});
 
 	// Enable ADC
 	ADC2->CR |= ADC_CR_ADEN;

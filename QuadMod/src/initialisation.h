@@ -25,15 +25,16 @@ static constexpr float pi_x_2 = pi * 2.0f;
 
 
 struct ADCValues {
-	uint16_t delayFeedback;
 	uint16_t delayTime;
+	uint16_t delayFeedback;
+	uint16_t effectMix;
+	uint16_t lfoRange;
+	uint16_t delayMix;
+	uint16_t baseFreq;
 	uint16_t delayFilter;
-	uint16_t lfoSpeed = 2720;
-	uint16_t lfoRange = 630;
-	uint16_t feedback = 1250;
-	uint16_t baseFreq = 500;
-	uint16_t effectMix = 2048;
-	uint16_t delayMix = 2048;
+	uint16_t delayTimePot;
+	uint16_t lfoSpeed;
+	uint16_t feedback;
 };
 
 
