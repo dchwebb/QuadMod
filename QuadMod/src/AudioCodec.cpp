@@ -13,6 +13,7 @@ static inline void DelayMS(uint32_t ms)
 	while (SysTickVal < delay + ms);
 }
 
+
 void AudioCodec::Init()
 {
 	InitAudioCodec();											// Initialise SPI and PDN pin
@@ -25,8 +26,8 @@ void AudioCodec::Init()
 	WriteData(Command::AnalogInput,          0b1111'1111);		// Set all in channels to pseudo differential input mode
 	WriteData(Command::AnalogFilter,         0b0010'0010);		// Use a fast filter for ADC - reduces latency by ~300uS
 
-	InitSAI();													// Configure I2S via SAI peripheral and start clocks
-	WriteData(Command::PowerManagement,      0b0011'0111);		// Release standby state
+//	InitSAI();													// Configure I2S via SAI peripheral and start clocks
+//	WriteData(Command::PowerManagement,      0b0011'0111);		// Release standby state
 }
 
 

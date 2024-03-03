@@ -28,9 +28,9 @@ int main(void)
 	SystemInit();						// Activates floating point coprocessor and resets clock
 	InitSystemClock();					// Configure the clock and PLL
 	InitHardware();
-//	effectManager.effect = &flanger;
-//	audioCodec.Init();
-//	usb.InitUSB();
+	effectManager.effect = &flanger;
+	audioCodec.Init();
+	usb.InitUSB();
 
 	while (1) {
 #if (USB_DEBUG)
@@ -39,7 +39,7 @@ int main(void)
 			outputUSB = SysTickVal;
 		}
 #endif
-//		usb.cdc.ProcessCommand();
+		usb.cdc.ProcessCommand();
 //
 //		// When the audio codec has output samples, idle jobs (ie filter recalculation) can be done by the active effect
 //		if (audioCodec.outputDone) {
