@@ -66,6 +66,7 @@ void InitHardware()
 	InitMPU();
 	InitADC2(reinterpret_cast<volatile uint16_t*>(&adc), 10);
 	InitCordic();
+	InitPWMTimer();
 	//InitDAC();
 
 //	GpioPin::Init(GPIOA, 6, GpioPin::Type::Input);	// PA6 - clock in
@@ -377,7 +378,39 @@ void InitCordic()
 }
 
 
+void InitPWMTimer()
+{
+	// TIM4: Used for LED PWM
+	RCC->APB1LENR |= RCC_APB1LENR_TIM4EN;
 
+	GpioPin::Init(GPIOD, 12, GpioPin::Type::AlternateFunction, 2);	// PD12 TIM4_CH1 (AF2)
+	GpioPin::Init(GPIOD, 13, GpioPin::Type::AlternateFunction, 2);	// PD13 TIM4_CH2 (AF2)
+	GpioPin::Init(GPIOD, 14, GpioPin::Type::AlternateFunction, 2);	// PD14 TIM4_CH3 (AF2)
+
+	TIM4->CCMR1 |= TIM_CCMR1_OC1PE;					// Output compare 1 preload enable
+	TIM4->CCMR1 |= TIM_CCMR1_OC2PE;					// Output compare 2 preload enable
+	TIM4->CCMR2 |= TIM_CCMR2_OC3PE;					// Output compare 3 preload enable
+
+	TIM4->CCMR1 |= (TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2);	// 0110: PWM mode 1 - In upcounting, channel 1 active if TIMx_CNT<TIMx_CCR1
+	TIM4->CCMR1 |= (TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2);	// 0110: PWM mode 1 - In upcounting, channel 2 active if TIMx_CNT<TIMx_CCR2
+	TIM4->CCMR2 |= (TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2);	// 0110: PWM mode 1 - In upcounting, channel 3 active if TIMx_CNT<TIMx_CCR3
+
+	TIM4->CCR1 = 0;									// Initialise PWM level to 0
+	TIM4->CCR2 = 0;
+	TIM4->CCR3 = 0;
+
+	// Timing calculations: Clock = 250MHz / (PSC + 1) = 31.25m counts per second
+	// ARR = number of counts per PWM tick = 4095
+	// 31.25m / ARR ~= 7.6kHz of PWM square wave with 4095 levels of output
+
+	TIM4->ARR = 4095;								// Total number of PWM ticks
+	TIM4->PSC = 7;									// Should give ~7.6kHz
+	TIM4->CR1 |= TIM_CR1_ARPE;						// 1: TIMx_ARR register is buffered
+	TIM4->CCER |= (TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E);		// Capture mode enabled / OC1 signal is output on the corresponding output pin
+	TIM4->EGR |= TIM_EGR_UG;						// 1: Re-initialize the counter and generates an update of the registers
+
+	TIM4->CR1 |= TIM_CR1_CEN;						// Enable counter
+}
 
 
 

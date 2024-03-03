@@ -62,7 +62,7 @@ inline void AudioCodec::SendCmd(Command cmd)
 // For generating test signals
 float sinePos = 0.0f;
 int32_t sinOutput = 0;
-uint32_t triInc = 10000000;
+int32_t triInc = 10000000;
 int32_t triOutput = 0;
 
 void AudioCodec::Interrupt()
@@ -96,8 +96,8 @@ void AudioCodec::Interrupt()
 	}
 
 
-	SAI1_Block_A->DR = std::bit_cast<uint32_t>(triOutput);
-	SAI1_Block_A->DR = std::bit_cast<uint32_t>(sinOutput);
+	SAI1_Block_A->DR = Denormalise(dataIn.ch[2]);
+	SAI1_Block_A->DR = Denormalise(dataIn.ch[3]);
 	SAI1_Block_B->DR = std::bit_cast<uint32_t>(sinOutput);
 	SAI1_Block_B->DR = std::bit_cast<uint32_t>(triOutput);
 

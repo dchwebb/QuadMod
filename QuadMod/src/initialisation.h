@@ -59,3 +59,4 @@ void InitHyperRAM();
 void InitADC2(volatile uint16_t* buffer, uint16_t channels);
 void InitDAC();
 void InitCordic();
+void InitPWMTimer();
