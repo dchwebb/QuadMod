@@ -96,7 +96,7 @@ void AudioCodec::Interrupt()
 	}
 
 
-	SAI1_Block_A->DR = Denormalise(dataIn.ch[2]);
+	SAI1_Block_A->DR = Denormalise(dataIn.ch[0]);
 	SAI1_Block_A->DR = Denormalise(dataIn.ch[3]);
 	SAI1_Block_B->DR = std::bit_cast<uint32_t>(sinOutput);
 	SAI1_Block_B->DR = std::bit_cast<uint32_t>(triOutput);
