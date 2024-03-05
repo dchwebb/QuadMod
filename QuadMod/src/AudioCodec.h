@@ -1,7 +1,6 @@
 #pragma once
 
 #include "initialisation.h"
-#include "GpioPin.h"
 #include "Effect.h"
 #include <cmath>
 

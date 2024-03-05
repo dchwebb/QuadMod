@@ -10,7 +10,7 @@ public:
 	static constexpr uint32_t audioBuffSize = 4000;
 	Samples audioBuffer[audioBuffSize] = {};
 
-	bool delayOn = false;
+	bool delayOn = true;
 
 	std::pair<float, float> ProcessSamples(Samples& samples);
 	void IdleJobs();

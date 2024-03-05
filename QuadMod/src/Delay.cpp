@@ -6,7 +6,7 @@ Delay delay;
 void Delay::GetSamples(Samples& samples)
 {
 	// Check if clock received
-	if ((GPIOA->IDR & GPIO_IDR_ID6) != GPIO_IDR_ID6) {
+	if (clockInPin.IsHigh()) {
 		if (!clockHigh) {
 			clockInterval = delayCounter - lastClock - clockAdjust;			// FIXME constant found by trial and error - probably relates to filtering group delay
 			lastClock = delayCounter;
@@ -48,15 +48,15 @@ void Delay::GetSamples(Samples& samples)
 
 	if (clockValid) {
 		if (abs(delayPotVal - adc.delayTime) > tempoHysteresis) {
-			delayPotVal = adc.delayTime;										// Store value for hysteresis checking
+			delayPotVal = adc.delayTimePot;										// Store value for hysteresis checking
 			delayMult = tempoMult[tempoMult.size() * adc.delayTime / 4096];		// get tempo multiplier from lookup
 			calcDelay = delayMult * (clockInterval / 2);
-			while (calcDelay > audioBuffSize) {
+			while (calcDelay > (int32_t)audioBuffSize) {
 				calcDelay /= 2;
 			}
 		}
 	} else {
-		calcDelay = std::min((uint32_t)(1000 + adc.delayTime) * 6, audioBuffSize);
+		calcDelay = std::min((uint32_t)(1000 + adc.delayTimePot) * 6, audioBuffSize);
 	}
 
 	// If delay time has changed trigger crossfade from old to new read position
@@ -71,6 +71,14 @@ void Delay::GetSamples(Samples& samples)
 	}
 
 	samples = newSample;
+
+	// LED
+	if (++ledCounter > (uint32_t)calcDelay) {
+		ledCounter = 0;
+		clockedDelayLED = 4095;
+	} else if (ledCounter == 1000) {
+		clockedDelayLED = 0;
+	}
 }
 
 

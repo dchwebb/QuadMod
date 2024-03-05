@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stm32h563xx.h"
+#include "GpioPin.h"
 #include <numbers>
 
 extern volatile uint32_t SysTickVal;

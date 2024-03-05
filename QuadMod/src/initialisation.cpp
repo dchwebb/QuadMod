@@ -1,5 +1,4 @@
 #include "initialisation.h"
-#include "GpioPin.h"
 #include <initializer_list>
 
 // 12MHz / 6(M) * 250(N) / 2(P) = 250MHz
@@ -64,12 +63,9 @@ void InitHardware()
 {
 	InitSysTick();
 	InitMPU();
-//	InitADC2(reinterpret_cast<volatile uint16_t*>(&adc), 10);
-//	InitCordic();
+	InitADC2(reinterpret_cast<volatile uint16_t*>(&adc), 10);
+	InitCordic();
 	InitPWMTimer();
-	//InitDAC();
-
-//	GpioPin::Init(GPIOA, 6, GpioPin::Type::Input);	// PA6 - clock in
 
 	// Debug pins - PG12, PG6
 //	GpioPin::Init(GPIOC, 1, GpioPin::Type::Output);
@@ -111,7 +107,7 @@ void InitSAI()
 	GpioPin::Init(GPIOE, 4, GpioPin::Type::AlternateFunction, 6); 	// PE4 SAI1_FS_A    AF6
 	GpioPin::Init(GPIOE, 5, GpioPin::Type::AlternateFunction, 6); 	// PE5 SAI1_SCK_A   AF6
 	GpioPin::Init(GPIOE, 6, GpioPin::Type::AlternateFunction, 6); 	// PE6 SAI1_SD_A    AF6
-	GpioPin::Init(GPIOC, 1, GpioPin::Type::AlternateFunction, 8);	// PC1 SAI2_SD_A    AF6
+	GpioPin::Init(GPIOC, 1, GpioPin::Type::AlternateFunction, 8);	// PC1 SAI2_SD_A    AF8
 	GpioPin::Init(GPIOA, 0, GpioPin::Type::AlternateFunction, 10);	// PA0 SAI2_SD_B    AF10
 
 	SAI1_Block_A->CR1 |= SAI_xCR1_DS;					// 110: 24 bits; 111: 32 bits
@@ -279,11 +275,11 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 	PA7 ADC12_INP7	Delay Mix
 	PB0	ADC12_INP9	LFO Base Frequency
 	PB1 ADC12_IN5   Delay Filter
-	PC1 ADC12_INP11	Delay Time Pot
+	PC0 ADC12_INP10	Delay Time Pot
 	PC4	ADC12_INP4	LFO Speed
 	PC5 ADC12_INP8	FX Feedback
 	*/
-	InitAdcPins(ADC2, {1, 14, 15, 3, 7, 9, 5, 11, 4, 8});
+	InitAdcPins(ADC2, {1, 14, 15, 3, 7, 9, 5, 10, 4, 8});
 
 	// Enable ADC
 	ADC2->CR |= ADC_CR_ADEN;
@@ -381,17 +377,17 @@ void InitDAC()
 void InitHyperRAM()
 {
 	// Cypress S27KL0641 DABHI020: 3.0v, 64Mb, 100MHz
-	GpioPin::Init(GPIOA, 3, GpioPin::Type::AlternateFunction, 3, 0b11);		// PA3  OCTOSPI_CLK AF3
-	GpioPin::Init(GPIOB, 1, GpioPin::Type::AlternateFunction, 6, 0b11);		// PB1  OCTOSPI_IO0 AF6
-	GpioPin::Init(GPIOB, 0, GpioPin::Type::AlternateFunction, 6, 0b11);		// PB0  OCTOSPI_IO1 AF6
-	GpioPin::Init(GPIOC, 2, GpioPin::Type::AlternateFunction, 9, 0b11);		// PC2  OCTOSPI_IO2 AF9
-	GpioPin::Init(GPIOA, 6, GpioPin::Type::AlternateFunction, 6, 0b11);		// PA6  OCTOSPI_IO3 AF6
-	GpioPin::Init(GPIOE, 7, GpioPin::Type::AlternateFunction, 10, 0b11); 	// PE7  OCTOSPI_IO4 AF10
-	GpioPin::Init(GPIOE, 8, GpioPin::Type::AlternateFunction, 10, 0b11); 	// PE8  OCTOSPI_IO5 AF10
-	GpioPin::Init(GPIOC, 3, GpioPin::Type::AlternateFunction, 6, 0b11);		// PC3  OCTOSPI_IO6 AF6
-	GpioPin::Init(GPIOC, 0, GpioPin::Type::AlternateFunction, 10, 0b11);	// PC0  OCTOSPI_IO7 AF10
-	GpioPin::Init(GPIOB, 10, GpioPin::Type::AlternateFunction, 9, 0b11);	// PB10 OCTOSPI_NCS AF10
-	GpioPin::Init(GPIOB, 2, GpioPin::Type::AlternateFunction, 10, 0b11);	// PB2  OCTOSPI_DQS AF10
+	GpioPin::Init(GPIOA, 3, GpioPin::Type::AlternateFunction, 3, GpioPin::DriveStrength::VeryHigh);		// PA3  OCTOSPI_CLK AF3
+	GpioPin::Init(GPIOB, 1, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// PB1  OCTOSPI_IO0 AF6
+	GpioPin::Init(GPIOB, 0, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// PB0  OCTOSPI_IO1 AF6
+	GpioPin::Init(GPIOC, 2, GpioPin::Type::AlternateFunction, 9, GpioPin::DriveStrength::VeryHigh);		// PC2  OCTOSPI_IO2 AF9
+	GpioPin::Init(GPIOA, 6, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// PA6  OCTOSPI_IO3 AF6
+	GpioPin::Init(GPIOE, 7, GpioPin::Type::AlternateFunction, 10, GpioPin::DriveStrength::VeryHigh); 	// PE7  OCTOSPI_IO4 AF10
+	GpioPin::Init(GPIOE, 8, GpioPin::Type::AlternateFunction, 10, GpioPin::DriveStrength::VeryHigh); 	// PE8  OCTOSPI_IO5 AF10
+	GpioPin::Init(GPIOC, 3, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// PC3  OCTOSPI_IO6 AF6
+	GpioPin::Init(GPIOC, 0, GpioPin::Type::AlternateFunction, 10, GpioPin::DriveStrength::VeryHigh);	// PC0  OCTOSPI_IO7 AF10
+	GpioPin::Init(GPIOB, 10, GpioPin::Type::AlternateFunction, 9, GpioPin::DriveStrength::VeryHigh);	// PB10 OCTOSPI_NCS AF10
+	GpioPin::Init(GPIOB, 2, GpioPin::Type::AlternateFunction, 10, GpioPin::DriveStrength::VeryHigh);	// PB2  OCTOSPI_DQS AF10
 
 	RCC->AHB4ENR |= RCC_AHB4ENR_OCTOSPI1EN;
 	//RCC->CCIPR4 &= ~RCC_CCIPR4_OCTOSPISEL;					// kernel clock 250MHz: 00 rcc_hclk4 (default); 01 pll1_q_ck; 10 pll2_r_ck; 11 per_ck
