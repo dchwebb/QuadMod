@@ -19,7 +19,6 @@ private:
 		float oldVal[maxFilters + 1];			// Previous samples
 	} allpass[maxFilters];
 
-	float baseFrequency = 200.0;				// Lowest frequency of allpass filters
 	uint32_t lfoInitPhase = 0;
 	uint32_t lfoFreq = 0;						// LFO frequency
 

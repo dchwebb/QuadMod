@@ -268,18 +268,18 @@ void InitADC2(volatile uint16_t* buffer, uint16_t channels)
 
 	/*--------------------------------------------------------------------------------------------
 	Configure ADC Channels to be converted:
-	PA1 ADC12_INP1	Delay Time
-	PA2 ADC12_INP14	Delay Feedback
 	PA3 ADC12_INP15	FX Mix
-	PA6 ADC12_INP3	LFO Range
-	PA7 ADC12_INP7	Delay Mix
-	PB0	ADC12_INP9	LFO Base Frequency
-	PB1 ADC12_IN5   Delay Filter
+	PA6 ADC12_INP3	FX LFO Range
+	PC4	ADC12_INP4	FX LFO Speed
+	PB0	ADC12_INP9	FX LFO Base Frequency
+	PC5 ADC12_INP8	FX Regen
 	PC0 ADC12_INP10	Delay Time Pot
-	PC4	ADC12_INP4	LFO Speed
-	PC5 ADC12_INP8	FX Feedback
+	PA1 ADC12_INP1	Delay Clock/Time CV
+	PA2 ADC12_INP14	Delay Feedback
+	PB1 ADC12_IN5   Delay Filter
+	PA7 ADC12_INP7	Delay Mix
 	*/
-	InitAdcPins(ADC2, {1, 14, 15, 3, 7, 9, 5, 10, 4, 8});
+	InitAdcPins(ADC2, {15, 3, 4, 9, 8, 10, 1, 14, 5, 7});
 
 	// Enable ADC
 	ADC2->CR |= ADC_CR_ADEN;

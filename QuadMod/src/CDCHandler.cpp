@@ -60,10 +60,10 @@ void CDCHandler::ProcessCommand()
 				effectManager.delayOn ? "on" : "off",
 				ringMod.octaveOnly ? "on" : "off",
 				flanger.wide ? "on" : "off",
-				adc.lfoSpeed,
-				adc.lfoRange,
-				adc.feedback,
-				adc.baseFreq,
+				adc.effectLFOSpeed,
+				adc.effectLFORange,
+				adc.effectRegen,
+				adc.effectLFOBaseFreq,
 				adc.effectMix,
 				adc.delayMix
 				);
@@ -79,30 +79,30 @@ void CDCHandler::ProcessCommand()
 	} else if (cmd.compare(0, 9, "lfoSpeed:") == 0) {
 		const int32_t val = ParseInt(cmd, ':', 0, 4095);
 		if (val >= 0) {
-			adc.lfoSpeed = val;
+			adc.effectLFOSpeed = val;
 		}
-		printf("lfoSpeed: %d\r\n", adc.lfoSpeed);
+		printf("lfoSpeed: %d\r\n", adc.effectLFOSpeed);
 
 	} else if (cmd.compare(0, 9, "lfoRange:") == 0) {
 		const int32_t val = ParseInt(cmd, ':', 0, 4095);
 		if (val >= 0) {
-			adc.lfoRange = val;
+			adc.effectLFORange = val;
 		}
-		printf("lfoRange: %d\r\n", adc.lfoRange);
+		printf("lfoRange: %d\r\n", adc.effectLFORange);
 
 	} else if (cmd.compare(0, 9, "feedback:") == 0) {
 		const int32_t val = ParseInt(cmd, ':', 0, 4095);
 		if (val >= 0) {
-			adc.feedback = val;
+			adc.effectRegen = val;
 		}
-		printf("feedback: %d\r\n", adc.feedback);
+		printf("feedback: %d\r\n", adc.effectRegen);
 
 	} else if (cmd.compare(0, 9, "baseFreq:") == 0) {
 		const int32_t val = ParseInt(cmd, ':', 0, 4095);
 		if (val >= 0) {
-			adc.baseFreq = val;
+			adc.effectLFOBaseFreq = val;
 		}
-		printf("baseFreq: %d\r\n", adc.baseFreq);
+		printf("baseFreq: %d\r\n", adc.effectLFOBaseFreq);
 
 	} else if (cmd.compare(0, 10, "effectMix:") == 0) {
 		const int32_t val = ParseInt(cmd, ':', 0, 4095);

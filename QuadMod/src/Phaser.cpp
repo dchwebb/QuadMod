@@ -7,18 +7,16 @@
 
 Phaser phaser;
 
-volatile int16_t stestPhase = 0;
-volatile uint32_t testPhase = 0;
 
 void Phaser::GetSamples(Samples& samples)
 {
-	const uint32_t lfoFreq = (4095 - adc.lfoSpeed) * 64;
+	const uint32_t lfoFreq = (4095 - adc.effectLFOSpeed) * 64;
 	uint32_t lfoPhase = lfoInitPhase + lfoFreq;
 
-	const float lfoSweepWidth = static_cast<float>(adc.lfoRange) * 5.0f;
+	const float lfoSweepWidth = static_cast<float>(adc.effectLFORange) * 5.0f;
 
 	static constexpr float feedbackScale = 1.0f / 4096.0f;
-	const float feedback = static_cast<float>(adc.feedback) * feedbackScale;
+	const float feedback = static_cast<float>(adc.effectRegen) * feedbackScale;
 
 
 	for (uint32_t channel = 0; channel < 4; ++channel) {
@@ -41,22 +39,17 @@ void Phaser::GetSamples(Samples& samples)
 	}
 
 	// Convert phase to a 12 bit value for LED brightness
-	stestPhase = (int16_t)(lfoInitPhase >> 16);
-	testPhase = 65536 + stestPhase;
-
 	uint32_t brightness = lfoInitPhase >> 19;		// Limit from 0 to 8191
 	if (brightness > 4095) {
 		brightness = 8192 - brightness;
 	}
-
 	phaseLED = brightness;
-
 }
 
 
 float Phaser::FilterSamples(const uint32_t channel, float sample, const float lfoSweepWidth, const uint32_t phase)
 {
- 	const float freq = baseFrequency + lfoSweepWidth * (0.5f + 0.5f * Cordic::Sin(phase));
+	const float freq = (4300.0f - adc.effectLFOBaseFreq) + lfoSweepWidth * (0.5f + 0.5f * Cordic::Sin(phase));
 	const float w0 = std::min(freq * inverseSampleRate, 0.99f * pi);
 	const float coeff = -Cordic::Tan((0.5f * w0) - (float)M_PI_4);
 
