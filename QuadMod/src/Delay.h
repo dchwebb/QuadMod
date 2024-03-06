@@ -40,8 +40,8 @@ private:
 	bool clockHigh = false;
 
 	uint32_t ledCounter = 0;
-	volatile uint32_t& unclockedDelayLED = TIM4->CCR2;
-	volatile uint32_t& clockedDelayLED = TIM4->CCR3;
+	volatile uint32_t& clockedDelayLED = TIM4->CCR1;
+	volatile uint32_t& unclockedDelayLED = TIM4->CCR3;
 
 	GpioPin clockInPin{GPIOC, 12, GpioPin::Type::Input};	// PC12 - clock in
 

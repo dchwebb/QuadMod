@@ -3,6 +3,7 @@
 
 Delay delay;
 
+
 void Delay::GetSamples(Samples& samples)
 {
 	// Check if clock received
@@ -47,9 +48,9 @@ void Delay::GetSamples(Samples& samples)
 	// Calculate delay times - either clocked or not
 
 	if (clockValid) {
-		if (abs(delayPotVal - adc.delayTime) > tempoHysteresis) {
+		if (abs(delayPotVal - adc.delayTimePot) > tempoHysteresis) {
 			delayPotVal = adc.delayTimePot;										// Store value for hysteresis checking
-			delayMult = tempoMult[tempoMult.size() * adc.delayTime / 4096];		// get tempo multiplier from lookup
+			delayMult = tempoMult[((float)adc.delayTimePot / 4096.0f) * tempoMult.size()];		// get tempo multiplier from lookup
 			calcDelay = delayMult * (clockInterval / 2);
 			while (calcDelay > (int32_t)audioBuffSize) {
 				calcDelay /= 2;
@@ -75,9 +76,14 @@ void Delay::GetSamples(Samples& samples)
 	// LED
 	if (++ledCounter > (uint32_t)calcDelay) {
 		ledCounter = 0;
-		clockedDelayLED = 4095;
+		if (clockValid) {
+			clockedDelayLED = 4095;
+		} else {
+			unclockedDelayLED = 4095;
+		}
 	} else if (ledCounter == 1000) {
 		clockedDelayLED = 0;
+		unclockedDelayLED = 0;
 	}
 }
 

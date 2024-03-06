@@ -5429,7 +5429,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 28949d9a-e3bd-4360-99bc-d25aa10265f6)
   )
-  (text "v1.0 Errata: PC0 and PC1 connections should be switched"
+  (text "v1.0 Errata: PC0 and PC1 connections should be switched\nChanged LED resistors R29, R45 from 1K to 510"
     (at 303.53 257.81 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 3b24aa21-ca3b-4a90-bc85-7fb7d138aa39)
@@ -8522,7 +8522,7 @@
     (property "Reference" "R17" (at 375.92 204.47 90)
       (effects (font (size 0.9 0.9)))
     )
-    (property "Value" "1k" (at 375.92 201.93 90)
+    (property "Value" "510" (at 375.92 201.93 90)
       (effects (font (size 1.27 1.27)))
     )
     (property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder" (at 375.92 204.47 0)
@@ -12196,7 +12196,7 @@
     (property "Reference" "R19" (at 375.92 214.63 90)
       (effects (font (size 0.9 0.9)))
     )
-    (property "Value" "1k" (at 375.92 212.09 90)
+    (property "Value" "510" (at 375.92 212.09 90)
       (effects (font (size 1.27 1.27)))
     )
     (property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder" (at 375.92 214.63 0)

@@ -1,5 +1,8 @@
 #include "EffectManager.h"
 #include "Delay.h"
+#include "Flanger.h"
+#include "Phaser.h"
+#include <cstring>
 
 EffectManager effectManager;
 
@@ -19,14 +22,13 @@ std::pair<float, float> EffectManager::ProcessSamples(Samples& samples)
 {
 	Samples origSamples = samples;
 
-	if (effect != nullptr) {
-		effect->GetSamples(samples);
+	FXType();
+	effect->GetSamples(samples);
 
-		// Scale mix from 0 (dry) to  1 (fully wet)
-		const float effectMix = adc.effectMix / 4096.0f;
-		for (uint32_t i = 0; i < 4; ++i) {
-			samples.ch[i] = EqualPowerCrossfade(effectMix, samples.ch[i], origSamples.ch[i]);
-		}
+	// Scale mix from 0 (dry) to  1 (fully wet)
+	const float effectMix = adc.effectMix / 4096.0f;
+	for (uint32_t i = 0; i < 4; ++i) {
+		samples.ch[i] = EqualPowerCrossfade(effectMix, samples.ch[i], origSamples.ch[i]);
 	}
 
 	// Stereo mix with effects only
@@ -53,6 +55,16 @@ std::pair<float, float> EffectManager::ProcessSamples(Samples& samples)
 
 	return std::make_pair(mixOutL, mixOutR);
 
+}
+
+
+void EffectManager::FXType()
+{
+	// Handle effect switching (Phaser = pin high; flanger = pin low)
+	if (fxTypePin.IsHigh() !=  (effect == &phaser)) {
+		std::memset(audioBuffer, 0, audioBuffSize * sizeof(Samples));			// Clear sample buffer
+		effect = fxTypePin.IsHigh() ? (Effect*)&phaser : (Effect*)&flanger;
+	}
 }
 
 

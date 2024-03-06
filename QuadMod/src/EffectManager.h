@@ -16,6 +16,9 @@ public:
 	void IdleJobs();
 private:
 	float EqualPowerCrossfade(const float mix, const float sample1, const float sample2);
+	void FXType();
+
+	GpioPin fxTypePin{GPIOD, 6, GpioPin::Type::Input};	// PD6: Effect Type
 };
 
 extern EffectManager effectManager;
