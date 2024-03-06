@@ -22,6 +22,8 @@ private:
 	float baseFrequency = 200.0;				// Lowest frequency of allpass filters
 	uint32_t lfoInitPhase = 0;
 	uint32_t lfoFreq = 0;						// LFO frequency
+
+	volatile uint32_t& phaseLED = TIM4->CCR2;
 };
 
 extern Phaser phaser;

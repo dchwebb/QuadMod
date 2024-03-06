@@ -7,9 +7,12 @@
 
 Phaser phaser;
 
+volatile int16_t stestPhase = 0;
+volatile uint32_t testPhase = 0;
+
 void Phaser::GetSamples(Samples& samples)
 {
-	const uint32_t lfoFreq = adc.lfoSpeed * 32;
+	const uint32_t lfoFreq = (4095 - adc.lfoSpeed) * 64;
 	uint32_t lfoPhase = lfoInitPhase + lfoFreq;
 
 	const float lfoSweepWidth = static_cast<float>(adc.lfoRange) * 5.0f;
@@ -36,6 +39,18 @@ void Phaser::GetSamples(Samples& samples)
 			lfoPhase += phaseDiff;
 		}
 	}
+
+	// Convert phase to a 12 bit value for LED brightness
+	stestPhase = (int16_t)(lfoInitPhase >> 16);
+	testPhase = 65536 + stestPhase;
+
+	uint32_t brightness = lfoInitPhase >> 19;		// Limit from 0 to 8191
+	if (brightness > 4095) {
+		brightness = 8192 - brightness;
+	}
+
+	phaseLED = brightness;
+
 }
 
 
