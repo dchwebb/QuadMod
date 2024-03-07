@@ -73,7 +73,7 @@ private:
 		uint32_t n = 0;
 
 		for (uint8_t i = 0; i < poles / 2; ++i) {
-			const float theta = std::numbers::pi * static_cast<float>(2 * i + poles + 1) / static_cast<float>(2 * poles);
+			const float theta = pi * static_cast<float>(2 * i + poles + 1) / static_cast<float>(2 * poles);
 			roots[n++] = complex_t(cos(theta), sin(theta));
 			roots[n++] = complex_t(cos(theta), -sin(theta));
 		}
@@ -152,7 +152,7 @@ public:
 
 		if (passType == filterPass::BandPass) {
 			// See http://shepazu.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
-			const float w0 = std::numbers::pi * cutoffFreq;
+			const float w0 = pi * cutoffFreq;
 			const float n = (2.0f * Q) / (2.0f * Q + sin(w0));			// Use normalised alpha to set a0 = 1.0
 			iirCoeff.b0[0] = 1.0f - n;
 			iirCoeff.b1[0] = 0.0f;
@@ -165,7 +165,7 @@ public:
 
 		// T sets the IIR filter's corner frequency, or center frequency
 		// The Bilinear transform is defined as:  s = 2/T * tan(Omega/2) = 2/T * (1 - z^-1)/(1 + z^-1)
-		const float T = 2.0f * tan(omega * std::numbers::pi / 2);
+		const float T = 2.0f * tan(omega * pi / 2);
 
 		// Calc the IIR coefficients. SPlaneCoeff.sections is the number of 1st and 2nd order s plane factors.
 		for (uint32_t i = 0; i < sections; ++i) {

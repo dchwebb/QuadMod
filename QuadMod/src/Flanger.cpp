@@ -8,6 +8,8 @@
 
 Flanger flanger;
 
+
+
 void Flanger::GetSamples(Samples& samples)
 {
 	const uint32_t lfoFreq = adc.effectLFOSpeed * 128;
@@ -15,9 +17,12 @@ void Flanger::GetSamples(Samples& samples)
 	lfoInitPhase = lfoPhase;
 
 	// needs to be between baseFrequency and audioBuffSize
-	const float lfoSweepWidth = (adc.effectLFORange / 4096.0f) * 100.0f;
-	const float feedback = adc.effectRegen / 4096.0f;
-	const float baseFreq = (adc.effectLFOBaseFreq / 4096.0f) * 2000.0f;
+	const float lfoSweepWidthADC = (adc.effectLFORange / 4096.0f) * 100.0f;
+	lfoSweepWidth = (lfoSweepWidth * 0.9f) + (0.1f * lfoSweepWidthADC);
+	const float regenADC = adc.effectRegen / 4096.0f;
+	regen = (regen * 0.9f) + (0.1f * regenADC);
+	const float baseFreqADC = (adc.effectLFOBaseFreq / 4096.0f) * 2000.0f;
+	baseFreq = (baseFreq * 0.99f) + (0.01f * baseFreqADC);
 
 	if (++writePos == effectManager.audioBuffSize) {
 		writePos = 0;
@@ -37,7 +42,7 @@ void Flanger::GetSamples(Samples& samples)
 			wideFlange.ch[channel] = SampleFromReadOffset(readOffset2, channel);
 		}
 
-		effectManager.audioBuffer[writePos].ch[channel] = samples.ch[channel] + feedback * flangeSample;
+		effectManager.audioBuffer[writePos].ch[channel] = samples.ch[channel] + regen * flangeSample;
 
 		samples.ch[channel] = flangeSample;
 
@@ -72,7 +77,6 @@ float Flanger::SampleFromReadOffset(const float readOffset, const uint32_t chann
 
 	// Interpolate two samples
 	int32_t floor = std::floor(readPos);
-	//int32_t floor2 = (int32_t)(readPos);
 
 	const float fractionalPos = readPos - (float)floor;				// Handle situation where sample position is between -1 and 0
 	if (floor < 0) {

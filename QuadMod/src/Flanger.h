@@ -13,6 +13,10 @@ private:
 	int32_t writePos = 0;
 	uint32_t lfoInitPhase = 0;
 
+	float baseFreq;		// Used for adc smoothing
+	float regen;
+	float lfoSweepWidth;
+
 	volatile uint32_t& lfoLED = TIM4->CCR2;
 };
 
