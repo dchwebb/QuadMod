@@ -3,10 +3,24 @@
 
 Delay delay;
 
+uint32_t nonClockVals = 0;		// Counter to store ADC values that are neither valid clock high or low
+uint32_t nonClockTime = 0;		// Last SysTick time a sequence of non-clock values were on ADC
+uint32_t clockTest = 1000;		// Interval inside which intermediate signals on ADC invalidate clock
 
-void Delay::GetSamples(Samples& samples)
+void Delay::CheckForClock()
 {
-	// Check if clock received
+	// Check if intermediate values on the adc look like a non-clock value is present
+	if (adc.delayTimeCV > 1000 && adc.delayTimeCV < 3500) {
+		if (++nonClockVals > 20) {
+			nonClockVals = 0;
+			nonClockTime = SysTickVal;
+		}
+	} else {
+		nonClockVals = 0;
+	}
+
+	const bool nonClock = (SysTickVal - nonClockTime < clockTest);				// Check that sufficient time has elapsed sin ce last non-clock signal
+
 	if (clockInPin.IsHigh()) {
 		if (!clockHigh) {
 			clockInterval = delayCounter - lastClock - clockAdjust;			// FIXME constant found by trial and error - probably relates to filtering group delay
@@ -16,8 +30,14 @@ void Delay::GetSamples(Samples& samples)
 	} else {
 		clockHigh = false;
 	}
-	clockValid = (delayCounter - lastClock < (sampleRate * 2));					// Valid clock interval is within a second
+	clockValid = (!nonClock && delayCounter - lastClock < (sampleRate * 2));	// Valid clock interval is within a second
+
 	++delayCounter;
+}
+
+void Delay::GetSamples(Samples& samples)
+{
+	CheckForClock();					// Auto-detect if valid clock signal is present on delay CV
 
 	if (++writePos == audioBuffSize)   { writePos = 0; }
 	if (++readPos == audioBuffSize)    { readPos = 0; }

@@ -12,6 +12,8 @@ public:
 	void IdleJobs();
 
 private:
+	void CheckForClock();
+
 	static constexpr uint32_t audioBuffSize = 34000;
 	int32_t writePos = 0;
 	int32_t readPos = 1000;
