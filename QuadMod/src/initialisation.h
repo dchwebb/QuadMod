@@ -23,7 +23,7 @@ struct ADCValues {
 	uint16_t effectLFOBaseFreq;
 	uint16_t effectRegen;
 	uint16_t delayTimePot;
-	uint16_t delayTime;
+	uint16_t delayTimeCV;
 	uint16_t delayFeedback;
 	uint16_t delayFilter;
 	uint16_t delayMix;

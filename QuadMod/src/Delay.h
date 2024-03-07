@@ -12,7 +12,7 @@ public:
 	void IdleJobs();
 
 private:
-	static constexpr uint32_t audioBuffSize = 30000;
+	static constexpr uint32_t audioBuffSize = 34000;
 	int32_t writePos = 0;
 	int32_t readPos = 1000;
 	Samples audioBuffer[audioBuffSize] = {};
@@ -21,17 +21,20 @@ private:
 	uint16_t delayCrossfade;			// Counter that ticks down during a crossfade following delay length change
 	int32_t currentDelay = 0;			// Used to trigger crossfade from old to new read position
 	int32_t calcDelay = 0;				// Delay time according to whether clocked and with multipliers applied
-	int16_t delayPotVal;				// For hysteresis checking
+	int16_t hysteresisPotVal;			// For hysteresis checking
 	const std::array<float, 6> tempoMult = {0.5, 1, 2, 4, 6, 8};
 	float delayMult = 1.0f;				// Multipliers for delay in clocked mode
 	volatile int32_t clockAdjust = -8;
+
+	float delayTimePot = 0.0f;			// Smoothed value
+	float delayTimeCV = 0.0f;
 
 	int16_t delayHysteresis = 900;
 	static constexpr int16_t crossfade = 6000;
 	static constexpr int16_t tempoHysteresis = 50;
 
 	float lpFilterCutoff = 0.5f;
-	Filter<2> lpFilter{filterPass::LowPass, &adc.delayFilter};
+	Filter<2> lpFilter{filterPass::LowPass, &adc.delayFilter, true};
 
 	uint32_t delayCounter;				// Counter used to calculate clock times in sample time
 	uint32_t lastClock;					// Time last clock signal received in sample time
@@ -40,6 +43,7 @@ private:
 	bool clockHigh = false;
 
 	uint32_t ledCounter = 0;
+	uint32_t ledBrightness = 0;
 	volatile uint32_t& clockedDelayLED = TIM4->CCR1;
 	volatile uint32_t& unclockedDelayLED = TIM4->CCR3;
 

@@ -46,10 +46,11 @@ void Delay::GetSamples(Samples& samples)
 	}
 
 	// Calculate delay times - either clocked or not
-
+	delayTimePot = (0.95f * delayTimePot) + (0.05f * adc.delayTimePot);
+	delayTimeCV = (0.95f * delayTimeCV) + (0.05f * adc.delayTimeCV);
 	if (clockValid) {
-		if (abs(delayPotVal - adc.delayTimePot) > tempoHysteresis) {
-			delayPotVal = adc.delayTimePot;										// Store value for hysteresis checking
+		if (abs(hysteresisPotVal - adc.delayTimePot) > tempoHysteresis) {
+			hysteresisPotVal = adc.delayTimePot;				// Store value for hysteresis checking
 			delayMult = tempoMult[((float)adc.delayTimePot / 4096.0f) * tempoMult.size()];		// get tempo multiplier from lookup
 			calcDelay = delayMult * (clockInterval / 2);
 			while (calcDelay > (int32_t)audioBuffSize) {
@@ -57,7 +58,8 @@ void Delay::GetSamples(Samples& samples)
 			}
 		}
 	} else {
-		calcDelay = std::min((uint32_t)(1000 + adc.delayTimePot) * 6, audioBuffSize);
+		const float combinedDelay = (4096.0f + delayTimePot - delayTimeCV) * 5.0f;		// Pot ADC increments, CV ADC decrements
+		calcDelay = std::min((uint32_t)combinedDelay, audioBuffSize);
 	}
 
 	// If delay time has changed trigger crossfade from old to new read position
@@ -76,14 +78,17 @@ void Delay::GetSamples(Samples& samples)
 	// LED
 	if (++ledCounter > (uint32_t)calcDelay) {
 		ledCounter = 0;
-		if (clockValid) {
-			clockedDelayLED = 4095;
-		} else {
-			unclockedDelayLED = 4095;
-		}
-	} else if (ledCounter == 1000) {
+		ledBrightness = 4095;
+	}
+	if (ledBrightness > 0) {
 		clockedDelayLED = 0;
 		unclockedDelayLED = 0;
+		if (clockValid) {
+			clockedDelayLED = ledBrightness;
+		} else {
+			unclockedDelayLED = ledBrightness;
+		}
+		--ledBrightness;
 	}
 }
 

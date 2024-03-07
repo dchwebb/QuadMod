@@ -7,7 +7,7 @@
 class EffectManager {
 public:
 	Effect* effect;					// Current effect in use
-	bool delayOn = false;
+	bool delayOn = true;
 
 	static constexpr uint32_t audioBuffSize = 4000;
 	Samples audioBuffer[audioBuffSize] = {};

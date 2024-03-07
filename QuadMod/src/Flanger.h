@@ -6,7 +6,7 @@
 class Flanger : public Effect {
 public:
 	void GetSamples(Samples& samples);
-	bool wide = false;
+	bool wide = true;
 private:
 	float SampleFromReadOffset(const float readOffset, const uint32_t channel);
 

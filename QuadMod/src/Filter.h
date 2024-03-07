@@ -308,7 +308,8 @@ template<uint32_t poles = 2, uint32_t channels = 4>
 struct Filter {
 	static constexpr uint32_t sections = (poles + 1) / 2;
 public:
-	Filter(filterPass pass, volatile uint16_t* adc) : passType{pass}, iirFilter{IIRFilter<poles>(pass), IIRFilter<poles>(pass)}, adcControl{adc}
+	Filter(filterPass pass, volatile uint16_t* adc, bool invertADC = false) :
+		passType{pass}, iirFilter{IIRFilter<poles>(pass), IIRFilter<poles>(pass)}, adcControl{adc}, invertADC{invertADC}
 	{
 		Update(true);								// Force calculation of coefficients
 	}
@@ -341,7 +342,7 @@ public:
 			return;
 		}
 
-		dampedADC = filterADC.FilterSample(*adcControl);
+		dampedADC = filterADC.FilterSample(invertADC ? 4095 - *adcControl : *adcControl);
 		if (reset || std::abs(dampedADC - previousADC) > hysteresis) {
 			previousADC = dampedADC;
 			InitIIRFilter(dampedADC);
@@ -366,6 +367,7 @@ private:
 	IIRRegisters<poles> iirReg[channels];	// N channels
 
 	volatile uint16_t* adcControl;
+	bool invertADC = false;
 	float dampedADC, previousADC;			// ADC readings governing damped cut off level (and previous for hysteresis)
 	FixedFilter<poles> filterADC = FixedFilter(filterPass::LowPass, 0.002f);
 	static constexpr uint16_t hysteresis = 30;

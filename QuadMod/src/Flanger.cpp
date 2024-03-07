@@ -12,16 +12,18 @@ Flanger flanger;
 
 void Flanger::GetSamples(Samples& samples)
 {
-	const uint32_t lfoFreq = adc.effectLFOSpeed * 128;
+	const uint32_t lfoFreq = (4095 - adc.effectLFOSpeed) * 128;
 	uint32_t lfoPhase = lfoInitPhase + lfoFreq;
 	lfoInitPhase = lfoPhase;
 
 	// needs to be between baseFrequency and audioBuffSize
 	const float lfoSweepWidthADC = (adc.effectLFORange / 4096.0f) * 100.0f;
+	const float regenADC = (4095 - adc.effectRegen) / 4096.0f;
+	const float baseFreqADC = ((4095 - adc.effectLFOBaseFreq) / 4096.0f) * 2000.0f;
+
+	// Smooth adc values (particularly to prevent crackling when lfo pos jumps)
 	lfoSweepWidth = (lfoSweepWidth * 0.9f) + (0.1f * lfoSweepWidthADC);
-	const float regenADC = adc.effectRegen / 4096.0f;
 	regen = (regen * 0.9f) + (0.1f * regenADC);
-	const float baseFreqADC = (adc.effectLFOBaseFreq / 4096.0f) * 2000.0f;
 	baseFreq = (baseFreq * 0.99f) + (0.01f * baseFreqADC);
 
 	if (++writePos == effectManager.audioBuffSize) {
