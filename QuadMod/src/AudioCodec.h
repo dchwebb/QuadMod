@@ -33,6 +33,7 @@ private:
 	void SendCmd(Command cmd);
 
 	GpioPin pdnPin{GPIOD, 15, GpioPin::Type::Output};		// PDN pin is used to bring Codec out of reset
+	GpioPin debugPin{GPIOC, 10, GpioPin::Type::Output};		// Timing Debug PIn
 
 	static constexpr float normalise32Bit = 1.0f / std::pow(2, 31);
 	static constexpr float denormalise32Bit = std::pow(2, 31);

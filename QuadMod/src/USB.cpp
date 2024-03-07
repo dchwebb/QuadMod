@@ -158,7 +158,7 @@ void USBMain::EPStartXfer(const Direction direction, const uint8_t endpoint, uin
 }
 
 
-void USBMain::USBInterruptHandler()								// Originally in Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pcd.c
+void USBMain::InterruptHandler()							// Originally in Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pcd.c
 {
 	// Handle spurious interrupt
 	USBP->ISTR &= ~(USB_ISTR_SOF | USB_ISTR_ESOF);
@@ -203,7 +203,7 @@ void USBMain::USBInterruptHandler()								// Originally in Drivers\STM32F4xx_HA
 				if ((USBP->CHEP0R & USB_EP_SETUP) != 0) {
 					classByEP[0]->outBuffCount = USB_PMA[0].GetRXCount();
 					ReadPMA(USB_PMA[0].GetRXAddr(), classByEP[0]);	// Read setup data into  receive buffer
-					ProcessSetupPacket();							// Parse setup packet into request, locate data (eg descriptor) and populate TX buffer
+					ProcessSetupPacket();					// Parse setup packet into request, locate data (eg descriptor) and populate TX buffer
 
 				} else {
 					classByEP[0]->outBuffCount = USB_PMA[0].GetRXCount();

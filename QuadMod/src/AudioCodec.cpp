@@ -67,7 +67,7 @@ int32_t triOutput = 0;
 
 void AudioCodec::Interrupt()
 {
-	//GPIOG->ODR |= GPIO_ODR_OD12;
+	debugPin.SetHigh();
 
 	// Input: SAI2 Block A FIFO request
 	while ((SAI2_Block_A->SR & SAI_xSR_FREQ) != 0) {
@@ -117,7 +117,7 @@ void AudioCodec::Interrupt()
 		outputDone = true;			// Tell the main loop it can run idle jobs
 	}
 
-//	GPIOG->ODR &= ~GPIO_ODR_OD12;
+	debugPin.SetLow();
 }
 
 

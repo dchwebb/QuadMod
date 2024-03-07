@@ -6,7 +6,6 @@
 class Phaser : public Effect {
 public:
 	void GetSamples(Samples& samples);
-	void IdleJobs();
 
 	static constexpr uint32_t maxFilters = 16;	// Maximum number of allpass filters to use per channel
 	uint32_t filterCount = 4;					// number of allpass filters to use per channel
@@ -22,7 +21,7 @@ private:
 	uint32_t lfoInitPhase = 0;
 	uint32_t lfoFreq = 0;						// LFO frequency
 
-	volatile uint32_t& phaseLED = TIM4->CCR2;
+	volatile uint32_t& lfoLED = TIM4->CCR2;
 };
 
 extern Phaser phaser;

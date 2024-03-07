@@ -5,7 +5,6 @@
 #include "HyperRAM.h"
 #include "Phaser.h"
 #include "Flanger.h"
-#include "RingMod.h"
 #include "Cordic.h"
 #include "Delay.h"
 #include <charconv>
@@ -48,7 +47,6 @@ void CDCHandler::ProcessCommand()
 	} else if (cmd.compare("settings") == 0) {
 		printf("effect:%s\r\n"
 				"delay:%s\r\n"
-				"octave:%s\r\n"
 				"wideflange:%s\r\n"
 				"lfoSpeed: %d\r\n"
 				"lfoRange: %d\r\n"
@@ -56,9 +54,8 @@ void CDCHandler::ProcessCommand()
 				"baseFreq: %d\r\n"
 				"effectMix: %d\r\n"
 				"delayMix: %d\r\n",
-				effectManager.effect == &phaser ? "phaser" : (effectManager.effect == &flanger ? "flanger" : "ringmod"),
+				effectManager.effect == &phaser ? "phaser" : "flanger",
 				effectManager.delayOn ? "on" : "off",
-				ringMod.octaveOnly ? "on" : "off",
 				flanger.wide ? "on" : "off",
 				adc.effectLFOSpeed,
 				adc.effectLFORange,
@@ -210,10 +207,6 @@ void CDCHandler::ProcessCommand()
 		effectManager.effect = &flanger;
 		printf("Effect set to flanger\r\n");
 
-	} else if (cmd.compare("ringmod") == 0) {
-		effectManager.effect = &ringMod;
-		printf("Effect set to ringmod\r\n");
-
 	} else if (cmd.compare("delay") == 0) {
 		effectManager.delayOn = !effectManager.delayOn;
 		printf("delay:%s\r\n", effectManager.delayOn ? "on" : "off");
@@ -221,10 +214,6 @@ void CDCHandler::ProcessCommand()
 	} else if (cmd.compare("wideflange") == 0) {
 		flanger.wide = !flanger.wide;
 		printf("Wide flanger:%s\r\n", flanger.wide ? "on" : "off");
-
-	} else if (cmd.compare("octave") == 0) {
-		ringMod.octaveOnly = !ringMod.octaveOnly;
-		printf("octaveOnly:%s\r\n", ringMod.octaveOnly ? "on" : "off");
 
 	} else if (cmd.compare("savecfg") == 0) {			// Save configuration
 		//config.SaveConfig();

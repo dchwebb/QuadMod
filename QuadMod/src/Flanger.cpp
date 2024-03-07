@@ -8,7 +8,6 @@
 
 Flanger flanger;
 
-
 void Flanger::GetSamples(Samples& samples)
 {
 	const uint32_t lfoFreq = adc.effectLFOSpeed * 128;
@@ -55,20 +54,27 @@ void Flanger::GetSamples(Samples& samples)
 		}
 	}
 
+	// Convert phase to a 12 bit value for LED brightness
+	uint32_t brightness = lfoInitPhase >> 19;		// Limit from 0 to 8191
+	if (brightness > 4095) {
+		brightness = 8192 - brightness;
+	}
+	lfoLED = brightness;
 }
 
 
 float Flanger::SampleFromReadOffset(const float readOffset, const uint32_t channel)
 {
-	volatile float readPos = writePos - readOffset;
+	float readPos = (float)writePos - readOffset;
 	while (readPos <= -1.0f) {
 		readPos += effectManager.audioBuffSize;
 	}
 
 	// Interpolate two samples
-	volatile int32_t floor = std::floor(readPos);
+	int32_t floor = std::floor(readPos);
+	//int32_t floor2 = (int32_t)(readPos);
 
-	const float fractionalPos = readPos - floor;				// Handle situation where sample position is between -1 and 0
+	const float fractionalPos = readPos - (float)floor;				// Handle situation where sample position is between -1 and 0
 	if (floor < 0) {
 		floor += effectManager.audioBuffSize;
 	}
@@ -80,11 +86,4 @@ float Flanger::SampleFromReadOffset(const float readOffset, const uint32_t chann
 
 	return std::lerp(effectManager.audioBuffer[floor].ch[channel], effectManager.audioBuffer[ceil].ch[channel], fractionalPos);
 }
-
-
-void Flanger::IdleJobs()
-{
-
-}
-
 

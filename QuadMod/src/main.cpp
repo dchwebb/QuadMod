@@ -3,9 +3,7 @@
 #include "AudioCodec.h"
 #include "EffectManager.h"
 #include "Delay.h"
-#include "Phaser.h"
-#include "Flanger.h"
-#include "RingMod.h"
+
 
 volatile uint32_t SysTickVal;
 volatile uint32_t outputUSB = 0;		// USB debugging
@@ -18,7 +16,6 @@ extern "C" {
 /*
 	Production TODO:
 	- Clock/tempo CV detection
-	- Clear buffers when switching effect type
 	- USB optimisation
  */
 
@@ -28,7 +25,7 @@ int main(void)
 	SystemInit();						// Activates floating point coprocessor and resets clock
 	InitSystemClock();					// Configure the clock and PLL
 	InitHardware();
-	effectManager.effect = &flanger;
+	effectManager.EffectType();
 	audioCodec.Init();
 	usb.InitUSB();
 

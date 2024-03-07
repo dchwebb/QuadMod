@@ -16,7 +16,7 @@ void Phaser::GetSamples(Samples& samples)
 	const float lfoSweepWidth = static_cast<float>(adc.effectLFORange) * 5.0f;
 
 	static constexpr float feedbackScale = 1.0f / 4096.0f;
-	const float feedback = static_cast<float>(adc.effectRegen) * feedbackScale;
+	const float feedback = static_cast<float>(4095 - adc.effectRegen) * feedbackScale;
 
 
 	for (uint32_t channel = 0; channel < 4; ++channel) {
@@ -43,7 +43,7 @@ void Phaser::GetSamples(Samples& samples)
 	if (brightness > 4095) {
 		brightness = 8192 - brightness;
 	}
-	phaseLED = brightness;
+	lfoLED = brightness;
 }
 
 
@@ -64,10 +64,5 @@ float Phaser::FilterSamples(const uint32_t channel, float sample, const float lf
 	return sample;
 }
 
-
-void Phaser::IdleJobs()
-{
-
-}
 
 

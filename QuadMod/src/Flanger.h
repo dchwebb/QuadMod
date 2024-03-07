@@ -6,14 +6,14 @@
 class Flanger : public Effect {
 public:
 	void GetSamples(Samples& samples);
-	void IdleJobs();
-	bool wide = true;
+	bool wide = false;
 private:
 	float SampleFromReadOffset(const float readOffset, const uint32_t channel);
 
 	int32_t writePos = 0;
-	//float baseFrequency = 2.0;				// Lowest frequency of allpass filters
 	uint32_t lfoInitPhase = 0;
+
+	volatile uint32_t& lfoLED = TIM4->CCR2;
 };
 
 extern Flanger flanger;

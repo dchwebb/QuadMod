@@ -5,7 +5,7 @@ void SAI1_IRQHandler(void)
 
 void USB_DRD_FS_IRQHandler()
 {
-	usb.USBInterruptHandler();
+	usb.InterruptHandler();
 }
 
 void SysTick_Handler(void)

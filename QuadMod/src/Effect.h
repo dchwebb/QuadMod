@@ -10,5 +10,4 @@ struct Samples {
 class Effect {
 public:
 	virtual void GetSamples(Samples& samples);
-	void IdleJobs() {};
 };

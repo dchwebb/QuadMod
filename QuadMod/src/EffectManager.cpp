@@ -22,7 +22,7 @@ std::pair<float, float> EffectManager::ProcessSamples(Samples& samples)
 {
 	Samples origSamples = samples;
 
-	FXType();
+	EffectType();
 	effect->GetSamples(samples);
 
 	// Scale mix from 0 (dry) to  1 (fully wet)
@@ -58,10 +58,10 @@ std::pair<float, float> EffectManager::ProcessSamples(Samples& samples)
 }
 
 
-void EffectManager::FXType()
+void EffectManager::EffectType()
 {
 	// Handle effect switching (Phaser = pin high; flanger = pin low)
-	if (fxTypePin.IsHigh() !=  (effect == &phaser)) {
+	if (effect == nullptr || fxTypePin.IsHigh() != (effect == &phaser)) {
 		std::memset(audioBuffer, 0, audioBuffSize * sizeof(Samples));			// Clear sample buffer
 		effect = fxTypePin.IsHigh() ? (Effect*)&phaser : (Effect*)&flanger;
 	}
@@ -71,9 +71,9 @@ void EffectManager::FXType()
 
 void EffectManager::IdleJobs()
 {
-	GPIOG->ODR |= GPIO_ODR_OD6;
+	//GPIOG->ODR |= GPIO_ODR_OD6;
 
 	delay.IdleJobs();
 
-	GPIOG->ODR &= ~GPIO_ODR_OD6;
+	//GPIOG->ODR &= ~GPIO_ODR_OD6;
 }

@@ -5,14 +5,14 @@
 #include "EFfect.h"
 #include <tuple>
 
-class Delay : public Effect {
+class Delay {
 public:
 	// functions inherited from Effect for sample generation and filter recalculation
 	void GetSamples(Samples& samples);
 	void IdleJobs();
 
 private:
-	static constexpr uint32_t audioBuffSize = 34000;
+	static constexpr uint32_t audioBuffSize = 30000;
 	int32_t writePos = 0;
 	int32_t readPos = 1000;
 	Samples audioBuffer[audioBuffSize] = {};

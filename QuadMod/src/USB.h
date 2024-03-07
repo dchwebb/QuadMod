@@ -69,7 +69,7 @@ public:
 
 	static constexpr uint8_t ep_maxPacket = 0x40;
 
-	void USBInterruptHandler();
+	void InterruptHandler();
 	void InitUSB();
 	void Disable();
 	size_t SendData(const uint8_t *data, uint16_t len, uint8_t endpoint);
