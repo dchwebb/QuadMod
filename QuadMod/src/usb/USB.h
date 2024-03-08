@@ -39,6 +39,7 @@ struct USB_PMA_t {
 
 };
 
+
 // Create struct for easy access to endpoint registers
 struct USB_EPR_t {
 	volatile uint32_t EPR;

@@ -1,9 +1,6 @@
 #include "AudioCodec.h"
 #include "EffectManager.h"
-#include <stdio.h>
-#include <numbers>
-#include <cmath>
-#include <bit>
+
 
 AudioCodec audioCodec;
 
@@ -59,12 +56,6 @@ inline void AudioCodec::SendCmd(Command cmd)
 }
 
 
-// For generating test signals
-float sinePos = 0.0f;
-int32_t sinOutput = 0;
-int32_t triInc = 10000000;
-int32_t triOutput = 0;
-
 void AudioCodec::Interrupt()
 {
 	debugPin.SetHigh();
@@ -80,28 +71,6 @@ void AudioCodec::Interrupt()
 		}
 		leftRight = !leftRight;
 	}
-
-	/*
-	// Generate test signals for output and loop-back testing
-	sinePos += 0.01f;
-	if (sinePos > 2.0f * M_PI) {
-		sinePos -= 2.0f * M_PI;
-	}
-	sinOutput = (int32_t)(std::sin(sinePos) * std::numeric_limits<int32_t>::max());
-
-	int32_t newTri = triOutput + triInc;
-	if ((triInc > 0 && newTri < triOutput) || (triInc < 0 && newTri > triOutput)) {
-		triInc = -triInc;
-	} else {
-		triOutput = newTri;
-	}
-
-
-	SAI1_Block_A->DR = Denormalise(dataIn.ch[0]);
-	SAI1_Block_A->DR = Denormalise(dataIn.ch[3]);
-	SAI1_Block_B->DR = std::bit_cast<uint32_t>(sinOutput);
-	SAI1_Block_B->DR = std::bit_cast<uint32_t>(triOutput);
-*/
 
 
 	// Output: SAI1 Block A FIFO request

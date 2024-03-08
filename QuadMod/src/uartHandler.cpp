@@ -1,4 +1,5 @@
 #include "uartHandler.h"
+#include "GpioPin.h"
 #include "usb.h"
 
 #if (USB_DEBUG)
@@ -6,17 +7,11 @@ UART uart;
 #endif
 
 void UART::Init() {
-	// Debug UART pin: PD8 = USART3_TX
-	// Dev board button PC13
-
+	// Debug UART pin: PC10 = USART3_TX; PC11 = USART3_RX
 	RCC->APB1LENR |= RCC_APB1LENR_USART3EN;			// USART clock enable
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIODEN;			// GPIO clock
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;			// GPIO clock
 
-	// MODER 00: Input mode, 01: General purpose output mode, 10: Alternate function mode, 11: Analog mode (reset state)
-	GPIOD->MODER &= ~GPIO_MODER_MODE8_0;			// Set alternate function on PD8
-	GPIOD->AFR[1] |= 7 << GPIO_AFRH_AFSEL8_Pos;		// Alternate function on PD8 for USART3_TX is AF7
-	GPIOC->MODER &= ~GPIO_MODER_MODE13;				// Input on PC13
+	GpioPin::Init(GPIOC, 10, GpioPin::Type::AlternateFunction, 7);	// PC10 USART3_TX    AF7
+	GpioPin::Init(GPIOC, 11, GpioPin::Type::AlternateFunction, 7);	// PC11 USART3_RX    AF7
 
 	// Calculations depended on oversampling mode set in CR1 OVER8. Default = 0: Oversampling by 16
 	USART3->BRR |= SystemCoreClock / 230400;		// clk / desired_baud

@@ -5,7 +5,6 @@
 #include <cmath>
 
 
-
 class AudioCodec {
 public:
 	void Init();
@@ -15,11 +14,11 @@ public:
 
 	Samples dataIn;
 
-	bool leftRight = true;		// to keep count of which channel we are receiving
+	bool leftRight = true;				// to keep count of which channel is being received
 	bool outputDone = false;			// To alert the main loop it can run idle jobs
 
 private:
-	int32_t Denormalise(float x);
+	int32_t Denormalise(float x);		// Apply Tanh limiter and convert from 0-1 to 32 bit
 
 	struct __attribute__((__packed__)) Command {
 		enum CommandType : uint8_t {Read  = 0x43, Write = 0xC3, activateSPI = 0xDE};

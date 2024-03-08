@@ -7,7 +7,6 @@
 
 class Delay {
 public:
-	// functions inherited from Effect for sample generation and filter recalculation
 	void GetSamples(Samples& samples);
 	void IdleJobs();
 
@@ -25,7 +24,7 @@ private:
 	int32_t calcDelay = 0;				// Delay time according to whether clocked and with multipliers applied
 	int16_t hysteresisPotVal;			// For hysteresis checking
 	const std::array<float, 6> tempoMult = {0.5, 1, 2, 4, 6, 8};
-	float delayMult = 1.0f;				// Multipliers for delay in clocked mode
+	//float delayMult = 1.0f;				// Multipliers for delay in clocked mode
 	volatile int32_t clockAdjust = -8;
 
 	float delayTimePot = 0.0f;			// Smoothed value
@@ -43,6 +42,11 @@ private:
 	uint32_t clockInterval;				// Clock interval in sample time
 	bool clockValid = false;
 	bool clockHigh = false;
+
+	// Testing for whether clock or LFO is being used as delay time CV
+	uint32_t nonClockVals = 0;			// Counter to store ADC values that are neither valid clock high or low
+	uint32_t nonClockTime = 0;			// Last SysTick time a sequence of non-clock values were on ADC
+	uint32_t clockTest = 1000;			// Interval inside which intermediate signals on ADC invalidate clock
 
 	uint32_t ledCounter = 0;
 	uint32_t ledBrightness = 0;

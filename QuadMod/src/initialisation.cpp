@@ -11,20 +11,12 @@ void InitSystemClock(void) {
 	PWR->VOSCR |= PWR_VOSCR_VOS;						// Set power scaling to 11: VOS0 (highest frequency)
 	while ((PWR->VOSSR & PWR_VOSSR_VOSRDY) == 0); 		// Delay after an RCC peripheral clock enabling
 
-//	RCC->CR |= RCC_CR_CSION;							// Enable low power internal RC oscillator
-//	while ((RCC->CR & RCC_CR_CSIRDY) == 0);				// Wait until CSI ready
-
 	RCC->CR |= RCC_CR_HSEON;							// HSE ON
 	while ((RCC->CR & RCC_CR_HSERDY) == 0);				// Wait till HSE is ready
 
 	// Configure PLL1
 	RCC->PLL1CFGR = (PLL_M << RCC_PLL1CFGR_PLL1M_Pos) | (RCC_PLL1CFGR_PLL1SRC);		// PLL1SRC 11: HSE selected as PLL clock
 	RCC->PLL1DIVR = ((PLL_N - 1) << RCC_PLL1DIVR_PLL1N_Pos) | (PLL_P << RCC_PLL1DIVR_PLL1P_Pos) | (PLL_Q << RCC_PLL1DIVR_PLL1Q_Pos);
-
-	// Settings needed for fractional adjustment:
-//	RCC->PLL1CFGR |= RCC_PLL1CFGR_PLL1FRACEN;			// HAL Enables this but not sure if needed
-//	RCC->PLL1CFGR |= RCC_PLL1CFGR_PLL1RGE;				// PLL1 input frequency range: 00: 1-2MHz; 01: 2-4 MHz; 10: 4-8 MHz; 11: 8-16 MHz;
-//	RCC->PLL1CFGR &= ~RCC_PLL1CFGR_PLL1VCOSEL;
 
 	RCC->CR |= RCC_CR_PLL1ON;							// Enable PLL1
 	RCC->PLL1CFGR = RCC_PLL1CFGR_PLL1PEN |				// Enable PLL P (drives AHB clock)
@@ -66,10 +58,6 @@ void InitHardware()
 	InitADC2(reinterpret_cast<volatile uint16_t*>(&adc), 10);
 	InitCordic();
 	InitPWMTimer();
-
-	// Debug pins - PG12, PG6
-//	GpioPin::Init(GPIOC, 1, GpioPin::Type::Output);
-//	GpioPin::Init(GPIOG, 12, GpioPin::Type::Output);
 }
 
 
@@ -181,7 +169,7 @@ void InitSAI()
 
 void InitSysTick()
 {
-	SysTick_Config(SystemCoreClock / sysTick);		// gives 1ms
+	SysTick_Config(SystemCoreClock / sysTick);			// gives 1ms
 	NVIC_SetPriority(SysTick_IRQn, 0);
 }
 
@@ -189,19 +177,19 @@ void InitSysTick()
 void InitMPU()
 {
 	// Use the Memory Protection Unit (MPU) to set up a region of memory with data caching disabled to access UID
-	MPU->RNR = 0;									// Memory region number
+	MPU->RNR = 0;										// Memory region number
 
-	MPU->RBAR = (UID_BASE & 0xFFFFFFE0UL) |			// Store the address of the UID into the region base address register
-				(0    << MPU_RBAR_SH_Pos) |			// Shareable
-				(0b11 << MPU_RBAR_AP_Pos) |			// Access Permission: Read-only by any privilege level
-				(1    << MPU_RBAR_XN_Pos);			// Execution not permitted
+	MPU->RBAR = (UID_BASE & 0xFFFFFFE0UL) |				// Store the address of the UID into the region base address register
+				(0    << MPU_RBAR_SH_Pos) |				// Shareable
+				(0b11 << MPU_RBAR_AP_Pos) |				// Access Permission: Read-only by any privilege level
+				(1    << MPU_RBAR_XN_Pos);				// Execution not permitted
 
 	MPU->RLAR = ((UID_BASE | 0xFFFF) & 0xFFFFFFE0UL) |	// Set the upper memory limit for the region
 				(0 << MPU_RLAR_AttrIndx_Pos)         |	// Set attribute index to 0
 				MPU_RLAR_EN_Msk;						// Enable the region
 
-	MPU->CTRL |= (1 << MPU_CTRL_PRIVDEFENA_Pos) |	// Enable PRIVDEFENA - this allows use of default memory map for memory areas other than those specific regions defined above
-				 (1 << MPU_CTRL_ENABLE_Pos);		// Enable the MPU
+	MPU->CTRL |= (1 << MPU_CTRL_PRIVDEFENA_Pos) |		// Enable PRIVDEFENA - this allows use of default memory map for memory areas other than those specific regions defined above
+				 (1 << MPU_CTRL_ENABLE_Pos);			// Enable the MPU
 
 }
 
@@ -335,15 +323,15 @@ void InitPWMTimer()
 	GpioPin::Init(GPIOD, 13, GpioPin::Type::AlternateFunction, 2);	// PD13 TIM4_CH2 (AF2)
 	GpioPin::Init(GPIOD, 14, GpioPin::Type::AlternateFunction, 2);	// PD14 TIM4_CH3 (AF2)
 
-	TIM4->CCMR1 |= TIM_CCMR1_OC1PE;					// Output compare 1 preload enable
-	TIM4->CCMR1 |= TIM_CCMR1_OC2PE;					// Output compare 2 preload enable
-	TIM4->CCMR2 |= TIM_CCMR2_OC3PE;					// Output compare 3 preload enable
+	TIM4->CCMR1 |= TIM_CCMR1_OC1PE;							// Output compare 1 preload enable
+	TIM4->CCMR1 |= TIM_CCMR1_OC2PE;							// Output compare 2 preload enable
+	TIM4->CCMR2 |= TIM_CCMR2_OC3PE;							// Output compare 3 preload enable
 
 	TIM4->CCMR1 |= (TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2);	// 0110: PWM mode 1 - In upcounting, channel 1 active if TIMx_CNT<TIMx_CCR1
 	TIM4->CCMR1 |= (TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2);	// 0110: PWM mode 1 - In upcounting, channel 2 active if TIMx_CNT<TIMx_CCR2
 	TIM4->CCMR2 |= (TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2);	// 0110: PWM mode 1 - In upcounting, channel 3 active if TIMx_CNT<TIMx_CCR3
 
-	TIM4->CCR1 = 0;									// Initialise PWM level to 0
+	TIM4->CCR1 = 0;											// Initialise PWM level to 0
 	TIM4->CCR2 = 0;
 	TIM4->CCR3 = 0;
 
@@ -351,62 +339,13 @@ void InitPWMTimer()
 	// ARR = number of counts per PWM tick = 4095
 	// 31.25m / ARR ~= 7.6kHz of PWM square wave with 4095 levels of output
 
-	TIM4->ARR = 4095;								// Total number of PWM ticks
-	TIM4->PSC = 7;									// Should give ~7.6kHz
-	TIM4->CR1 |= TIM_CR1_ARPE;						// 1: TIMx_ARR register is buffered
+	TIM4->ARR = 4095;										// Total number of PWM ticks
+	TIM4->PSC = 7;											// Should give ~7.6kHz
+	TIM4->CR1 |= TIM_CR1_ARPE;								// 1: TIMx_ARR register is buffered
 	TIM4->CCER |= (TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E);		// Capture mode enabled / OC1 signal is output on the corresponding output pin
-	TIM4->EGR |= TIM_EGR_UG;						// 1: Re-initialize the counter and generates an update of the registers
+	TIM4->EGR |= TIM_EGR_UG;								// 1: Re-initialize the counter and generates an update of the registers
 
-	TIM4->CR1 |= TIM_CR1_CEN;						// Enable counter
+	TIM4->CR1 |= TIM_CR1_CEN;								// Enable counter
 }
 
 
-void InitDAC()
-{
-	// Configure 4 DAC outputs PA4 and PA5 are regular DAC1 buffered outputs; PA2 and PB1 are DAC3 via OpAmp1 and OpAmp3 (Manual p.782)
-	RCC->AHB2ENR |= RCC_AHB2ENR_DAC1EN;				// Enable DAC Clock
-
-	DAC1->MCR &= ~DAC_MCR_MODE1_Msk;				// Set to normal mode: DAC1 channel1 is connected to external pin with Buffer enabled
-	DAC1->CR |= DAC_CR_EN1;							// Enable DAC using PA4 (DAC_OUT1)
-
-//	DAC1->MCR &= ~DAC_MCR_MODE2_Msk;				// Set to normal mode: DAC1 channel2 is connected to external pin with Buffer enabled
-//	DAC1->CR |= DAC_CR_EN2;							// Enable DAC using PA5 (DAC_OUT2)
-}
-
-
-void InitHyperRAM()
-{
-	// Cypress S27KL0641 DABHI020: 3.0v, 64Mb, 100MHz
-	GpioPin::Init(GPIOA, 3, GpioPin::Type::AlternateFunction, 3, GpioPin::DriveStrength::VeryHigh);		// PA3  OCTOSPI_CLK AF3
-	GpioPin::Init(GPIOB, 1, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// PB1  OCTOSPI_IO0 AF6
-	GpioPin::Init(GPIOB, 0, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// PB0  OCTOSPI_IO1 AF6
-	GpioPin::Init(GPIOC, 2, GpioPin::Type::AlternateFunction, 9, GpioPin::DriveStrength::VeryHigh);		// PC2  OCTOSPI_IO2 AF9
-	GpioPin::Init(GPIOA, 6, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// PA6  OCTOSPI_IO3 AF6
-	GpioPin::Init(GPIOE, 7, GpioPin::Type::AlternateFunction, 10, GpioPin::DriveStrength::VeryHigh); 	// PE7  OCTOSPI_IO4 AF10
-	GpioPin::Init(GPIOE, 8, GpioPin::Type::AlternateFunction, 10, GpioPin::DriveStrength::VeryHigh); 	// PE8  OCTOSPI_IO5 AF10
-	GpioPin::Init(GPIOC, 3, GpioPin::Type::AlternateFunction, 6, GpioPin::DriveStrength::VeryHigh);		// PC3  OCTOSPI_IO6 AF6
-	GpioPin::Init(GPIOC, 0, GpioPin::Type::AlternateFunction, 10, GpioPin::DriveStrength::VeryHigh);	// PC0  OCTOSPI_IO7 AF10
-	GpioPin::Init(GPIOB, 10, GpioPin::Type::AlternateFunction, 9, GpioPin::DriveStrength::VeryHigh);	// PB10 OCTOSPI_NCS AF10
-	GpioPin::Init(GPIOB, 2, GpioPin::Type::AlternateFunction, 10, GpioPin::DriveStrength::VeryHigh);	// PB2  OCTOSPI_DQS AF10
-
-	RCC->AHB4ENR |= RCC_AHB4ENR_OCTOSPI1EN;
-	//RCC->CCIPR4 &= ~RCC_CCIPR4_OCTOSPISEL;					// kernel clock 250MHz: 00 rcc_hclk4 (default); 01 pll1_q_ck; 10 pll2_r_ck; 11 per_ck
-	RCC->CCIPR4 |= RCC_CCIPR4_OCTOSPISEL_0;					// kernel clock 100MHz: 00 rcc_hclk4; *01 pll1_q_ck; 10 pll2_r_ck; 11 per_ck
-
-	// Various settings below taken from AN5050
-	OCTOSPI1->CR |= (3 << OCTOSPI_CR_FTHRES_Pos);			// FIFO Threshold
-	OCTOSPI1->DCR1 |= (22 << OCTOSPI_DCR1_DEVSIZE_Pos);		// No. of bytes = 2^(DEVSIZE+1): 64Mb = 2^23 bytes
-	OCTOSPI1->DCR1 |= (7 << OCTOSPI_DCR1_CSHT_Pos);			// CSHT + 1: min no CLK cycles where NCS must stay high between commands - Min 10ns
-	OCTOSPI1->DCR1 &= ~OCTOSPI_DCR1_CKMODE;					// Clock mode 0: CLK is low NCS high
-	OCTOSPI1->DCR1 |= (0b100 << OCTOSPI_DCR1_MTYP_Pos);		// 100: HyperBus memory mode; 101: HyperBus register mode
-	OCTOSPI1->DCR2 |= (4 << OCTOSPI_DCR2_PRESCALER_Pos);	// Set prescaler to n + 1 => 100MHz / 1 = 100MHz
-	//OCTOSPI1->DCR1 |= OCTOSPI_DCR1_DLYBYP;				// Delay block is bypassed
-	//OCTOSPI1->DCR1 |= OCTOSPI_DCR1_FRCK;					// Free running clock
-	OCTOSPI1->DCR3 |= (23 << OCTOSPI_DCR3_CSBOUND_Pos);		// Set Chip select boundary
-	OCTOSPI1->DCR4 = 250; 									// Refresh Time: The chip select should be released every 4us
-	OCTOSPI1->TCR |= OCTOSPI_TCR_DHQC;						// Delay hold quarter cycle; See RM p881
-	OCTOSPI1->HLCR |= (6 << OCTOSPI_HLCR_TACC_Pos);			// 40ns: Access time according to memory latency, in no of communication clock cycles
-	OCTOSPI1->HLCR |= (3 << OCTOSPI_HLCR_TRWR_Pos);			// 40ns: Minimum recovery time in number of communication clock cycles
-	//OCTOSPI1->HLCR |= OCTOSPI_HLCR_WZL;					// Set write zero latency
-	OCTOSPI1->HLCR |= OCTOSPI_HLCR_LM;						// Latency mode	0: Variable initial latency; 1: Fixed latency
-}

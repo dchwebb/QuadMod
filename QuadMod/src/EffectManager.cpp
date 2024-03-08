@@ -68,12 +68,7 @@ void EffectManager::EffectType()
 }
 
 
-
 void EffectManager::IdleJobs()
 {
-	//GPIOG->ODR |= GPIO_ODR_OD6;
-
-	delay.IdleJobs();
-
-	//GPIOG->ODR &= ~GPIO_ODR_OD6;
+	delay.IdleJobs();				// Delay filter calculations
 }

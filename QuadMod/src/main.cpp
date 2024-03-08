@@ -14,9 +14,12 @@ extern "C" {
 }
 
 /*
-	Production TODO:
-	- Clock/tempo CV detection
-	- USB optimisation
+	Potential improvements:
+	- Config saving (eg flanger wide; phaser filter count etc)
+	- CDC allows editing of adc (legacy)
+	- USB not working if optimisation set above -O0
+	- USB supports MIDI (unused, legacy)
+	- UART not tested
  */
 
 extern uint32_t SystemCoreClock;

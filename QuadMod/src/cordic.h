@@ -7,7 +7,7 @@ public:
 
 	inline static float ToFloat()
 	{
-		const float mult = 1.0f / 2147483648.0f;
+		constexpr float mult = 1.0f / 2147483648.0f;
 		return (float)((int)CORDIC->RDATA) * mult;
 	}
 

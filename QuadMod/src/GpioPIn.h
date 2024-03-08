@@ -11,6 +11,7 @@ public:
 		Init(port, pin, pinType, alternateFunction, driveStrength);		// Init function is static so can be called without instantiating object
 	}
 
+
 	static void Init(GPIO_TypeDef* port, uint32_t pin, Type pinType, uint32_t alternateFunction = 0, DriveStrength driveStrength = DriveStrength::Low)
 	{
 		// maths to calculate RCC clock to enable
@@ -41,33 +42,28 @@ public:
 		port->OSPEEDR |= static_cast<uint32_t>(driveStrength) << (pin * 2);
 	}
 
-	bool IsHigh()
-	{
+
+	bool IsHigh() {
 		return (port->IDR & (1 << pin));
 	}
 
-	bool IsLow()
-	{
+	bool IsLow() {
 		return ((port->IDR & (1 << pin)) == 0);
 	}
 
-	static void SetHigh(GPIO_TypeDef* port, uint32_t pin)
-	{
+	static void SetHigh(GPIO_TypeDef* port, uint32_t pin) {
 		port->ODR |= (1 << pin);
 	}
 
-	void SetHigh()
-	{
+	void SetHigh() {
 		port->ODR |= (1 << pin);
 	}
 
-	static void SetLow(GPIO_TypeDef* port, uint32_t pin)
-	{
+	static void SetLow(GPIO_TypeDef* port, uint32_t pin) {
 		port->ODR &= ~(1 << pin);
 	}
 
-	void SetLow()
-	{
+	void SetLow() {
 		port->ODR &= ~(1 << pin);
 	}
 

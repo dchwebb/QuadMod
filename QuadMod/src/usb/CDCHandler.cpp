@@ -2,7 +2,6 @@
 #include "CDCHandler.h"
 #include "AudioCodec.h"
 #include "EffectManager.h"
-#include "HyperRAM.h"
 #include "Phaser.h"
 #include "Flanger.h"
 #include "Cordic.h"
@@ -160,41 +159,6 @@ void CDCHandler::ProcessCommand()
 			usb->SendString("Invalid register\r\n");
 		}
 
-	} else if (cmd.compare(0, 5, "mreg:") == 0) {				// HyperRAM Register
-		uint32_t addr;
-		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), addr, 16);
-		if (res.ec == std::errc()) {
-			uint32_t id = hyperRAM.Read(addr, HyperRAM::Register);
-			printf("HyperRAM Register: %#010lx Data: %#010lx\r\n", addr, id);
-		} else {
-			usb->SendString("Invalid register\r\n");
-		}
-
-	} else if (cmd.compare(0, 5, "mmem:") == 0) {				// HyperRAM Memory
-		uint32_t addr;
-		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), addr, 16);
-		if (res.ec == std::errc()) {
-			uint32_t id = hyperRAM.Read(addr, HyperRAM::Memory);
-			printf("HyperRAM Address: %#010lx Data: %#010lx\r\n", addr, id);
-		} else {
-			usb->SendString("Invalid register\r\n");
-		}
-
-	} else if (cmd.compare(0, 5, "wmem:") == 0) {				// Write HyperRAM Memory
-		uint32_t addr;
-		uint32_t value;
-		auto res = std::from_chars(cmd.data() + cmd.find(":") + 1, cmd.data() + cmd.size(), addr, 16);
-		if (res.ec == std::errc()) {
-			res = std::from_chars(cmd.data() + cmd.find(",") + 1, cmd.data() + cmd.size(), value, 16);
-			if (res.ec == std::errc()) {			// no error
-				hyperRAM.Write(addr, value);
-				printf("Write Address: %#010lx Data: %#010lx\r\n", addr, value);
-			} else {
-				usb->SendString("Invalid value\r\n");
-			}
-		} else {
-			usb->SendString("Invalid register\r\n");
-		}
 
 	} else if (cmd.compare("none") == 0) {
 		effectManager.effect = nullptr;

@@ -1,6 +1,5 @@
 #pragma once
 #include "initialisation.h"
-#include <tuple>
 
 struct Samples {
 	float ch[4];

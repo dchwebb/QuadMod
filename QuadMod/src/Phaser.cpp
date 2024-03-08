@@ -1,6 +1,6 @@
 #include "Phaser.h"
 #include "Cordic.h"
-#include <cmath>
+
 
 // Code loosely based on:
 // https://code.soundsoftware.ac.uk/projects/audio_effects_textbook_code/repository/show/effects/phaser

@@ -9,7 +9,6 @@
 Flanger flanger;
 
 
-
 void Flanger::GetSamples(Samples& samples)
 {
 	const uint32_t lfoFreq = (4095 - adc.effectLFOSpeed) * 128;

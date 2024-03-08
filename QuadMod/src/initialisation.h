@@ -13,7 +13,7 @@ static constexpr float pi_x_2 = pi * 2.0f;
 
 #ifndef M_PI_4
 #define M_PI_4 0.78539816339744830962f
-#define M_1_PI 0.63661977236758134308
+#define M_1_PI 0.63661977236758134308f
 #endif
 
 struct ADCValues {
@@ -28,6 +28,7 @@ struct ADCValues {
 	uint16_t delayFilter;
 	uint16_t delayMix;
 };
+extern volatile ADCValues adc;
 
 
 struct DMALinkedList {
@@ -39,7 +40,6 @@ struct DMALinkedList {
 	uint32_t LLR;
 };
 
-extern volatile ADCValues adc;
 
 void InitSystemClock();
 void InitSAI();
@@ -47,8 +47,6 @@ void InitHardware();
 void InitAudioCodec();
 void InitSysTick();
 void InitMPU();
-void InitHyperRAM();
 void InitADC2(volatile uint16_t* buffer, uint16_t channels);
-void InitDAC();
 void InitCordic();
 void InitPWMTimer();
