@@ -3,6 +3,7 @@
 #include <cmath>
 #include <complex>
 #include <array>
+#include <algorithm>
 
 /*
  * Much of the filter code gratefully taken from Iowa Hills Software
